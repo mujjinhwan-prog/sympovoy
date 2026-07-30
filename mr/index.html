@@ -1,1 +1,619 @@
-aa
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYMPOVOY 소개자</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
+  --accent:#3b6ef5;--accent2:#6c47d4;--green:#18b96a;
+  --red:#e74c3c;--yellow:#f59e0b;--text:#1a1d2e;
+  --muted:#7b82a0;--border:#e2e5f0;--radius:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
+
+/* 로그인 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--surface);border-radius:20px;box-shadow:0 8px 40px rgba(59,110,245,.12);padding:44px 36px;width:400px;text-align:center;}
+.logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;}
+.logo span{color:var(--accent);}
+.logo-sub{color:var(--muted);font-size:13px;margin-bottom:32px;}
+.form-group{margin-bottom:14px;text-align:left;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+input,select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(59,110,245,.3);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;}
+
+/* 앱 레이아웃 */
+.app{display:none;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar .logo{font-size:18px;}
+.topbar .user-info{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:12px;}
+.topbar .user-name{font-weight:700;color:var(--text);}
+.content{max-width:1000px;margin:0 auto;padding:28px 20px;}
+.tab-bar{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:24px;}
+.tab{flex:1;padding:9px;text-align:center;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.tab-page{display:none;}
+.tab-page.active{display:block;}
+
+/* 카드 */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.card-title{font-size:14px;font-weight:800;margin-bottom:14px;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+
+/* 심포지엄 선택 */
+.sympo-card{border:2px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.sympo-card:hover{border-color:var(--accent);background:rgba(59,110,245,.03);}
+.sympo-card.selected{border-color:var(--accent);background:rgba(59,110,245,.06);}
+.sympo-card .hotel{font-size:16px;font-weight:800;}
+.sympo-card .date{font-size:12px;color:var(--muted);margin-top:2px;}
+.sympo-card .sympo-name{font-size:13px;color:var(--accent);margin-top:4px;}
+
+/* 장소 */
+.place-search-row{display:flex;gap:8px;margin-bottom:10px;}
+.place-search-row input{flex:1;}
+.place-result{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .2s;margin-bottom:6px;}
+.place-result:hover{border-color:var(--accent);}
+.place-result .pname{font-size:14px;font-weight:700;}
+.place-result .paddr{font-size:12px;color:var(--muted);margin-top:2px;}
+.added-place{display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.added-place .pinfo{flex:1;}
+.added-place .ptag{font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(59,110,245,.1);color:var(--accent);font-weight:700;display:inline-block;margin-bottom:4px;}
+.added-place .pname2{font-size:14px;font-weight:700;}
+.added-place .ptip{font-size:12px;color:var(--muted);margin-top:2px;}
+.tip-input{margin-top:8px;}
+
+/* 컨셉 선택 */
+.concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.concept-card{border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;text-align:center;}
+.concept-card:hover{border-color:var(--accent);}
+.concept-card.selected{border-color:var(--accent);background:rgba(59,110,245,.06);}
+.concept-card .cicon{font-size:32px;margin-bottom:8px;}
+.concept-card .ctitle{font-size:14px;font-weight:800;margin-bottom:4px;}
+.concept-card .cdesc{font-size:11px;color:var(--muted);}
+
+/* 초대장 미리보기 */
+.preview-box{border-radius:var(--radius);overflow:hidden;margin-top:16px;}
+.preview-c1{background:linear-gradient(135deg,#1a1d2e,#3b6ef5);color:#fff;padding:28px;}
+.preview-c2{background:linear-gradient(135deg,#fff9f0,#fff3dc);color:#1a1d2e;padding:28px;border:2px solid #f59e0b;}
+.preview-c3{background:linear-gradient(135deg,#f0f7ff,#e8f4fd);color:#1a1d2e;padding:28px;border-left:5px solid #3b6ef5;}
+.preview-hotel{font-size:22px;font-weight:900;margin-bottom:4px;}
+.preview-date{font-size:13px;opacity:.7;margin-bottom:16px;}
+.preview-sympo{font-size:15px;font-weight:700;margin-bottom:12px;}
+.preview-places{display:grid;gap:8px;margin-top:12px;}
+.preview-place{background:rgba(255,255,255,.15);border-radius:8px;padding:10px 14px;}
+.preview-place-name{font-size:13px;font-weight:700;}
+.preview-place-tip{font-size:11px;opacity:.8;margin-top:2px;}
+
+/* 참석 현황 */
+.attendance-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.attendance-item:last-child{border-bottom:none;}
+.att-name{font-weight:700;font-size:14px;}
+.att-hosp{font-size:12px;color:var(--muted);}
+.att-status{font-size:12px;font-weight:700;}
+.att-arrived{color:var(--green);}
+.att-waiting{color:var(--muted);}
+
+/* 배지 */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:rgba(24,185,106,.12);color:var(--green);}
+.badge-yellow{background:rgba(245,158,11,.12);color:var(--yellow);}
+.badge-blue{background:rgba(59,110,245,.12);color:var(--accent);}
+
+/* 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:26px;width:460px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* 링크 복사 */
+.link-box{background:var(--surface2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;}
+.link-url{font-size:12px;color:var(--muted);word-break:break-all;flex:1;}
+
+@media(max-width:600px){
+  .concept-grid{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- 로그인 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="logo">SYMPO<span>VOY</span></div>
+    <p class="logo-sub">소개자 전용 페이지</p>
+    <!-- STEP 1 -->
+    <div id="step1">
+      <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <div class="form-group"><label>사번</label><input id="lEmpId" placeholder="사번 입력" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep1()">확인</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:16px">소개자 등록이 필요하면 관리자에게 문의하세요</p>
+    </div>
+    <!-- STEP 2 -->
+    <div id="step2" style="display:none">
+      <div id="step2Msg" style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;padding:10px 14px;background:rgba(255,255,255,.06);border-radius:10px;line-height:1.7"></div>
+      <div class="form-group"><label id="pwLabel">비밀번호</label><input type="password" id="lPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')checkStep2()"></div>
+      <div class="form-group" id="pwConfirmWrap" style="display:none">
+        <label>비밀번호 확인</label>
+        <input type="password" id="lPwConfirm" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')checkStep2()">
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep2()">로그인</button>
+      <button class="btn btn-full" style="margin-top:8px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:none;border-radius:10px;padding:11px;font-size:14px;cursor:pointer" onclick="backToStep1()">← 다시 입력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 앱 -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="user-info">
+      <span class="user-name" id="topName"></span>
+      <span id="topEmpId" style="font-size:12px"></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(this,'tab-invite')">📨 초대장 만들기</div>
+      <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석 현황</div>
+      <div class="tab" onclick="switchTab(this,'tab-items')">💊 품목 승인</div>
+    </div>
+
+    <!-- 초대장 만들기 -->
+    <div class="tab-page active" id="tab-invite">
+
+      <!-- STEP 1: 심포지엄 선택 -->
+      <div class="card">
+        <div class="card-title">STEP 1 · 심포지엄 선택</div>
+        <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
+      </div>
+
+      <!-- STEP 2: 추천 장소 -->
+      <div class="card" id="step2" style="display:none">
+        <div class="card-title">STEP 2 · 추천 장소 추가</div>
+        <div class="place-search-row">
+          <input id="placeSearch" placeholder="장소명 검색 예) 황남관, 경주월드">
+          <select id="placeType" style="width:110px">
+            <option value="restaurant">🍽️ 식당</option>
+            <option value="attraction">🏛️ 명소</option>
+            <option value="cafe">☕ 카페</option>
+            <option value="shopping">🛍️ 쇼핑</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
+        </div>
+        <div id="placeResults"></div>
+        <div id="addedPlaces" style="margin-top:12px"></div>
+      </div>
+
+      <!-- STEP 3: 컨셉 & 메시지 -->
+      <div class="card" id="step3" style="display:none">
+        <div class="card-title">STEP 3 · 초대장 컨셉 선택</div>
+        <div class="concept-grid">
+          <div class="concept-card selected" onclick="selectConcept(this,1)" data-c="1">
+            <div class="cicon">🌙</div>
+            <div class="ctitle">프리미엄 다크</div>
+            <div class="cdesc">격식있는 고급스러운 분위기</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,2)" data-c="2">
+            <div class="cicon">🌸</div>
+            <div class="ctitle">웜 골드</div>
+            <div class="cdesc">따뜻하고 환영하는 느낌</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,3)" data-c="3">
+            <div class="cicon">💎</div>
+            <div class="ctitle">클린 블루</div>
+            <div class="cdesc">깔끔하고 신뢰감 있는 느낌</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>개인 메시지 (선택)</label>
+          <textarea id="customMsg" rows="3" placeholder="안녕하세요! 이번 심포지엄에 초대합니다. 아래 일정과 추천 장소를 참고해 주세요 😊"></textarea>
+        </div>
+        <div id="previewArea"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-primary" style="flex:1" onclick="generateInvite()">🔗 초대 링크 생성</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="updatePreview()">👁️ 미리보기 업데이트</button>
+        </div>
+        <div id="inviteLink" style="display:none">
+          <div class="link-box">
+            <span class="link-url" id="linkUrl"></span>
+            <button class="btn btn-primary btn-sm" onclick="copyLink()">복사</button>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center">위 링크를 카카오톡으로 공유하세요</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 참석 현황 -->
+    <div class="tab-page" id="tab-attendance">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div class="card-title" style="margin:0">참석 현황</div>
+          <select id="attFilter" style="width:auto;font-size:13px" onchange="loadAttendance()">
+            <option value="">전체 심포지엄</option>
+          </select>
+        </div>
+        <div id="attendanceList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div></div>
+      </div>
+    </div>
+
+    <!-- 품목 승인 -->
+    <div class="tab-page" id="tab-items">
+      <div class="card">
+        <div class="card-title">품목 승인 대기</div>
+        <div id="itemList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 장소 팁 입력 모달 -->
+<div class="modal-bg" id="tipModal">
+  <div class="modal">
+    <div class="modal-title" id="tipPlaceName"></div>
+    <div class="form-group">
+      <label>소개자 팁 입력</label>
+      <textarea id="tipText" rows="3" placeholder="예) 물회가 정말 맛있어요! 점심에 가세요 🐟"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="confirmAddPlace()">추가</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('tipModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=fpdwg3ytk5"></script>
+<script>
+const SB_URL='https://sgmmeibexipozsywxpyk.supabase.co';
+const SB_KEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
+const KAKAO_KEY='48214b855ccaf8305d175a6a333e7415';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+let currentIntroducer=null;
+let selectedSympo=null;
+let selectedConcept=1;
+let addedPlaces=[];
+let pendingPlace=null;
+
+// 토스트
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=ok?'var(--green)':'var(--red)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// 로그인 STEP1: 이름+사번 확인
+let _introFound = null;
+
+async function checkStep1(){
+  const name=document.getElementById('lName').value.trim();
+  const emp=document.getElementById('lEmpId').value.trim();
+  if(!name||!emp){toast('이름과 사번을 입력해주세요',false);return;}
+
+  const {data}=await sb.from('introducers').select('*').eq('employee_id',emp).eq('name',name).single();
+  if(!data){toast('등록된 소개자 정보가 없습니다',false);return;}
+
+  _introFound=data;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+
+  if(!data.password){
+    // 최초 로그인 - PW 설정
+    document.getElementById('pwLabel').textContent='새 비밀번호 설정';
+    document.getElementById('step2Msg').innerHTML=`👋 <strong>${data.name}</strong>님, 처음 로그인하시는군요!<br>사용하실 비밀번호를 설정해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='block';
+    document.getElementById('lPw').placeholder='새 비밀번호 입력';
+  } else {
+    // 기존 로그인 - PW 입력
+    document.getElementById('pwLabel').textContent='비밀번호';
+    document.getElementById('step2Msg').innerHTML=`✅ <strong>${data.name}</strong>님 확인되었습니다.<br>비밀번호를 입력해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='none';
+    document.getElementById('lPw').placeholder='비밀번호 입력';
+  }
+  document.getElementById('lPw').value='';
+  setTimeout(()=>document.getElementById('lPw').focus(),100);
+}
+
+async function checkStep2(){
+  const pw=document.getElementById('lPw').value;
+  if(!pw||pw.length<4){toast('비밀번호 4자 이상 입력',false);return;}
+
+  if(!_introFound.password){
+    // 최초 - PW 설정
+    const confirm=document.getElementById('lPwConfirm').value;
+    if(pw!==confirm){toast('비밀번호가 일치하지 않습니다',false);return;}
+    await sb.from('introducers').update({password:pw}).eq('id',_introFound.id);
+    _introFound.password=pw;
+    toast('비밀번호 설정 완료!');
+  } else {
+    // 기존 - PW 확인
+    if(pw!==_introFound.password){toast('비밀번호가 틀렸습니다',false);return;}
+  }
+  currentIntroducer=_introFound;
+  localStorage.setItem('intro_session',JSON.stringify(currentIntroducer));
+  enterApp();
+}
+
+function backToStep1(){
+  _introFound=null;
+  document.getElementById('step1').style.display='block';
+  document.getElementById('step2').style.display='none';
+  document.getElementById('lPw').value='';
+}
+
+function doLogout(){
+  localStorage.removeItem('intro_session');
+  currentIntroducer=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginWrap').style.display='flex';
+}
+
+function enterApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('topName').textContent=currentIntroducer.name;
+  document.getElementById('topEmpId').textContent=currentIntroducer.employee_id;
+  loadSympoList();
+  loadAttendanceFilter();
+  loadItems();
+}
+
+// 자동 로그인
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('intro_session');
+  if(saved){currentIntroducer=JSON.parse(saved);enterApp();}
+});
+
+// 탭
+function switchTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='tab-attendance')loadAttendance();
+  if(id==='tab-items')loadItems();
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// 심포지엄 목록
+async function loadSympoList(){
+  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
+  const el=document.getElementById('sympoList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">등록된 심포지엄이 없습니다. 관리자에게 문의하세요.</div>';return;}
+  el.innerHTML=data.map(j=>`
+    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')">
+      <div class="hotel">🏨 ${j.hotel_name}</div>
+      <div class="date">📅 ${j.symposium_date||'날짜 미정'}</div>
+      ${j.symposium_name?`<div class="sympo-name">🎓 ${j.symposium_name}</div>`:''}
+      ${j.agenda_image_url?`<div style="font-size:12px;color:var(--muted);margin-top:4px">📄 아젠다 있음</div>`:''}
+    </div>
+  `).join('');
+  window._sympoDB=data;
+}
+
+async function selectSympo(el,id){
+  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSympo=window._sympoDB.find(j=>j.id===id);
+  addedPlaces=[];
+  document.getElementById('addedPlaces').innerHTML='';
+  document.getElementById('step2').style.display='block';
+  document.getElementById('step3').style.display='block';
+  updatePreview();
+  toast('심포지엄 선택됨: '+selectedSympo.hotel_name);
+}
+
+// 장소 검색
+async function searchPlace(){
+  const q=document.getElementById('placeSearch').value.trim();
+  if(!q){toast('검색어 입력',false);return;}
+  const res=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=5`,{headers:{'Authorization':'KakaoAK '+KAKAO_KEY}});
+  const data=await res.json();
+  const el=document.getElementById('placeResults');
+  if(!data.documents||!data.documents.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음</div>';return;}
+  el.innerHTML=data.documents.map(p=>`
+    <div class="place-result" onclick="openTipModal('${p.place_name.replace(/'/g,"\\'")}','${p.y}','${p.x}','${(p.road_address_name||p.address_name).replace(/'/g,"\\'")}')">
+      <div class="pname">${p.place_name}</div>
+      <div class="paddr">${p.road_address_name||p.address_name}</div>
+    </div>
+  `).join('');
+}
+
+function openTipModal(name,lat,lng,addr){
+  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,type:document.getElementById('placeType').value};
+  document.getElementById('tipPlaceName').textContent='📍 '+name;
+  document.getElementById('tipText').value='';
+  document.getElementById('tipModal').classList.add('open');
+  document.getElementById('placeResults').innerHTML='';
+  document.getElementById('placeSearch').value='';
+}
+
+function confirmAddPlace(){
+  if(!pendingPlace)return;
+  pendingPlace.tip=document.getElementById('tipText').value.trim();
+  addedPlaces.push({...pendingPlace});
+  renderAddedPlaces();
+  closeModal('tipModal');
+  updatePreview();
+  toast(pendingPlace.name+' 추가됨');
+}
+
+function renderAddedPlaces(){
+  const typeLabel={restaurant:'🍽️ 식당',attraction:'🏛️ 명소',cafe:'☕ 카페',shopping:'🛍️ 쇼핑'};
+  document.getElementById('addedPlaces').innerHTML=addedPlaces.map((p,i)=>`
+    <div class="added-place">
+      <div class="pinfo">
+        <span class="ptag">${typeLabel[p.type]||p.type}</span>
+        <div class="pname2">${p.name}</div>
+        ${p.tip?`<div class="ptip">💬 ${p.tip}</div>`:''}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removePlace(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePlace(i){addedPlaces.splice(i,1);renderAddedPlaces();updatePreview();}
+
+// 컨셉
+function selectConcept(el,c){
+  document.querySelectorAll('.concept-card').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedConcept=c;
+  updatePreview();
+}
+
+// 미리보기
+function updatePreview(){
+  if(!selectedSympo)return;
+  const msg=document.getElementById('customMsg').value;
+  const typeLabel={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  const placesHtml=addedPlaces.map(p=>`
+    <div class="preview-place">
+      <div class="preview-place-name">${typeLabel[p.type]||'📍'} ${p.name}</div>
+      ${p.tip?`<div class="preview-place-tip">💬 ${p.tip}</div>`:''}
+    </div>
+  `).join('');
+
+  const themes={
+    1:`<div class="preview-box preview-c1">`,
+    2:`<div class="preview-box preview-c2">`,
+    3:`<div class="preview-box preview-c3">`,
+  };
+
+  document.getElementById('previewArea').innerHTML=`
+    ${themes[selectedConcept]}
+      <div style="font-size:11px;opacity:.6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">초대장 미리보기</div>
+      <div class="preview-hotel">🏨 ${selectedSympo.hotel_name}</div>
+      <div class="preview-date">📅 ${selectedSympo.symposium_date||'날짜 미정'} ${selectedSympo.symposium_name?'· '+selectedSympo.symposium_name:''}</div>
+      ${msg?`<div style="font-size:13px;margin:10px 0;opacity:.85;border-left:3px solid currentColor;padding-left:10px">${msg}</div>`:''}
+      ${selectedSympo.agenda_image_url?`<div style="font-size:12px;opacity:.7;margin-bottom:8px">📄 아젠다 첨부됨</div>`:''}
+      ${addedPlaces.length?`<div style="font-size:12px;opacity:.7;margin-bottom:6px;font-weight:700">추천 장소</div><div class="preview-places">${placesHtml}</div>`:''}
+    </div>
+  `;
+}
+
+// 초대 링크 생성
+async function generateInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  const msg=document.getElementById('customMsg').value;
+  const {data:pkg,error}=await sb.from('invite_packages').insert({
+    introducer_id:currentIntroducer.id,
+    journey_id:selectedSympo.id,
+    concept:selectedConcept,
+    custom_message:msg||null,
+    is_sent:true
+  }).select().single();
+  if(error){toast('생성 실패',false);return;}
+
+  // 추천 장소 저장
+  if(addedPlaces.length){
+    await sb.from('invite_locations').insert(addedPlaces.map(p=>({
+      invite_id:pkg.id,
+      place_name:p.name,
+      place_lat:p.lat,
+      place_lng:p.lng,
+      address:p.addr,
+      place_type:p.type,
+      tip:p.tip||null
+    })));
+  }
+
+  const url=`${location.origin}/user.html?invite=${pkg.invite_code}`;
+  document.getElementById('linkUrl').textContent=url;
+  document.getElementById('inviteLink').style.display='block';
+  toast('초대 링크 생성 완료!');
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(document.getElementById('linkUrl').textContent);
+  toast('링크 복사됨!');
+}
+
+// 참석 현황
+async function loadAttendanceFilter(){
+  const {data}=await sb.from('journeys').select('id,hotel_name,symposium_date').order('symposium_date',{ascending:false});
+  const sel=document.getElementById('attFilter');
+  if(data) data.forEach(j=>{
+    const o=document.createElement('option');
+    o.value=j.id; o.textContent=`${j.symposium_date||''} ${j.hotel_name}`;
+    sel.appendChild(o);
+  });
+}
+
+async function loadAttendance(){
+  const jid=document.getElementById('attFilter').value;
+  let q=sb.from('visits').select('*,users(name,hospital),journeys(hotel_name,symposium_date)').order('visited_at',{ascending:false});
+  if(jid) q=q.eq('journey_id',jid);
+  const {data}=await q;
+  const el=document.getElementById('attendanceList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div>';return;}
+  el.innerHTML=data.map(v=>`
+    <div class="attendance-item">
+      <div>
+        <div class="att-name">${v.users?.name||'-'}</div>
+        <div class="att-hosp">${v.users?.hospital||'-'} · ${v.journeys?.hotel_name||'-'}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="att-status att-arrived">✅ 도착완료</div>
+        <div style="font-size:11px;color:var(--muted)">${new Date(v.visited_at).toLocaleString('ko-KR')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 품목 승인
+async function loadItems(){
+  const {data}=await sb.from('items').select('*,users(name,hospital)').eq('is_approved',false).order('submitted_at',{ascending:false});
+  const el=document.getElementById('itemList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">승인 대기 품목 없음</div>';return;}
+  el.innerHTML=data.map(i=>`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:14px;font-weight:700">${i.item_name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${i.users?.name||'-'} · ${i.users?.hospital||'-'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(i.submitted_at).toLocaleString('ko-KR')}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
+          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
+          <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function approveItem(id,score){
+  await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
+  toast(`${score}점 승인 완료`);
+  loadItems();
+}
+</script>
+</body>
+</html>
