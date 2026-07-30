@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SYMPOVOY 관리자</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1c157dabbb64699efd17d355af674834&libraries=services"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -427,31 +426,40 @@ function editSympo(j){
   document.getElementById('sympoModal').classList.add('open');
 }
 
-// 카카오 장소 검색 (JS SDK)
-function searchHotel(){
+// 카카오 로컬 REST API 직접 호출 (CORS 프록시 경유)
+async function searchHotel(){
   const q=document.getElementById('hotelSearch').value.trim();
   if(!q){toast('검색어를 입력해주세요',false);return;}
-  if(typeof kakao==='undefined'||!kakao.maps||!kakao.maps.services){
-    toast('지도 서비스 로딩 중... 잠시 후 다시 시도해주세요',false);return;
-  }
+  const el=document.getElementById('hotelResults');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
   try{
-    const ps=new kakao.maps.services.Places();
-    ps.keywordSearch(q,(data,status)=>{
-      const el=document.getElementById('hotelResults');
-      if(status!==kakao.maps.services.Status.OK||!data.length){
-        el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
-        return;
+    const url=`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=5`;
+    const res=await fetch(url,{
+      method:'GET',
+      headers:{
+        'Authorization':'KakaoAK 48214b855ccaf8305d175a6a333e7415',
+        'Content-Type':'application/json'
       }
-      el.innerHTML=data.slice(0,6).map(p=>`
-        <div class="place-result" onclick="selectHotel(${p.y},${p.x},'${p.place_name.replace(/'/g,"\\'")}','${(p.road_address_name||p.address_name).replace(/'/g,"\\'")}')">
-          <div class="pname">${p.place_name}</div>
-          <div class="paddr">${p.road_address_name||p.address_name}</div>
-        </div>
-      `).join('');
     });
+    if(!res.ok){throw new Error('HTTP '+res.status);}
+    const data=await res.json();
+    if(!data.documents||!data.documents.length){
+      el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
+      return;
+    }
+    el.innerHTML=data.documents.map(p=>{
+      const name=p.place_name.replace(/'/g,"\\'");
+      const addr=(p.road_address_name||p.address_name).replace(/'/g,"\\'");
+      const cat=p.category_name?p.category_name.split(' > ').pop():'';
+      return `<div class="place-result" onclick="selectHotel(${p.y},${p.x},'${name}','${addr}')">
+        <div class="pname">${p.place_name}</div>
+        <div class="paddr">${p.road_address_name||p.address_name}</div>
+        ${cat?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${cat}</div>`:''}
+      </div>`;
+    }).join('');
   }catch(e){
     console.error('검색 오류:',e);
-    toast('검색 오류가 발생했습니다',false);
+    el.innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px">오류: ${e.message}</div>`;
   }
 }
 
