@@ -142,11 +142,24 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   <div class="login-box">
     <div class="logo">SYMPO<span>VOY</span></div>
     <p class="logo-sub">소개자 전용 페이지</p>
-    <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동"></div>
-    <div class="form-group"><label>사번</label><input id="lEmpId" placeholder="사번 입력"></div>
-    <div class="form-group"><label>회사 이메일</label><input id="lEmail" type="email" placeholder="hong@yuhan.co.kr"></div>
-    <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doLogin()">로그인</button>
-    <p style="font-size:12px;color:var(--muted);margin-top:16px">소개자 등록이 필요하면 관리자에게 문의하세요</p>
+    <!-- STEP 1 -->
+    <div id="step1">
+      <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <div class="form-group"><label>사번</label><input id="lEmpId" placeholder="사번 입력" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep1()">확인</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:16px">소개자 등록이 필요하면 관리자에게 문의하세요</p>
+    </div>
+    <!-- STEP 2 -->
+    <div id="step2" style="display:none">
+      <div id="step2Msg" style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;padding:10px 14px;background:rgba(255,255,255,.06);border-radius:10px;line-height:1.7"></div>
+      <div class="form-group"><label id="pwLabel">비밀번호</label><input type="password" id="lPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')checkStep2()"></div>
+      <div class="form-group" id="pwConfirmWrap" style="display:none">
+        <label>비밀번호 확인</label>
+        <input type="password" id="lPwConfirm" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')checkStep2()">
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep2()">로그인</button>
+      <button class="btn btn-full" style="margin-top:8px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:none;border-radius:10px;padding:11px;font-size:14px;cursor:pointer" onclick="backToStep1()">← 다시 입력</button>
+    </div>
   </div>
 </div>
 
@@ -293,24 +306,63 @@ function toast(msg,ok=true){
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// 로그인
-async function doLogin(){
+// 로그인 STEP1: 이름+사번 확인
+let _introFound = null;
+
+async function checkStep1(){
   const name=document.getElementById('lName').value.trim();
   const emp=document.getElementById('lEmpId').value.trim();
-  const email=document.getElementById('lEmail').value.trim();
-  if(!name||!emp||!email){toast('모두 입력해주세요',false);return;}
+  if(!name||!emp){toast('이름과 사번을 입력해주세요',false);return;}
 
-  // 기존 소개자 확인
-  let {data}=await sb.from('introducers').select('*').eq('employee_id',emp).eq('email',email).single();
-  if(!data){
-    // 신규 등록
-    const res=await sb.from('introducers').insert({name,employee_id:emp,email}).select().single();
-    data=res.data;
+  const {data}=await sb.from('introducers').select('*').eq('employee_id',emp).eq('name',name).single();
+  if(!data){toast('등록된 소개자 정보가 없습니다',false);return;}
+
+  _introFound=data;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+
+  if(!data.password){
+    // 최초 로그인 - PW 설정
+    document.getElementById('pwLabel').textContent='새 비밀번호 설정';
+    document.getElementById('step2Msg').innerHTML=`👋 <strong>${data.name}</strong>님, 처음 로그인하시는군요!<br>사용하실 비밀번호를 설정해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='block';
+    document.getElementById('lPw').placeholder='새 비밀번호 입력';
+  } else {
+    // 기존 로그인 - PW 입력
+    document.getElementById('pwLabel').textContent='비밀번호';
+    document.getElementById('step2Msg').innerHTML=`✅ <strong>${data.name}</strong>님 확인되었습니다.<br>비밀번호를 입력해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='none';
+    document.getElementById('lPw').placeholder='비밀번호 입력';
   }
-  if(!data){toast('로그인 실패',false);return;}
-  currentIntroducer=data;
-  localStorage.setItem('intro_session',JSON.stringify(data));
+  document.getElementById('lPw').value='';
+  setTimeout(()=>document.getElementById('lPw').focus(),100);
+}
+
+async function checkStep2(){
+  const pw=document.getElementById('lPw').value;
+  if(!pw||pw.length<4){toast('비밀번호 4자 이상 입력',false);return;}
+
+  if(!_introFound.password){
+    // 최초 - PW 설정
+    const confirm=document.getElementById('lPwConfirm').value;
+    if(pw!==confirm){toast('비밀번호가 일치하지 않습니다',false);return;}
+    await sb.from('introducers').update({password:pw}).eq('id',_introFound.id);
+    _introFound.password=pw;
+    toast('비밀번호 설정 완료!');
+  } else {
+    // 기존 - PW 확인
+    if(pw!==_introFound.password){toast('비밀번호가 틀렸습니다',false);return;}
+  }
+  currentIntroducer=_introFound;
+  localStorage.setItem('intro_session',JSON.stringify(currentIntroducer));
   enterApp();
+}
+
+function backToStep1(){
+  _introFound=null;
+  document.getElementById('step1').style.display='block';
+  document.getElementById('step2').style.display='none';
+  document.getElementById('lPw').value='';
 }
 
 function doLogout(){
