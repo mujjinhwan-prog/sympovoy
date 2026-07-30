@@ -176,13 +176,26 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
   <div class="content">
     <div class="tab-bar">
-      <div class="tab active" onclick="switchTab(this,'tab-invite')">📨 초대장 만들기</div>
+      <div class="tab active" onclick="switchTab(this,'tab-approve')">👥 승인 요청</div>
+      <div class="tab" onclick="switchTab(this,'tab-invite')">📨 초대장 만들기</div>
       <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석 현황</div>
       <div class="tab" onclick="switchTab(this,'tab-items')">💊 품목 승인</div>
     </div>
 
+    <!-- 승인 요청 -->
+    <div class="tab-page active" id="tab-approve">
+      <div class="card">
+        <div class="card-title">사용자 승인 요청</div>
+        <div id="approveList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">승인된 사용자</div>
+        <div id="approvedList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
+      </div>
+    </div>
+
     <!-- 초대장 만들기 -->
-    <div class="tab-page active" id="tab-invite">
+    <div class="tab-page" id="tab-invite">
 
       <!-- STEP 1: 심포지엄 선택 -->
       <div class="card">
@@ -380,6 +393,7 @@ function enterApp(){
   loadSympoList();
   loadAttendanceFilter();
   loadItems();
+  loadApproveList();
 }
 
 // 자동 로그인
@@ -394,6 +408,7 @@ function switchTab(el,id){
   document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById(id).classList.add('active');
+  if(id==='tab-approve')loadApproveList();
   if(id==='tab-attendance')loadAttendance();
   if(id==='tab-items')loadItems();
 }
@@ -607,6 +622,53 @@ async function loadItems(){
       </div>
     </div>
   `).join('');
+}
+
+// 사용자 승인 요청 목록
+async function loadApproveList(){
+  if(!currentIntroducer)return;
+  const {data:pending}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','pending');
+  const {data:approved}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','approved');
+
+  const el=document.getElementById('approveList');
+  el.innerHTML=pending&&pending.length?pending.map(u=>`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:15px;font-weight:800">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${u.hospital}</div>
+          <div style="font-size:12px;color:var(--muted)">면허번호: ${u.license_number}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(u.created_at).toLocaleString('ko-KR')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none" onclick="approveUser('${u.id}')">✅ 승인</button>
+          <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none" onclick="rejectUser('${u.id}')">❌ 거절</button>
+        </div>
+      </div>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">승인 대기 없음</div>';
+
+  const el2=document.getElementById('approvedList');
+  el2.innerHTML=approved&&approved.length?approved.map(u=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:14px;font-weight:700">${u.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${u.hospital} · ${u.license_number}</div>
+      </div>
+      <span class="badge badge-green">승인됨</span>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">승인된 사용자 없음</div>';
+}
+
+async function approveUser(id){
+  await sb.from('users').update({mr_approval:'approved',is_approved:true}).eq('id',id);
+  toast('승인 완료!');loadApproveList();
+}
+
+async function rejectUser(id){
+  if(!confirm('거절하시겠습니까?'))return;
+  await sb.from('users').update({mr_approval:'rejected'}).eq('id',id);
+  toast('거절 처리됨');loadApproveList();
 }
 
 async function approveItem(id,score){
