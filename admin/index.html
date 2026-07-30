@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SYMPOVOY 관리자</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1c157dabbb64699efd17d355af674834&libraries=services"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -430,21 +431,28 @@ function editSympo(j){
 function searchHotel(){
   const q=document.getElementById('hotelSearch').value.trim();
   if(!q){toast('검색어를 입력해주세요',false);return;}
-  if(typeof kakao==='undefined'||!kakao.maps){toast('지도 로딩 중입니다. 잠시 후 다시 시도해주세요',false);return;}
-  const ps=new kakao.maps.services.Places();
-  ps.keywordSearch(q,(data,status)=>{
-    const el=document.getElementById('hotelResults');
-    if(status!==kakao.maps.services.Status.OK||!data.length){
-      el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
-      return;
-    }
-    el.innerHTML=data.slice(0,6).map(p=>`
-      <div class="place-result" onclick="selectHotel(${p.y},${p.x},'${p.place_name.replace(/'/g,"\\'")}','${(p.road_address_name||p.address_name).replace(/'/g,"\\'")}')">
-        <div class="pname">${p.place_name}</div>
-        <div class="paddr">${p.road_address_name||p.address_name}</div>
-      </div>
-    `).join('');
-  });
+  if(typeof kakao==='undefined'||!kakao.maps||!kakao.maps.services){
+    toast('지도 서비스 로딩 중... 잠시 후 다시 시도해주세요',false);return;
+  }
+  try{
+    const ps=new kakao.maps.services.Places();
+    ps.keywordSearch(q,(data,status)=>{
+      const el=document.getElementById('hotelResults');
+      if(status!==kakao.maps.services.Status.OK||!data.length){
+        el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
+        return;
+      }
+      el.innerHTML=data.slice(0,6).map(p=>`
+        <div class="place-result" onclick="selectHotel(${p.y},${p.x},'${p.place_name.replace(/'/g,"\\'")}','${(p.road_address_name||p.address_name).replace(/'/g,"\\'")}')">
+          <div class="pname">${p.place_name}</div>
+          <div class="paddr">${p.road_address_name||p.address_name}</div>
+        </div>
+      `).join('');
+    });
+  }catch(e){
+    console.error('검색 오류:',e);
+    toast('검색 오류가 발생했습니다',false);
+  }
 }
 
 function selectHotel(lat,lng,name,addr){
@@ -457,21 +465,33 @@ function selectHotel(lat,lng,name,addr){
 
 async function uploadAgenda(input){
   const file=input.files[0];if(!file)return;
-  document.getElementById('uploadZone').textContent='업로드 중...';
-  const ext=file.name.split('.').pop();
-  const path=`agenda_${Date.now()}.${ext}`;
-  const {error}=await sb.storage.from('agenda-images').upload(path,file,{upsert:true});
-  if(error){toast('업로드 실패',false);document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택';return;}
-  const {data:{publicUrl}}=sb.storage.from('agenda-images').getPublicUrl(path);
-  document.getElementById('agendaUrl').value=publicUrl;
-  if(file.type.startsWith('image/')){
-    document.getElementById('agendaPreview').src=publicUrl;
-    document.getElementById('agendaPreview').style.display='block';
-    document.getElementById('uploadZone').textContent='✅ 이미지 업로드 완료';
-  } else {
-    document.getElementById('uploadZone').textContent='✅ '+file.name+' 업로드 완료';
+  document.getElementById('uploadZone').textContent='업로드 중... ⏳';
+  try{
+    const ext=file.name.split('.').pop().toLowerCase();
+    const path=`agenda_${Date.now()}.${ext}`;
+    const {data:upData,error}=await sb.storage.from('agenda-images').upload(path,file,{upsert:true,contentType:file.type});
+    if(error){
+      console.error('업로드 오류:',error);
+      toast('업로드 실패: '+error.message,false);
+      document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+      return;
+    }
+    const {data:urlData}=sb.storage.from('agenda-images').getPublicUrl(path);
+    const publicUrl=urlData.publicUrl;
+    document.getElementById('agendaUrl').value=publicUrl;
+    if(file.type.startsWith('image/')){
+      document.getElementById('agendaPreview').src=publicUrl;
+      document.getElementById('agendaPreview').style.display='block';
+      document.getElementById('uploadZone').textContent='✅ 이미지 업로드 완료';
+    } else {
+      document.getElementById('uploadZone').textContent='✅ '+file.name+' 업로드 완료';
+    }
+    toast('아젠다 업로드 완료 ✅');
+  }catch(e){
+    console.error('업로드 예외:',e);
+    toast('업로드 오류: '+e.message,false);
+    document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
   }
-  toast('아젠다 업로드 완료');
 }
 
 async function saveSympo(){
@@ -655,6 +675,5 @@ async function showDetail(vid){
   document.getElementById('detailPanel').classList.add('open');
 }
 </script>
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1c157dabbb64699efd17d355af674834&libraries=services"></script>
 </body>
 </html>
