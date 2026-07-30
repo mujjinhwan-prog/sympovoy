@@ -137,6 +137,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <small style="color:var(--muted);font-size:11px">관리자</small>
     </div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage(this)">📊 대시보드</div>
+    <div class="nav-item" data-page="approval" onclick="showPage(this)">✅ 승인 현황</div>
     <div class="nav-item" data-page="symposium" onclick="showPage(this)">🏨 심포지엄 관리</div>
     <div class="nav-item" data-page="users" onclick="showPage(this)">👥 사용자 관리</div>
     <div class="nav-item" data-page="visits" onclick="showPage(this)">📍 방문 인증</div>
@@ -160,6 +161,27 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="table-wrap">
           <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>인증일시</th><th>점수</th></tr></thead>
           <tbody id="recentTb"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 승인 현황 -->
+    <div class="page" id="page-approval">
+      <div class="page-title">✅ 승인 현황</div>
+      <div class="card">
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input id="searchMr" placeholder="🔍 MR 이름 또는 사번 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
+          <input id="searchUser" placeholder="🔍 사용자 이름 또는 병원 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
+          <select id="filterStatus" style="width:120px" onchange="filterApproval()">
+            <option value="">전체</option>
+            <option value="pending">대기중</option>
+            <option value="approved">승인됨</option>
+            <option value="rejected">거절됨</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>사용자</th><th>병원</th><th>면허번호</th><th>담당 MR</th><th>MR 사번</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+          <tbody id="approvalTb"></tbody></table>
         </div>
       </div>
     </div>
@@ -329,7 +351,7 @@ function showPage(el){
   el.classList.add('active');
   const pid=el.dataset.page;
   document.getElementById('page-'+pid).classList.add('active');
-  ({dashboard:loadDashboard,symposium:loadSympo,users:loadUsers,visits:loadVisits,items:loadItems,db:loadDB})[pid]?.();
+  ({dashboard:loadDashboard,approval:loadApproval,symposium:loadSympo,users:loadUsers,visits:loadVisits,items:loadItems,db:loadDB})[pid]?.();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
@@ -535,6 +557,59 @@ async function loadItems(){
       <td><span class="badge badge-blue">${i.approved_score||0}점</span></td>
     </tr>
   `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+}
+
+// 승인 현황
+let _allApproval=[];
+async function loadApproval(){
+  const {data:users}=await sb.from('users').select('*,introducers(name,employee_id)').order('created_at',{ascending:false});
+  _allApproval=users||[];
+  renderApproval(_allApproval);
+}
+
+function filterApproval(){
+  const mr=document.getElementById('searchMr').value.toLowerCase();
+  const user=document.getElementById('searchUser').value.toLowerCase();
+  const status=document.getElementById('filterStatus').value;
+  const filtered=_allApproval.filter(u=>{
+    const mrName=(u.introducers?.name||'').toLowerCase();
+    const mrEmp=(u.introducers?.employee_id||'').toLowerCase();
+    const uName=(u.name||'').toLowerCase();
+    const uHosp=(u.hospital||'').toLowerCase();
+    return (!mr||(mrName.includes(mr)||mrEmp.includes(mr)))
+      &&(!user||(uName.includes(user)||uHosp.includes(user)))
+      &&(!status||u.mr_approval===status);
+  });
+  renderApproval(filtered);
+}
+
+function renderApproval(data){
+  const statusMap={pending:'<span class="badge badge-yellow">대기중</span>',approved:'<span class="badge badge-green">승인됨</span>',rejected:'<span class="badge badge-red">거절됨</span>'};
+  document.getElementById('approvalTb').innerHTML=data.length?data.map(u=>`
+    <tr>
+      <td>${u.name}</td>
+      <td>${u.hospital}</td>
+      <td>${u.license_number}</td>
+      <td>${u.introducers?.name||'-'}</td>
+      <td>${u.introducers?.employee_id||'-'}</td>
+      <td>${statusMap[u.mr_approval]||'-'}</td>
+      <td>${new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
+      <td>
+        ${u.mr_approval!=='approved'?`<button class="btn btn-success btn-sm" onclick="adminApproveUser('${u.id}')">승인</button> `:''}
+        ${u.mr_approval!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="adminRejectUser('${u.id}')">거절</button>`:''}
+      </td>
+    </tr>
+  `).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+}
+
+async function adminApproveUser(id){
+  await sb.from('users').update({mr_approval:'approved',is_approved:true}).eq('id',id);
+  toast('승인 완료');loadApproval();
+}
+async function adminRejectUser(id){
+  if(!confirm('거절하시겠습니까?'))return;
+  await sb.from('users').update({mr_approval:'rejected',is_approved:false}).eq('id',id);
+  toast('거절 처리됨');loadApproval();
 }
 
 // 전체 DB
