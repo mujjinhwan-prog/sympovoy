@@ -447,7 +447,10 @@ async function selectSympo(el,id){
 async function searchPlace(){
   const q=document.getElementById('placeSearch').value.trim();
   if(!q){toast('검색어 입력',false);return;}
-  const res=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=5`,{headers:{'Authorization':'KakaoAK '+KAKAO_KEY}});
+  const res=await fetch(
+    `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`,
+    {headers:{'Authorization':'Bearer sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ'}}
+  );
   const data=await res.json();
   const el=document.getElementById('placeResults');
   if(!data.documents||!data.documents.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음</div>';return;}
