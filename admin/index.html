@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SYMPOVOY 관리자</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1c157dabbb64699efd17d355af674834&libraries=services&autoload=false"></script>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=1c157dabbb64699efd17d355af674834&libraries=services"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -404,14 +404,10 @@ function editSympo(j){
   document.getElementById('sympoModal').classList.add('open');
 }
 
-// 카카오 SDK 로드
-kakao.maps.load(function(){});
-
 // 카카오 장소 검색 (JS SDK)
 function searchHotel(){
   const q=document.getElementById('hotelSearch').value.trim();
   if(!q){toast('검색어를 입력해주세요',false);return;}
-  kakao.maps.load(function(){
   const ps=new kakao.maps.services.Places();
   ps.keywordSearch(q,(data,status)=>{
     const el=document.getElementById('hotelResults');
@@ -426,7 +422,6 @@ function searchHotel(){
       </div>
     `).join('');
   });
-  }); // kakao.maps.load
 }
 
 function selectHotel(lat,lng,name,addr){
