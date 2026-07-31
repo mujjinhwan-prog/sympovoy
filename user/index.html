@@ -181,12 +181,19 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="app" id="app">
   <div class="topbar">
     <div class="topbar-logo">SYMPO<span>VOY</span></div>
-    <div style="display:flex;align-items:center;gap:8px"><button class="theme-btn" onclick="toggleTheme()">🌙 다크</button><div class="topbar-user" id="topUser"></div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-btn" onclick="toggleTheme()">🌙 다크</button>
+      <div class="topbar-user" id="topUser"></div>
+      <button style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit" onclick="doLogout()">로그아웃</button>
+    </div>
   </div>
   <div class="content">
 
     <!-- 초대장 -->
     <div class="page active" id="page-invite">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button onclick="loadInvite()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit">🔄 새로고침</button>
+      </div>
       <div id="inviteContent">
         <div style="text-align:center;padding:40px 20px;color:var(--muted)">
           <div style="font-size:40px;margin-bottom:12px">🔗</div>
@@ -290,6 +297,18 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// 로그아웃
+function doLogout(){
+  localStorage.removeItem('user_session');
+  currentUser=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('lName').value='';
+  document.getElementById('lHospital').value='';
+  document.getElementById('lLicense').value='';
+  document.getElementById('lMrEmpId').value='';
+}
+
 // 로그인 - 승인 요청
 async function doLogin(){
   const name=document.getElementById('lName').value.trim();
@@ -298,34 +317,36 @@ async function doLogin(){
   const mrEmpId=document.getElementById('lMrEmpId').value.trim();
   if(!name||!hospital||!license||!mrEmpId){toast('모두 입력해주세요');return;}
 
-  // MR 확인
-  const {data:mr}=await sb.from('introducers').select('*').eq('employee_id',mrEmpId).single();
-  if(!mr){toast('존재하지 않는 MR 사번입니다');return;}
+  // 기존 사용자 면허번호로 먼저 확인
+  let {data:user}=await sb.from('users').select('*').eq('license_number',license).eq('name',name).single();
 
-  // 기존 사용자 확인
-  let {data:user}=await sb.from('users').select('*').eq('license_number',license).single();
   if(user){
-    // 기존 사용자 - 상태 확인
     if(user.mr_approval==='approved'){
+      // 이미 승인된 사용자 → 바로 로그인
       currentUser=user;
       localStorage.setItem('user_session',JSON.stringify(user));
       enterApp();
       return;
     }
-    // 대기중
+    // 대기 또는 거절 상태
+    const {data:mr}=await sb.from('introducers').select('*').eq('id',user.introducer_id).single();
     showPending(user,mr);
     return;
   }
 
+  // 신규 사용자 - MR 사번 확인
+  const {data:mr}=await sb.from('introducers').select('*').eq('employee_id',mrEmpId).single();
+  if(!mr){toast('존재하지 않는 MR 사번입니다');return;}
+
   // 신규 등록
-  const {data:newUser}=await sb.from('users').insert({
+  const {data:newUser,error}=await sb.from('users').insert({
     name,hospital,license_number:license,
     introducer_id:mr.id,
     mr_approval:'pending',
     is_approved:false
   }).select().single();
 
-  if(!newUser){toast('오류가 발생했습니다');return;}
+  if(error||!newUser){toast('오류: '+(error?.message||'등록 실패'));return;}
   localStorage.setItem('user_session',JSON.stringify(newUser));
   showPending(newUser,mr);
 }
@@ -364,7 +385,7 @@ function enterApp(){
   document.getElementById('pendingWrap').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('topUser').textContent=currentUser.name+' · '+currentUser.hospital;
-  loadInvite();
+  await loadInvite();
   loadStamp();
   loadItemHistory();
   startGPSWatch();
@@ -376,7 +397,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if(!saved)return;
   const u=JSON.parse(saved);
   const {data}=await sb.from('users').select('*').eq('id',u.id).single();
-  if(!data)return;
+  if(!data){localStorage.removeItem('user_session');return;}
   if(data.mr_approval==='approved'){
     currentUser=data;
     enterApp();
@@ -422,7 +443,21 @@ function buildPlaces(locations, typeIcon){
 async function loadInvite(){
   if(!currentUser)return;
   const {data:pkgs}=await sb.from('invite_packages').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(1);
-  if(!pkgs||!pkgs.length)return;
+  if(!pkgs||!pkgs.length){
+    document.getElementById('inviteContent').innerHTML=`
+      <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">🔗</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">초대장 없음</div>
+        <div style="font-size:13px">담당 MR이 초대장을 준비 중입니다</div>
+      </div>`;
+    return;
+  }
+  // 새 초대장 알림
+  const lastSeen=localStorage.getItem('last_invite_id');
+  if(lastSeen!==pkgs[0].id){
+    if(lastSeen) toast('📨 새 초대장이 도착했습니다!');
+    localStorage.setItem('last_invite_id',pkgs[0].id);
+  }
   const pkg=pkgs[0];
   currentInvite=pkg;
   const {data:journey}=await sb.from('journeys').select('*').eq('id',pkg.journey_id).single();
