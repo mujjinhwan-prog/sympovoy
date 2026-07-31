@@ -502,8 +502,12 @@ function buildMrMonthFilter(data){
   (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
   const sorted=[...months].sort().reverse();
   if(!sorted.length){el.innerHTML='';return;}
-  el.innerHTML='<span class="month-chip active" data-month="all" onclick="filterMrSympo('all')">전체</span>'+
-    sorted.map(m=>{const[y,mo]=m.split('-');return `<span class="month-chip" data-month="${m}" onclick="filterMrSympo('${m}')">${y}년 ${parseInt(mo)}월</span>`;}).join('');
+  let html='<span class="month-chip active" data-month="all" onclick="filterMrSympo(this.dataset.month)">전체</span>';
+  sorted.forEach(m=>{
+    const parts=m.split('-');
+    html+='<span class="month-chip" data-month="'+m+'" onclick="filterMrSympo(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
+  });
+  el.innerHTML=html;
 }
 
 function filterMrSympo(month){
