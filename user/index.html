@@ -378,10 +378,10 @@ function switchTab(el,id){
   document.getElementById('page-'+id).classList.add('active');
 }
 
-// 초대장 로드 (MR이 만든 invite_package)
+// 초대장 로드 (나에게 발송된 초대장)
 async function loadInvite(){
-  if(!currentUser?.introducer_id)return;
-  const {data:pkgs}=await sb.from('invite_packages').select('*').eq('introducer_id',currentUser.introducer_id).order('created_at',{ascending:false}).limit(1);
+  if(!currentUser)return;
+  const {data:pkgs}=await sb.from('invite_packages').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(1);
   if(!pkgs||!pkgs.length)return;
   const pkg=pkgs[0];
   currentInvite=pkg;
@@ -413,6 +413,7 @@ async function loadInvite(){
               <div class="place-name">${l.place_name}</div>
               ${l.address?`<div class="place-addr">${l.address}</div>`:''}
               ${l.tip?`<div class="place-tip">💬 ${l.tip}</div>`:''}
+              ${l.photo_url?`<img src="${l.photo_url}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-top:6px" onerror="this.style.display='none'">`:''}
             </div>
             <button class="place-nav-btn" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
           </div>
