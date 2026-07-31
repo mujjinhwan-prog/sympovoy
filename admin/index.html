@@ -426,7 +426,7 @@ function editSympo(j){
   document.getElementById('sympoModal').classList.add('open');
 }
 
-// 카카오 검색 - Supabase Edge Function 프록시
+// 네이버 지역 검색 - Supabase Edge Function 프록시
 async function searchHotel(){
   const q=document.getElementById('hotelSearch').value.trim();
   if(!q){toast('검색어를 입력해주세요',false);return;}
@@ -434,21 +434,25 @@ async function searchHotel(){
   el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
   try{
     const res=await fetch(
-      `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`,
-      {headers:{'Authorization':'Bearer sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ'}}
+      `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`
     );
     const data=await res.json();
-    if(!data.documents||!data.documents.length){
+    if(!data.items||!data.items.length){
       el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
       return;
     }
-    el.innerHTML=data.documents.map(p=>{
-      const name=p.place_name.replace(/'/g,"\\'");
-      const addr=(p.road_address_name||p.address_name||'').replace(/'/g,"\\'");
-      const cat=p.category_name?p.category_name.split(' > ').pop():'';
-      return `<div class="place-result" onclick="selectHotel(${p.y},${p.x},'${name}','${addr}')">
-        <div class="pname">${p.place_name}</div>
-        <div class="paddr">${p.road_address_name||p.address_name||''}</div>
+    el.innerHTML=data.items.map(p=>{
+      // 네이버 검색결과 HTML태그 제거
+      const name=p.title.replace(/<[^>]*>/g,'');
+      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
+      const cat=p.category||'';
+      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
+      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
+      const safeName=name.replace(/'/g,"\\'");
+      const safeAddr=addr.replace(/'/g,"\\'");
+      return `<div class="place-result" onclick="selectHotel(${lat},${lng},'${safeName}','${safeAddr}')">
+        <div class="pname">${name}</div>
+        <div class="paddr">${addr}</div>
         ${cat?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${cat}</div>`:''}
       </div>`;
     }).join('');
