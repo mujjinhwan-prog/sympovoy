@@ -132,6 +132,21 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 /* 토스트 */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1d2e;color:#fff;padding:12px 24px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* ===== 라이트 모드 ===== */
+:root[data-theme="light"] {
+  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
+  --accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;
+  --text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:12px;
+}
+/* ===== 다크 모드 ===== */
+:root[data-theme="dark"] {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
+  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
+  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+}
+.theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
+.theme-btn:hover{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -166,7 +181,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="app" id="app">
   <div class="topbar">
     <div class="topbar-logo">SYMPO<span>VOY</span></div>
-    <div class="topbar-user" id="topUser"></div>
+    <div style="display:flex;align-items:center;gap:8px"><button class="theme-btn" onclick="toggleTheme()">🌙 다크</button><div class="topbar-user" id="topUser"></div></div>
   </div>
   <div class="content">
 
@@ -549,6 +564,25 @@ async function loadItemHistory(){
     </div>
   `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">제출 이력 없음</div>';
 }
+
+function initTheme(){
+  const saved=localStorage.getItem('sympovoy_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved);
+  updateThemeBtn();
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('sympovoy_theme',next);
+  updateThemeBtn();
+}
+function updateThemeBtn(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=isDark?'☀️ 라이트':'🌙 다크');
+}
+initTheme();
+
 </script>
 </body>
 </html>
