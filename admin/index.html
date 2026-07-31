@@ -213,6 +213,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
             <button class="btn btn-primary btn-sm" onclick="openSympoModal()">+ 심포지엄 추가</button>
           </div>
         </div>
+        <div class="month-filter" id="sympoMonthFilter"></div>
         <div class="table-wrap">
           <table><thead><tr><th>기간</th><th>호텔명</th><th>심포지엄명</th><th>아젠다</th><th>초대코드</th><th>관리</th></tr></thead>
           <tbody id="sympTb"></tbody></table>
@@ -228,6 +229,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div class="card-title" style="margin:0">사용자 목록</div>
           <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ 사용자 추가</button>
         </div>
+        <div class="month-filter" id="userMonthFilter"></div>
         <div class="table-wrap">
           <table><thead><tr><th>이름</th><th>병원명</th><th>면허번호</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
           <tbody id="userTb"></tbody></table>
@@ -374,6 +376,24 @@ function showPage(el){
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
+// 월별 필터 빌더
+function buildMonthFilter(data, elId, callback, dateField='symposium_date'){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const months=new Set();
+  (data||[]).forEach(d=>{
+    const date=d[dateField]||'';
+    if(date.length>=7) months.add(date.slice(0,7));
+  });
+  const sorted=[...months].sort().reverse();
+  if(!sorted.length){el.innerHTML='';return;}
+  el.innerHTML=`<span class="month-chip active" data-month="all" onclick="(${callback.name}||${callback})('all')">전체</span>`+
+    sorted.map(m=>{
+      const [y,mo]=m.split('-');
+      return `<span class="month-chip" data-month="${m}" onclick="(${callback.name}||${callback})('${m}')">${y}년 ${parseInt(mo)}월</span>`;
+    }).join('');
+}
+
 // 대시보드
 async function loadDashboard(){
   const [a,b,c,d]=await Promise.all([
@@ -395,8 +415,24 @@ async function loadDashboard(){
 }
 
 // 심포지엄
+let _sympoDB=[];
+let _activeSympoMonth='all';
+
 async function loadSympo(){
   const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
+  _sympoDB=data||[];
+  buildMonthFilter(_sympoDB,'sympoMonthFilter',filterSympo);
+  renderSympoTable(_sympoDB);
+}
+
+function filterSympo(month){
+  _activeSympoMonth=month;
+  document.querySelectorAll('#sympoMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?_sympoDB:_sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
+  renderSympoTable(filtered);
+}
+
+function renderSympoTable(data){
   document.getElementById('sympTb').innerHTML=data?.length?data.map(j=>`
     <tr>
       <td>${j.symposium_date||'-'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</td>
@@ -549,8 +585,24 @@ async function delSympo(id){
 }
 
 // 사용자
+let _usersDB=[];
+let _activeUserMonth='all';
+
 async function loadUsers(){
   const {data:users}=await sb.from('users').select('*,introducers(name,email)').order('created_at',{ascending:false});
+  _usersDB=users||[];
+  buildMonthFilter(_usersDB,'userMonthFilter',filterUsers,'created_at');
+  renderUsersTable(_usersDB);
+}
+
+function filterUsers(month){
+  _activeUserMonth=month;
+  document.querySelectorAll('#userMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?_usersDB:_usersDB.filter(u=>(u.created_at||'').startsWith(month));
+  renderUsersTable(filtered);
+}
+
+async function renderUsersTable(users){
   const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)');
   const {data:items}=await sb.from('items').select('*').eq('is_approved',true);
 
