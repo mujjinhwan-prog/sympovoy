@@ -514,27 +514,51 @@ async function selectSympo(el,id){
 }
 
 // 장소 검색
-async function searchPlace(){
+let _searchPage=1;
+let _searchQuery='';
+
+async function searchPlace(page){
   if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
-  const q=document.getElementById('placeSearch').value.trim();
+  const q=page?_searchQuery:document.getElementById('placeSearch').value.trim();
   if(!q){toast('검색어 입력',false);return;}
+  if(!page){_searchPage=1;_searchQuery=q;}
   const el=document.getElementById('placeResults');
   el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
-  const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`);
+  const start=(_searchPage-1)*5+1;
+  const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${start}`);
   const data=await res.json();
-  if(!data.items||!data.items.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음</div>';return;}
-  el.innerHTML=data.items.map(p=>{
+  if(!data.items||!data.items.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">더 이상 결과가 없습니다</div>';return;
+  }
+  const items=data.items.map(p=>{
     const name=p.title.replace(/<[^>]*>/g,'');
     const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
     const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
     const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
     const thumb=p.thumbnail||'';
-    return `<div class="place-result" onclick="openTipModal('${name.replace(/'/g,"\\'")}','${lat}','${lng}','${addr.replace(/'/g,"\\'")}','${thumb}','${p.category||''}')">
-      <div class="pname">${name}</div>
-      <div class="paddr">${addr}</div>
-      ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+    const link=p.link||('https://search.naver.com/search.naver?query='+encodeURIComponent(name));
+    const safeName=name.replace(/'/g,"\'");
+    const safeAddr=addr.replace(/'/g,"\'");
+    const safeLink=link.replace(/'/g,"\'");
+    return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}','${thumb}','${p.category||''}','${safeLink}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        ${thumb?`<img src="${thumb}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:50px;height:50px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</div>`}
+        <div>
+          <div class="pname">${name}</div>
+          <div class="paddr">${addr}</div>
+          ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+        </div>
+      </div>
     </div>`;
   }).join('');
+  const nav=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-top:6px;border-top:1px solid var(--border)">
+    <span style="font-size:12px;color:var(--muted)">${_searchPage}페이지</span>
+    <div style="display:flex;gap:6px">
+      ${_searchPage>1?`<button class="btn btn-ghost btn-sm" onclick="_searchPage--;searchPlace(true)">◀ 이전 5개</button>`:''}
+      <button class="btn btn-primary btn-sm" onclick="_searchPage++;searchPlace(true)">다음 5개 ▶</button>
+    </div>
+  </div>`;
+  el.innerHTML=items+nav;
 }
 
 function openTipModal(name,lat,lng,addr,thumb,cat,link){
