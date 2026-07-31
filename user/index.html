@@ -147,6 +147,12 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 }
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
+
+/* 월별 필터 */
+.month-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.month-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);transition:all .2s;}
+.month-chip:hover{border-color:var(--accent);color:var(--accent);}
+.month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -215,6 +221,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
         </div>
       </div>
       <div class="section-title">🏅 방문 도장</div>
+      <div class="month-filter" id="stampMonthFilter"></div>
       <div class="stamp-grid" id="stampGrid"></div>
     </div>
 
@@ -560,10 +567,15 @@ async function uploadPhoto(input){
   toast('사진 업로드 완료! +5점');loadStamp();
 }
 
+let _allVisits=[];
+let _activeStampMonth='all';
+
 async function loadStamp(){
   if(!currentUser)return;
-  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name)').eq('user_id',currentUser.id);
+  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)').eq('user_id',currentUser.id);
   if(!visits)return;
+  _allVisits=visits;
+  // 전체 점수 계산
   const gps=visits.reduce((s,v)=>s+(v.gps_score||0),0);
   const photo=visits.reduce((s,v)=>s+(v.photo_score||0),0);
   const item=visits.reduce((s,v)=>s+(v.item_score||0),0);
@@ -571,6 +583,29 @@ async function loadStamp(){
   document.getElementById('gpsTotal').textContent=gps;
   document.getElementById('photoTotal').textContent=photo;
   document.getElementById('itemTotal').textContent=item;
+  // 월별 필터 빌드
+  const months=new Set();
+  visits.forEach(v=>{const d=v.journeys?.symposium_date||v.visited_at||'';if(d.length>=7)months.add(d.slice(0,7));});
+  const sorted=[...months].sort().reverse();
+  const filterEl=document.getElementById('stampMonthFilter');
+  if(sorted.length){
+    filterEl.innerHTML='<span class="month-chip active" data-month="all" onclick="filterStamp('all')">전체</span>'+
+      sorted.map(m=>{const[y,mo]=m.split('-');return `<span class="month-chip" data-month="${m}" onclick="filterStamp('${m}')">${y}년 ${parseInt(mo)}월</span>`;}).join('');
+  }
+  renderStampGrid(visits);
+}
+
+function filterStamp(month){
+  _activeStampMonth=month;
+  document.querySelectorAll('#stampMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?_allVisits:_allVisits.filter(v=>{
+    const d=v.journeys?.symposium_date||v.visited_at||'';
+    return d.startsWith(month);
+  });
+  renderStampGrid(filtered);
+}
+
+function renderStampGrid(visits){
   document.getElementById('stampGrid').innerHTML=visits.length?visits.map(v=>`
     <div class="stamp-item done">
       <div class="stamp-icon">✅</div>
