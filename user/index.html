@@ -430,7 +430,10 @@ async function loadInvite(){
               ${l.tip?`<div class="place-tip">💬 ${l.tip}</div>`:''}
               ${l.photo_url?`<img src="${l.photo_url}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-top:6px" onerror="this.style.display='none'">`:''}
             </div>
-            <button class="place-nav-btn" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+              <button class="place-nav-btn" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
+              <button class="place-nav-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="copyAddr('${(l.address||l.place_name).replace(/'/g,\"\\'\")}')" >주소복사</button>
+            </div>
           </div>
         `).join('')}
       </div>
@@ -548,6 +551,18 @@ async function submitItems(){
   if(!items.length){toast('품목을 입력해주세요');return;}
   await Promise.all(items.map(name=>sb.from('items').insert({user_id:currentUser.id,journey_id:currentJourney.id,item_name:name})));
   toast('품목 전송 완료!');document.getElementById('itemList').innerHTML='';loadItemHistory();
+}
+
+function copyAddr(addr){
+  navigator.clipboard.writeText(addr).then(()=>{
+    toast('주소가 복사되었습니다 📋');
+  }).catch(()=>{
+    const el=document.createElement('textarea');
+    el.value=addr;document.body.appendChild(el);
+    el.select();document.execCommand('copy');
+    document.body.removeChild(el);
+    toast('주소가 복사되었습니다 📋');
+  });
 }
 
 async function loadItemHistory(){
