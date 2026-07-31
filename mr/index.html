@@ -508,8 +508,8 @@ async function searchPlace(){
   }).join('');
 }
 
-function openTipModal(name,lat,lng,addr,thumb,cat){
-  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,type:document.getElementById('placeType').value};
+function openTipModal(name,lat,lng,addr,thumb,cat,link){
+  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',type:document.getElementById('placeType').value};
   document.getElementById('tipPlaceName').textContent='📍 '+name;
   document.getElementById('tipText').value='';
   document.getElementById('tipModal').classList.add('open');
@@ -539,7 +539,9 @@ function renderPlaceGrid(){
   const el=document.getElementById('addedPlacesGrid');
   el.innerHTML=addedPlaces.map((p,i)=>`
     <div class="place-grid-item">
-      ${p.thumb?`<img src="${p.thumb}" class="place-img" onerror="this.style.display='none'">`:`<div class="place-img">${typeIcon[p.type]||'📍'}</div>`}
+      ${p.thumb
+        ?`<img src="${p.thumb}" class="place-img" style="object-fit:cover" onerror="this.parentNode.querySelector('.place-img-fallback').style.display='flex';this.style.display='none'"><div class="place-img place-img-fallback" style="display:none">${typeIcon[p.type]||'📍'}</div>`
+        :`<div class="place-img">${typeIcon[p.type]||'📍'}</div>`}
       <button class="del-btn" onclick="removePlace(${i})">✕</button>
       <div class="place-info">
         <div class="place-name">${p.name}</div>
@@ -630,7 +632,8 @@ async function sendInvite(){
         address:p.addr,
         place_type:p.type,
         tip:p.tip||null,
-        photo_url:p.thumb||null
+        photo_url:p.thumb||null,
+        place_link:p.link||null
       })));
     }
     count++;
