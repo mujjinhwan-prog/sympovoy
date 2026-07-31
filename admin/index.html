@@ -210,7 +210,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ 사용자 추가</button>
         </div>
         <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>면허번호</th><th>상태</th><th>가입일</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>이름</th><th>병원명</th><th>면허번호</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
           <tbody id="userTb"></tbody></table>
         </div>
       </div>
@@ -524,18 +524,100 @@ async function delSympo(id){
 
 // 사용자
 async function loadUsers(){
-  const {data}=await sb.from('users').select('*').order('created_at',{ascending:false});
-  document.getElementById('userTb').innerHTML=data?.length?data.map(u=>`
-    <tr>
-      <td>${u.name}</td><td>${u.hospital}</td><td>${u.license_number}</td>
+  const {data:users}=await sb.from('users').select('*,introducers(name,email)').order('created_at',{ascending:false});
+  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)');
+  const {data:items}=await sb.from('items').select('*').eq('is_approved',true);
+
+  document.getElementById('userTb').innerHTML=users?.length?users.map(u=>{
+    const uVisits=(visits||[]).filter(v=>v.user_id===u.id);
+    const uItems=(items||[]).filter(i=>i.user_id===u.id);
+    const gpsScore=uVisits.reduce((s,v)=>s+(v.gps_score||0),0);
+    const photoScore=uVisits.reduce((s,v)=>s+(v.photo_score||0),0);
+    const itemScore=uItems.reduce((s,i)=>s+(i.approved_score||0),0);
+    const total=gpsScore+photoScore+itemScore;
+    const chips=uVisits.map(v=>{
+      const d=(v.journeys?.symposium_date||'').replace(/-/g,'').slice(2,8);
+      const h=(v.journeys?.hotel_name||'').slice(0,4);
+      return `<span class="j-chip done" onclick="showUserDetail('${u.id}')">${d}${h}</span>`;
+    }).join('') || '<span style="color:var(--muted);font-size:11px">없음</span>';
+    return `<tr>
+      <td>${u.name}</td>
+      <td>${u.hospital}</td>
+      <td>${u.license_number}</td>
+      <td>${u.introducers?.name||'-'}</td>
+      <td style="font-size:12px">${u.introducers?.email||'-'}</td>
+      <td>${chips}</td>
+      <td><span class="badge badge-blue">${total}점</span></td>
       <td><span class="badge ${u.is_approved?'badge-green':'badge-yellow'}">${u.is_approved?'승인':'대기'}</span></td>
-      <td>${new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
       <td>
         ${!u.is_approved?`<button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">승인</button> `:''}
         <button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')">삭제</button>
       </td>
-    </tr>
-  `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+    </tr>`;
+  }).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+}
+
+// 사용자 상세 보기
+async function showUserDetail(userId){
+  const {data:u}=await sb.from('users').select('*,introducers(name,email)').eq('id',userId).single();
+  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('user_id',userId);
+  const {data:items}=await sb.from('items').select('*,journeys(hotel_name)').eq('user_id',userId);
+
+  const gpsTotal=(visits||[]).reduce((s,v)=>s+(v.gps_score||0),0);
+  const photoTotal=(visits||[]).reduce((s,v)=>s+(v.photo_score||0),0);
+  const itemTotal=(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+  const total=gpsTotal+photoTotal+itemTotal;
+
+  const visitRows=(visits||[]).map(v=>`
+    <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:800">🏨 ${v.journeys?.hotel_name||'-'}</div>
+          <div style="font-size:12px;color:var(--muted)">${v.journeys?.symposium_date||''} ${v.journeys?.symposium_date_end?'~ '+v.journeys.symposium_date_end:''}</div>
+        </div>
+        <span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="badge badge-green">방문인증 +${v.gps_score||0}점</span>
+        <span class="badge badge-blue">사진 +${v.photo_score||0}점</span>
+        ${v.photo_url?`<img src="${v.photo_url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:''}
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:13px">방문 기록 없음</div>';
+
+  const itemRows=(items||[]).map(i=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${i.item_name}</span>
+      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'+'+i.approved_score+'점':'검토중'}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:13px">품목 없음</div>';
+
+  document.getElementById('detailContent').innerHTML=`
+    <button class="close-btn" onclick="document.getElementById('detailPanel').classList.remove('open')">✕</button>
+    <h3 style="font-size:17px;font-weight:800;margin-bottom:4px">${u.name}</h3>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${u.hospital} · ${u.license_number}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">담당 MR: ${u.introducers?.name||'-'} (${u.introducers?.email||'-'})</div>
+
+    <!-- 점수 요약 -->
+    <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:10px;padding:16px;color:#fff;text-align:center;margin:14px 0">
+      <div style="font-size:36px;font-weight:900">${total}점</div>
+      <div style="font-size:12px;opacity:.8;margin-top:4px">누적 점수</div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12px">
+        <span>방문 ${gpsTotal}점</span>
+        <span>사진 ${photoTotal}점</span>
+        <span>품목 ${itemTotal}점</span>
+      </div>
+    </div>
+
+    <div style="font-size:14px;font-weight:800;margin-bottom:10px">🏨 심포지엄 도장깨기</div>
+    ${visitRows}
+
+    <div style="font-size:14px;font-weight:800;margin:14px 0 10px">💊 품목 내역</div>
+    ${itemRows}
+
+    <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="document.getElementById('detailPanel').classList.remove('open')">← 목록으로</button>
+  `;
+  document.getElementById('detailPanel').classList.add('open');
 }
 async function approveUser(id){await sb.from('users').update({is_approved:true}).eq('id',id);toast('승인 완료');loadUsers();}
 async function delUser(id){if(!confirm('삭제?'))return;await sb.from('users').delete().eq('id',id);toast('삭제 완료');loadUsers();}
