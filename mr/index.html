@@ -237,7 +237,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
     <!-- 승인 탭 -->
     <div class="tab-page active" id="tab-approve">
       <div class="card">
-        <div class="card-title">승인 대기 사용자</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">승인 대기 사용자</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadApproveList();toast('새로고침 완료')">🔄 새로고침</button>
+        </div>
         <div id="approveList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
       </div>
       <div class="card">
