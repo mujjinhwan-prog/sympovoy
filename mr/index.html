@@ -447,19 +447,26 @@ async function selectSympo(el,id){
 async function searchPlace(){
   const q=document.getElementById('placeSearch').value.trim();
   if(!q){toast('검색어 입력',false);return;}
+  const el=document.getElementById('placeResults');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
   const res=await fetch(
-    `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`,
-    {headers:{'Authorization':'Bearer sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ'}}
+    `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`
   );
   const data=await res.json();
-  const el=document.getElementById('placeResults');
-  if(!data.documents||!data.documents.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음</div>';return;}
-  el.innerHTML=data.documents.map(p=>`
-    <div class="place-result" onclick="openTipModal('${p.place_name.replace(/'/g,"\\'")}','${p.y}','${p.x}','${(p.road_address_name||p.address_name).replace(/'/g,"\\'")}')">
-      <div class="pname">${p.place_name}</div>
-      <div class="paddr">${p.road_address_name||p.address_name}</div>
-    </div>
-  `).join('');
+  if(!data.items||!data.items.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음</div>';return;}
+  el.innerHTML=data.items.map(p=>{
+    const name=p.title.replace(/<[^>]*>/g,'');
+    const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
+    const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
+    const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
+    const safeName=name.replace(/'/g,"\\'");
+    const safeAddr=addr.replace(/'/g,"\\'");
+    return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}')">
+      <div class="pname">${name}</div>
+      <div class="paddr">${addr}</div>
+      ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 function openTipModal(name,lat,lng,addr){
