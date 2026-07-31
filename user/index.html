@@ -484,7 +484,12 @@ async function loadInvite(){
       ${journey.symposium_name?`<div style="font-size:14px;font-weight:700;color:#4f8ef7">🎓 ${journey.symposium_name}</div>`:''}
       ${pkg.custom_message?`<div style="font-size:13px;margin-top:12px;opacity:.85;border-left:3px solid currentColor;padding-left:10px">${pkg.custom_message}</div>`:''}
     </div>
-    ${journey.agenda_image_url?`<div class="card"><div class="section-title">📄 아젠다</div><img src="${journey.agenda_image_url}" class="agenda-img"></div>`:''}
+    ${journey.agenda_image_url?`<div class="card"><div class="section-title">📄 아젠다</div>
+      ${journey.agenda_image_url.match(/\.pdf$/i)
+        ?`<embed src="${journey.agenda_image_url}" type="application/pdf" style="width:100%;height:400px;border-radius:10px;border:1px solid var(--border)">`
+        :`<img src="${journey.agenda_image_url}" class="agenda-img">`
+      }
+    </div>`:''}
     ${inviteLocations.length?buildPlaces(inviteLocations,typeIcon):''}
   `;
 }
