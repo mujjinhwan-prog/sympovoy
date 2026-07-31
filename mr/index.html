@@ -516,49 +516,69 @@ async function selectSympo(el,id){
 // 장소 검색
 let _searchPage=1;
 let _searchQuery='';
+let _allResults=[];
 
-async function searchPlace(page){
+async function searchPlace(loadMore){
   if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
-  const q=page?_searchQuery:document.getElementById('placeSearch').value.trim();
+  const q=loadMore?_searchQuery:document.getElementById('placeSearch').value.trim();
   if(!q){toast('검색어 입력',false);return;}
-  if(!page){_searchPage=1;_searchQuery=q;}
+  if(!loadMore){_searchPage=1;_searchQuery=q;_allResults=[];}
   const el=document.getElementById('placeResults');
-  el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
-  const start=(_searchPage-1)*5+1;
-  const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${start}`);
-  const data=await res.json();
-  if(!data.items||!data.items.length){
-    el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">더 이상 결과가 없습니다</div>';return;
+  if(!loadMore) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
+  else {
+    // 더 검색 버튼 제거 후 로딩
+    const moreBtn=document.getElementById('moreSearchBtn');
+    if(moreBtn) moreBtn.innerHTML='<span style="color:var(--muted);font-size:13px">검색 중...</span>';
   }
-  const items=data.items.map(p=>{
-    const name=p.title.replace(/<[^>]*>/g,'');
-    const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
-    const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
-    const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
-    const thumb=p.thumbnail||'';
-    const link=p.link||('https://search.naver.com/search.naver?query='+encodeURIComponent(name));
-    const safeName=name.replace(/'/g,"\'");
-    const safeAddr=addr.replace(/'/g,"\'");
-    const safeLink=link.replace(/'/g,"\'");
-    return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}','${thumb}','${p.category||''}','${safeLink}')">
-      <div style="display:flex;align-items:center;gap:10px">
-        ${thumb?`<img src="${thumb}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:50px;height:50px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</div>`}
-        <div>
-          <div class="pname">${name}</div>
-          <div class="paddr">${addr}</div>
-          ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+  const startNum=(_searchPage-1)*5+1;
+  try{
+    const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${startNum}`);
+    const data=await res.json();
+    if(!data.items||!data.items.length){
+      const noMore=`<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px">더 이상 검색 결과가 없습니다</div>`;
+      if(loadMore){const btn=document.getElementById('moreSearchBtn');if(btn)btn.outerHTML=noMore;}
+      else el.innerHTML=noMore;
+      return;
+    }
+    const items=data.items.map(p=>{
+      const name=p.title.replace(/<[^>]*>/g,'');
+      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
+      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
+      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
+      const thumb=p.thumbnail||'';
+      const link=p.link||('https://search.naver.com/search.naver?query='+encodeURIComponent(name));
+      const safeName=name.replace(/'/g,"\'");
+      const safeAddr=addr.replace(/'/g,"\'");
+      const safeLink=link.replace(/'/g,"\'");
+      return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}','${thumb}','${p.category||''}','${safeLink}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${thumb?`<img src="${thumb}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:50px;height:50px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</div>`}
+          <div>
+            <div class="pname">${name}</div>
+            <div class="paddr">${addr}</div>
+            ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+          </div>
         </div>
-      </div>
+      </div>`;
+    }).join('');
+
+    const moreBtn=`<div id="moreSearchBtn" style="text-align:center;margin-top:8px">
+      <button class="btn btn-ghost" style="width:100%;border:1.5px dashed var(--border);font-size:13px" onclick="_searchPage++;searchPlace(true)">
+        🔍 더 검색하기 (다음 5개)
+      </button>
     </div>`;
-  }).join('');
-  const nav=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-top:6px;border-top:1px solid var(--border)">
-    <span style="font-size:12px;color:var(--muted)">${_searchPage}페이지</span>
-    <div style="display:flex;gap:6px">
-      ${_searchPage>1?`<button class="btn btn-ghost btn-sm" onclick="_searchPage--;searchPlace(true)">◀ 이전 5개</button>`:''}
-      <button class="btn btn-primary btn-sm" onclick="_searchPage++;searchPlace(true)">다음 5개 ▶</button>
-    </div>
-  </div>`;
-  el.innerHTML=items+nav;
+
+    if(loadMore){
+      const oldBtn=document.getElementById('moreSearchBtn');
+      if(oldBtn) oldBtn.insertAdjacentHTML('beforebegin', items);
+      if(oldBtn) oldBtn.outerHTML=moreBtn;
+      else el.insertAdjacentHTML('beforeend', items+moreBtn);
+    } else {
+      el.innerHTML=items+moreBtn;
+    }
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px">오류: ${e.message}</div>`;
+  }
 }
 
 function openTipModal(name,lat,lng,addr,thumb,cat,link){
