@@ -681,7 +681,7 @@ function updatePreview(){
         <div class="preview-hotel">🏨 ${selectedSympo.hotel_name}</div>
         <div class="preview-date">📅 ${period||'날짜 미정'}${selectedSympo.symposium_name?' · '+selectedSympo.symposium_name:''}</div>
         ${msg?`<div style="font-size:13px;margin:10px 0;opacity:.85;border-left:3px solid currentColor;padding-left:10px">${msg}</div>`:''}
-        ${selectedSympo.agenda_image_url?`<div style="font-size:12px;opacity:.7;margin-bottom:8px">📄 아젠다 첨부됨</div>`:''}
+        ${selectedSympo.agenda_image_url?`<div style="font-size:12px;opacity:.7;margin-bottom:6px;font-weight:700">📄 아젠다</div><img src="${selectedSympo.agenda_image_url}" style="width:100%;max-height:300px;object-fit:contain;border-radius:10px;margin-bottom:10px;background:rgba(255,255,255,.1)" onerror="this.style.display='none'">`:''}
         ${addedPlaces.length?`<div style="font-size:12px;opacity:.7;margin-bottom:8px;font-weight:700">추천 장소 (${addedPlaces.length}곳)</div><div class="preview-places-grid">${placesHtml}</div>`:''}
       </div>
     </div>
