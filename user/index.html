@@ -421,21 +421,23 @@ async function loadInvite(){
     ${inviteLocations.length?`
       <div class="card">
         <div class="section-title">🗺️ 추천 장소</div>
-        ${inviteLocations.map(l=>`
-          <div class="place-card">
-            <div class="place-type-icon">${typeIcon[l.place_type]||'📍'}</div>
+        ${inviteLocations.map(l=>{
+          const naverUrl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
+          return \`<div class="place-card" style="cursor:pointer" onclick="window.open('${naverUrl}','_blank')">
+            ${l.photo_url
+              ?`<img src="${l.photo_url}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.outerHTML='<div class=place-type-icon>${typeIcon[l.place_type]||'📍'}</div>'">`
+              :`<div class="place-type-icon">${typeIcon[l.place_type]||'📍'}</div>`}
             <div class="place-info">
-              <div class="place-name">${l.place_name}</div>
+              <div class="place-name">${l.place_name} <span style="font-size:11px;color:var(--accent)">↗</span></div>
               ${l.address?`<div class="place-addr">${l.address}</div>`:''}
               ${l.tip?`<div class="place-tip">💬 ${l.tip}</div>`:''}
-              ${l.photo_url?`<img src="${l.photo_url}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-top:6px" onerror="this.style.display='none'">`:''}
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
               <button class="place-nav-btn" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
-              <button class="place-nav-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="copyAddr('${(l.address||l.place_name).replace(/'/g,\"\\'\")}')" >주소복사</button>
+              <button class="place-nav-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="copyAddr('${(l.address||l.place_name).replace(/'/g,"\\'")}')">주소복사</button>
             </div>
-          </div>
-        `).join('')}
+          </div>\`;
+        }).join('')}
       </div>
     `:''}
   `;
