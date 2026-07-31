@@ -387,12 +387,14 @@ function buildMonthFilter(data, elId, callback, dateField='symposium_date'){
   });
   const sorted=[...months].sort().reverse();
   if(!sorted.length){el.innerHTML='';return;}
-  el.innerHTML=`<span class="month-chip active" data-month="all" onclick="(${callback.name}||${callback})('all')">전체</span>`+
-    sorted.map(m=>{
-      const [y,mo]=m.split('-');
-      return `<span class="month-chip" data-month="${m}" onclick="(${callback.name}||${callback})('${m}')">${y}년 ${parseInt(mo)}월</span>`;
-    }).join('');
+  let html='<span class="month-chip active" data-month="all" onclick="'+callback.name+'(this.dataset.month)">전체</span>';
+  sorted.forEach(m=>{
+    const parts=m.split('-');
+    html+='<span class="month-chip" data-month="'+m+'" onclick="'+callback.name+'(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
+  });
+  el.innerHTML=html;
 }
+
 
 // 대시보드
 async function loadDashboard(){
