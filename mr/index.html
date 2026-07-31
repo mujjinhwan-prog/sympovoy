@@ -463,12 +463,14 @@ async function loadSympoList(){
   const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
   window._sympoDB=data||[];
   const el=document.getElementById('sympoList');
+  el.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
   el.innerHTML=data&&data.length?data.map(j=>`
-    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')">
-      <div class="hotel">🏨 ${j.hotel_name}</div>
-      <div class="date">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''} ${j.symposium_name?'· '+j.symposium_name:''}</div>
+    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')" style="margin-bottom:0">
+      <div class="hotel" style="font-size:13px">🏨 ${j.hotel_name}</div>
+      <div class="date" style="font-size:11px;margin-top:4px">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</div>
+      ${j.symposium_name?`<div style="font-size:11px;color:var(--accent);margin-top:4px">🎓 ${j.symposium_name}</div>`:''}
     </div>
-  `).join(''):'<div style="color:var(--muted);font-size:13px">등록된 심포지엄 없음</div>';
+  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">등록된 심포지엄 없음</div>';
 }
 
 async function selectSympo(el,id){
