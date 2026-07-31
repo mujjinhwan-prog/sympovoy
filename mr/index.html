@@ -181,6 +181,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 }
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
+
+/* 월별 필터 */
+.month-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.month-chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);transition:all .2s;}
+.month-chip:hover{border-color:var(--accent);color:var(--accent);}
+.month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -246,6 +252,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <!-- STEP 1: 심포지엄 -->
       <div class="card">
         <div class="card-title">STEP 1 · 심포지엄 선택</div>
+        <div class="month-filter" id="mrMonthFilter"></div>
         <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
       </div>
 
@@ -486,9 +493,27 @@ async function rejectUser(id){
 }
 
 // 심포지엄
-async function loadSympoList(){
-  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
-  window._sympoDB=data||[];
+let _mrActiveMonth='all';
+
+function buildMrMonthFilter(data){
+  const el=document.getElementById('mrMonthFilter');
+  if(!el)return;
+  const months=new Set();
+  (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
+  const sorted=[...months].sort().reverse();
+  if(!sorted.length){el.innerHTML='';return;}
+  el.innerHTML='<span class="month-chip active" data-month="all" onclick="filterMrSympo('all')">전체</span>'+
+    sorted.map(m=>{const[y,mo]=m.split('-');return `<span class="month-chip" data-month="${m}" onclick="filterMrSympo('${m}')">${y}년 ${parseInt(mo)}월</span>`;}).join('');
+}
+
+function filterMrSympo(month){
+  _mrActiveMonth=month;
+  document.querySelectorAll('#mrMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?window._sympoDB:window._sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
+  renderMrSympoList(filtered);
+}
+
+function renderMrSympoList(data){
   const el=document.getElementById('sympoList');
   el.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
   el.innerHTML=data&&data.length?data.map(j=>`
@@ -497,7 +522,15 @@ async function loadSympoList(){
       <div class="date" style="font-size:11px;margin-top:4px">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</div>
       ${j.symposium_name?`<div style="font-size:11px;color:var(--accent);margin-top:4px">🎓 ${j.symposium_name}</div>`:''}
     </div>
-  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">등록된 심포지엄 없음</div>';
+  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">해당 월 심포지엄 없음</div>';
+}
+
+async function loadSympoList(){
+  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
+  window._sympoDB=data||[];
+  buildMrMonthFilter(data||[]);
+  const el=document.getElementById('sympoList');
+  renderMrSympoList(data||[]);
 }
 
 async function selectSympo(el,id){
