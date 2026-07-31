@@ -144,6 +144,21 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   .preview-places-grid{grid-template-columns:repeat(2,1fr);}
   .concept-grid{grid-template-columns:1fr;}
 }
+
+/* ===== 라이트 모드 ===== */
+:root[data-theme="light"] {
+  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
+  --accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;
+  --text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:12px;
+}
+/* ===== 다크 모드 ===== */
+:root[data-theme="dark"] {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
+  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
+  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+}
+.theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
+.theme-btn:hover{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -178,6 +193,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
     <div class="logo">SYMPO<span>VOY</span></div>
     <div class="topbar-right">
       <span class="topbar-name" id="topName"></span>
+      <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
       <button class="btn btn-ghost btn-sm no-print" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -690,6 +706,25 @@ async function approveItem(id,score){
   await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
   toast(`${score}점 승인 완료`);loadItems();
 }
+
+function initTheme(){
+  const saved=localStorage.getItem('sympovoy_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved);
+  updateThemeBtn();
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('sympovoy_theme',next);
+  updateThemeBtn();
+}
+function updateThemeBtn(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=isDark?'☀️ 라이트':'🌙 다크');
+}
+initTheme();
+
 </script>
 </body>
 </html>
