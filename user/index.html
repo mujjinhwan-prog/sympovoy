@@ -393,6 +393,31 @@ function switchTab(el,id){
   document.getElementById('page-'+id).classList.add('active');
 }
 
+// 추천장소 빌더 함수 (문법 오류 방지용 분리)
+function buildPlaces(locations, typeIcon){
+  const items=locations.map(l=>{
+    const naverUrl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
+    const icon=typeIcon[l.place_type]||'📍';
+    const photo=l.photo_url?'<img src="'+l.photo_url+'" style="width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+      :'<div class="place-type-icon">'+icon+'</div>';
+    const addr=l.address?'<div class="place-addr">'+l.address+'</div>':'';
+    const tip=l.tip?'<div class="place-tip">💬 '+l.tip+'</div>':'';
+    const safeAddr=(l.address||l.place_name).replace(/'/g,"\'");
+    return '<div class="place-card" style="cursor:pointer" onclick="window.open(\''+naverUrl+'\',\'_blank\')">'+
+      photo+
+      '<div class="place-info">'+
+        '<div class="place-name">'+l.place_name+' <span style="font-size:11px;color:var(--accent)">↗</span></div>'+
+        addr+tip+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">'+
+        '<button class="place-nav-btn" onclick="window.open(\'https://map.naver.com/v5/search/'+encodeURIComponent(l.place_name)+'\',\'_blank\')">길찾기</button>'+
+        '<button class="place-nav-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="copyAddr(\''+safeAddr+'\')">주소복사</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  return '<div class="card"><div class="section-title">🗺️ 추천 장소</div>'+items+'</div>';
+}
+
 // 초대장 로드 (나에게 발송된 초대장)
 async function loadInvite(){
   if(!currentUser)return;
@@ -418,28 +443,7 @@ async function loadInvite(){
       ${pkg.custom_message?`<div style="font-size:13px;margin-top:12px;opacity:.85;border-left:3px solid currentColor;padding-left:10px">${pkg.custom_message}</div>`:''}
     </div>
     ${journey.agenda_image_url?`<div class="card"><div class="section-title">📄 아젠다</div><img src="${journey.agenda_image_url}" class="agenda-img"></div>`:''}
-    ${inviteLocations.length?`
-      <div class="card">
-        <div class="section-title">🗺️ 추천 장소</div>
-        ${inviteLocations.map(l=>{
-          const naverUrl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
-          return \`<div class="place-card" style="cursor:pointer" onclick="window.open('${naverUrl}','_blank')">
-            ${l.photo_url
-              ?`<img src="${l.photo_url}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.outerHTML='<div class=place-type-icon>${typeIcon[l.place_type]||'📍'}</div>'">`
-              :`<div class="place-type-icon">${typeIcon[l.place_type]||'📍'}</div>`}
-            <div class="place-info">
-              <div class="place-name">${l.place_name} <span style="font-size:11px;color:var(--accent)">↗</span></div>
-              ${l.address?`<div class="place-addr">${l.address}</div>`:''}
-              ${l.tip?`<div class="place-tip">💬 ${l.tip}</div>`:''}
-            </div>
-            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
-              <button class="place-nav-btn" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
-              <button class="place-nav-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="copyAddr('${(l.address||l.place_name).replace(/'/g,"\\'")}')">주소복사</button>
-            </div>
-          </div>\`;
-        }).join('')}
-      </div>
-    `:''}
+    ${inviteLocations.length?buildPlaces(inviteLocations,typeIcon):''}
   `;
 }
 
