@@ -162,6 +162,10 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 /* 토스트 */
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1d2e;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1;}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
+}
 </style>
 </head>
 <body>
@@ -254,14 +258,14 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="gps-overlay" id="gpsOverlay">
   <div class="gps-card">
     <div class="gps-hotel-name" id="gpsHotelName">🏨 호텔 도착!</div>
-    <div class="gps-sub">로고를 손가락으로 빙글 돌려 방문을 인증하세요</div>
+    <div class="gps-sub">로고를 손가락으로 좌우로 쓸어서 방문을 인증하세요</div>
     <div class="spin-area">
       <div class="spin-ring"></div>
       <div class="spin-img" id="spinTarget">
         <img src="https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png">
       </div>
     </div>
-    <div class="spin-hint">👆 손가락으로 돌리세요 (720도 회전)</div>
+    <div class="spin-hint">👉 손가락으로 좌우 슬라이드 하세요!</div>
     <div class="spin-progress"><div class="spin-bar" id="spinBar"></div></div>
     <button class="gps-cancel" onclick="cancelSpin()">나중에 하기</button>
   </div>
@@ -578,35 +582,43 @@ function showSpinOverlay(){
   document.getElementById('spinBar').style.width='0%';
   document.getElementById('gpsOverlay').classList.add('show');
   const el=document.getElementById('spinTarget');
+  el.style.transition='none';
   el.style.transform='translate(-50%,-50%) rotate(0deg)';
+
+  let startX=0;
+  let lastX=0;
+  const REQUIRED=600; // 총 슬라이드 누적 거리(px)
 
   function onStart(e){
     e.preventDefault();
     const t=e.touches?e.touches[0]:e;
-    const r=el.getBoundingClientRect();
-    lastAngle=Math.atan2(t.clientY-(r.top+r.height/2),t.clientX-(r.left+r.width/2))*180/Math.PI;
+    startX=t.clientX;lastX=t.clientX;
     spinStarted=true;
   }
   function onMove(e){
     e.preventDefault();
-    if(!spinStarted)return;
+    if(!spinStarted||!spinActive)return;
     const t=e.touches?e.touches[0]:e;
-    const r=el.getBoundingClientRect();
-    const angle=Math.atan2(t.clientY-(r.top+r.height/2),t.clientX-(r.left+r.width/2))*180/Math.PI;
-    let delta=angle-lastAngle;
-    if(delta>180)delta-=360;if(delta<-180)delta+=360;
-    totalSpinAngle+=Math.abs(delta);spinRotation+=delta;lastAngle=angle;
+    const dx=t.clientX-lastX;
+    lastX=t.clientX;
+    // 슬라이드 방향에 따라 회전 (좌→우: +회전, 우→좌: -회전)
+    const rotDelta=dx*2.5; // 슬라이드 1px당 회전각도
+    spinRotation+=rotDelta;
+    totalSpinAngle+=Math.abs(dx);
     el.style.transform=`translate(-50%,-50%) rotate(${spinRotation}deg)`;
-    document.getElementById('spinBar').style.width=Math.min(totalSpinAngle/720*100,100)+'%';
-    if(totalSpinAngle>=720&&spinActive)completeVisit();
+    document.getElementById('spinBar').style.width=Math.min(totalSpinAngle/REQUIRED*100,100)+'%';
+    if(totalSpinAngle>=REQUIRED&&spinActive)completeVisit();
   }
+  function onEnd(){spinStarted=false;}
+
   // 기존 리스너 제거 후 재등록
   const newEl=el.cloneNode(true);el.parentNode.replaceChild(newEl,el);
   newEl.addEventListener('touchstart',onStart,{passive:false});
   newEl.addEventListener('touchmove',onMove,{passive:false});
-  newEl.addEventListener('mousedown',onStart,{passive:false});
-  document.addEventListener('mousemove',e=>{if(spinStarted)onMove(e);},{passive:false});
-  document.addEventListener('mouseup',()=>{spinStarted=false;});
+  newEl.addEventListener('touchend',onEnd,{passive:true});
+  newEl.addEventListener('mousedown',onStart);
+  document.addEventListener('mousemove',e=>{if(spinStarted)onMove(e);});
+  document.addEventListener('mouseup',onEnd);
 }
 
 function cancelSpin(){spinActive=false;spinStarted=false;document.getElementById('gpsOverlay').classList.remove('show');}
@@ -618,10 +630,25 @@ async function completeVisit(){
   if(data){currentVisitId=data.id;await sb.from('symposium_history').insert({user_id:currentUser.id,journey_id:currentJourney.id});}
   document.getElementById('doneHotelName').textContent=currentJourney.hotel_name;
   document.getElementById('doneOverlay').classList.add('show');
+  // 폭죽 효과
+  launchConfetti();
   loadStamp();
 }
 
 function afterComplete(){document.getElementById('doneOverlay').classList.remove('show');document.getElementById('photoInput').click();}
+function launchConfetti(){
+  const colors=['#3b6ef5','#18b96a','#f59e0b','#e74c3c','#6c47d4','#4f8ef7'];
+  const overlay=document.getElementById('doneOverlay');
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.style.cssText=`position:fixed;top:-10px;left:${Math.random()*100}vw;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};z-index:700;pointer-events:none;animation:fall ${1.5+Math.random()*2}s ease-in forwards;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),4000);
+    },Math.random()*1200);
+  }
+}
+
 function skipPhoto(){document.getElementById('doneOverlay').classList.remove('show');toast('방문 인증 완료! +10점 🎉');}
 
 async function uploadPhoto(input){
