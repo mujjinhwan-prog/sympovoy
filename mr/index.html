@@ -253,6 +253,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
     <!-- 초대장 탭 -->
     <div class="tab-page" id="tab-invite">
 
+      <!-- 발송 이력 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin:0">📬 발송한 초대장</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSentInvites();toast('새로고침 완료')">🔄</button>
+        </div>
+        <div id="sentInviteList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">로딩 중...</div></div>
+      </div>
+
+      <div style="margin:16px 14px 8px;font-size:15px;font-weight:800;color:var(--accent)">✉️ 새 초대장 만들기</div>
+
       <!-- STEP 1: 심포지엄 -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -319,7 +330,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         <div id="previewArea"></div>
 
         <div style="display:flex;gap:8px;margin-top:14px" class="no-print">
-          <button class="btn btn-primary" style="flex:1" onclick="sendInvite()">📨 초대장 발송</button>
+          <button class="btn btn-primary" id="sendInviteBtn" style="flex:1" onclick="sendInvite()">📨 초대장 발송</button>
           <button class="btn btn-ghost" style="flex:1" onclick="printInvite()">🖨️ 인쇄</button>
           <button class="btn btn-ghost btn-sm" onclick="updatePreview()">👁️ 미리보기</button>
         </div>
@@ -474,6 +485,7 @@ function enterApp(){
   document.getElementById('topName').textContent=currentIntroducer.name;
   loadApproveList();
   loadSympoList();
+  loadSentInvites();
   loadAttendanceFilter();
   loadItems();
 }
@@ -493,6 +505,7 @@ function switchTab(el,id){
   if(id==='tab-items')loadItems();
   if(id==='tab-approve')loadApproveList();
   if(id==='tab-users')loadUserManage();
+  if(id==='tab-invite')loadSentInvites();
 }
 
 // 승인
@@ -851,30 +864,43 @@ function updatePreview(){
 // 발송
 async function sendInvite(){
   if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
-  if(!selectedUsers.length){toast('발송할 사용자를 선택해주세요',false);return;}
   const msg=document.getElementById('customMsg').value;
+
+  // 수정 모드
+  if(window._editInviteId){
+    const invId=window._editInviteId;
+    // 기존 장소 삭제 후 재등록
+    await sb.from('invite_locations').delete().eq('invite_id',invId);
+    await sb.from('invite_packages').update({concept:selectedConcept,custom_message:msg||null,is_sent:true}).eq('id',invId);
+    if(addedPlaces.length){
+      await sb.from('invite_locations').insert(addedPlaces.map(p=>({
+        invite_id:invId,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
+        address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
+        photo_url:p.thumb||null,place_link:p.link||null
+      })));
+    }
+    window._editInviteId=null;window._editUserId=null;
+    document.getElementById('sendInviteBtn').textContent='📨 초대장 발송';
+    document.getElementById('sendInviteBtn').style.background='';
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ 초대장이 수정되었습니다!</div>`;
+    toast('초대장 수정 완료!');
+    loadSentInvites();
+    return;
+  }
+
+  // 신규 발송
+  if(!selectedUsers.length){toast('발송할 사용자를 선택해주세요',false);return;}
   let count=0;
   for(const u of selectedUsers){
     const {data:pkg}=await sb.from('invite_packages').insert({
-      introducer_id:currentIntroducer.id,
-      user_id:u.id,
-      journey_id:selectedSympo.id,
-      concept:selectedConcept,
-      custom_message:msg||null,
-      is_sent:true
+      introducer_id:currentIntroducer.id,user_id:u.id,journey_id:selectedSympo.id,
+      concept:selectedConcept,custom_message:msg||null,is_sent:true
     }).select().single();
     if(pkg&&addedPlaces.length){
       await sb.from('invite_locations').insert(addedPlaces.map(p=>({
-        invite_id:pkg.id,
-        place_name:p.name,
-        place_lat:p.lat,
-        place_lng:p.lng,
-        address:p.addr,
-        place_type:p.type,
-        tip:p.tip||null,
-        phone:p.phone||null,
-        photo_url:p.thumb||null,
-        place_link:p.link||null
+        invite_id:pkg.id,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
+        address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
+        photo_url:p.thumb||null,place_link:p.link||null
       })));
     }
     count++;
@@ -882,6 +908,7 @@ async function sendInvite(){
   const names=selectedUsers.map(u=>u.name).join(', ');
   document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
   toast(`${count}명에게 발송 완료!`);
+  loadSentInvites();
 }
 
 // 인쇄
@@ -1021,6 +1048,104 @@ async function loadItems(){
 async function approveItem(id,score){
   await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
   toast(`${score}점 승인 완료`);loadItems();
+}
+
+// ===== 발송 초대장 이력 =====
+async function loadSentInvites(){
+  if(!currentIntroducer)return;
+  const el=document.getElementById('sentInviteList');
+
+  const {data:pkgs}=await sb.from('invite_packages')
+    .select('*,users(name,hospital),journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)')
+    .eq('introducer_id',currentIntroducer.id)
+    .order('created_at',{ascending:false});
+
+  if(!pkgs||!pkgs.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">발송한 초대장이 없습니다</div>';
+    return;
+  }
+
+  // 장소도 함께 로드
+  const pkgIds=pkgs.map(p=>p.id);
+  const {data:locs}=await sb.from('invite_locations').select('*').in('invite_id',pkgIds);
+  const locMap={};
+  (locs||[]).forEach(l=>{if(!locMap[l.invite_id])locMap[l.invite_id]=[];locMap[l.invite_id].push(l);});
+  const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+
+  el.innerHTML=pkgs.map((p,i)=>{
+    const j=p.journeys||{};
+    const u=p.users||{};
+    const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
+    const places=locMap[p.id]||[];
+    const cColors={1:'#3b6ef5',2:'#c17f24',3:'#4f8ef7'};
+    return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
+      <div style="background:${cColors[p.concept]||'#3b6ef5'};padding:10px 14px;color:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:800">🏨 ${j.hotel_name||'-'}</div>
+            <div style="font-size:11px;opacity:.8">📅 ${period||'-'} · 수신: ${u.name||'-'}(${u.hospital||'-'})</div>
+          </div>
+          <span style="font-size:10px;opacity:.7">#${i+1}</span>
+        </div>
+      </div>
+      <div style="padding:10px 14px">
+        ${places.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">${places.map(l=>`<span style="background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px">${typeIcon[l.place_type]||'📍'} ${l.place_name}</span>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">추천 장소 없음</div>'}
+        ${p.custom_message?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">"${p.custom_message}"</div>`:''}
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm" onclick="editInvite('${p.id}')">✏️ 수정/재발송</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvite('${p.id}','${j.hotel_name||''}','${u.name||''}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteInvite(invId,hotel,userName){
+  if(!confirm(`"${userName}"님께 보낸 ${hotel} 초대장을 삭제하시겠습니까?
+사용자 페이지에서 더 이상 보이지 않습니다.`))return;
+  await sb.from('invite_locations').delete().eq('invite_id',invId);
+  const {error}=await sb.from('invite_packages').delete().eq('id',invId);
+  if(error){toast('삭제 실패',false);return;}
+  toast('초대장이 삭제되었습니다');
+  loadSentInvites();
+}
+
+async function editInvite(invId){
+  // 기존 초대장 데이터 로드
+  const {data:pkg}=await sb.from('invite_packages').select('*,journeys(*),users(name,hospital)').eq('id',invId).single();
+  const {data:locs}=await sb.from('invite_locations').select('*').eq('invite_id',invId);
+  if(!pkg){toast('불러오기 실패',false);return;}
+
+  // STEP1 심포지엄 선택 상태로 설정
+  selectedSympo=pkg.journeys;
+  addedPlaces=(locs||[]).map(l=>({name:l.place_name,lat:l.place_lat,lng:l.place_lng,addr:l.address||'',type:l.place_type||'restaurant',tip:l.tip||'',phone:l.phone||'',thumb:l.photo_url||'',link:l.place_link||'',cat:''}));
+
+  // 수정 모드 활성화
+  window._editInviteId=invId;
+  window._editUserId=pkg.user_id;
+
+  // UI 업데이트
+  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('step2Place').style.display='block';
+  document.getElementById('step3User').style.display='block';
+  document.getElementById('step4Concept').style.display='block';
+  document.getElementById('customMsg').value=pkg.custom_message||'';
+
+  // 컨셉 선택
+  document.querySelectorAll('.concept-card').forEach((cd,i)=>cd.classList.toggle('selected',i+1===pkg.concept));
+  selectedConcept=pkg.concept||1;
+
+  renderPlaceGrid();
+  updatePreview();
+
+  // 발송 버튼 텍스트 변경
+  document.getElementById('sendInviteBtn').textContent='✏️ 수정 완료 · 재발송';
+  document.getElementById('sendInviteBtn').style.background='var(--yellow)';
+
+  toast('초대장을 수정하세요. 완료 후 재발송 버튼을 누르세요!',3000);
+
+  // 스크롤 아래로
+  document.getElementById('step2Place').scrollIntoView({behavior:'smooth'});
 }
 
 // ===== 사용자 관리 =====
