@@ -351,6 +351,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   <div class="modal">
     <div class="modal-title" id="tipPlaceName"></div>
     <div class="form-group">
+      <label>전화번호 <span style="font-size:10px;color:var(--muted)">(선택)</span></label>
+      <input id="tipPhone" placeholder="예) 02-820-1231">
+    </div>
+    <div class="form-group">
       <label>소개 팁</label>
       <textarea id="tipText" rows="2" placeholder="예) 물회가 정말 맛있어요! 점심에 가세요 🐟"></textarea>
     </div>
@@ -697,6 +701,7 @@ async function searchPlace(loadMore){
 function openTipModal(name,lat,lng,addr,thumb,cat,link){
   pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',type:document.getElementById('placeType').value};
   document.getElementById('tipPlaceName').textContent='📍 '+name;
+  document.getElementById('tipPhone').value='';
   document.getElementById('tipText').value='';
   document.getElementById('imgUrl').value=thumb||'';
   document.getElementById('imgPreview').innerHTML=thumb?`<img src="${thumb}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
@@ -711,6 +716,7 @@ function openTipModal(name,lat,lng,addr,thumb,cat,link){
 function confirmAddPlace(){
   if(!pendingPlace)return;
   pendingPlace.tip=document.getElementById('tipText').value.trim();
+  pendingPlace.phone=document.getElementById('tipPhone').value.trim();
   const manualImg=document.getElementById('imgUrl').value.trim();
   if(manualImg) pendingPlace.thumb=manualImg;
   addedPlaces.push({...pendingPlace});
@@ -739,6 +745,7 @@ function renderPlaceGrid(){
       <div class="place-info">
         <div class="place-name">${p.name}</div>
         <div class="place-cat">${typeIcon[p.type]||''} ${p.cat||''}</div>
+        ${p.phone?`<div style="font-size:10px;color:var(--muted)">📞 ${p.phone}</div>`:''}
         ${p.tip?`<div class="place-tip">💬 ${p.tip}</div>`:''}
       </div>
     </div>
@@ -776,7 +783,7 @@ function updatePreview(){
   if(!selectedSympo)return;
   const msg=document.getElementById('customMsg').value;
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
-  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#6c47d4'};
+  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
   const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
 
   const placesHtml=addedPlaces.map(p=>`
@@ -834,6 +841,7 @@ async function sendInvite(){
         address:p.addr,
         place_type:p.type,
         tip:p.tip||null,
+        phone:p.phone||null,
         photo_url:p.thumb||null,
         place_link:p.link||null
       })));
@@ -861,15 +869,16 @@ function printInviteCard(){
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
   const msg=document.getElementById('customMsg').value;
 
-  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#6c47d4'};
+  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
   const typeLabel={restaurant:'식당',cafe:'카페',attraction:'명소',shopping:'쇼핑'};
 
   const placesHtml=addedPlaces.map(p=>{
     const color=typeColors[p.type]||'#333';
     return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
       +'<div style="font-size:22px;font-weight:900;color:#1a1d2e;margin-bottom:6px">'+p.name+'</div>'
-      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:4px">'+p.addr+'</div>':'')
-      +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px">'+p.tip+'</div>':'')
+      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
+      +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
+      +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
       +'</div>';
   }).join('');
 
@@ -935,25 +944,47 @@ async function loadAttendance(){
     </div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div>';
 }
 
-// 품목 승인
+// 품목 승인 - 사용자별 그룹화
 async function loadItems(){
   if(!currentIntroducer)return;
-  const {data:myUsers}=await sb.from('users').select('id').eq('introducer_id',currentIntroducer.id);
+  const {data:myUsers}=await sb.from('users').select('id,name,hospital').eq('introducer_id',currentIntroducer.id);
   if(!myUsers||!myUsers.length){document.getElementById('itemList').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">없음</div>';return;}
   const ids=myUsers.map(u=>u.id);
-  const {data}=await sb.from('items').select('*,users(name,hospital)').in('user_id',ids).eq('is_approved',false).order('submitted_at',{ascending:false});
+  const uMap={};myUsers.forEach(u=>uMap[u.id]=u);
+  const {data}=await sb.from('items').select('*,journeys(hotel_name,symposium_date)').in('user_id',ids).eq('is_approved',false).order('submitted_at',{ascending:false});
   const el=document.getElementById('itemList');
-  el.innerHTML=data&&data.length?data.map(i=>`
-    <div class="approve-item">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div style="font-size:14px;font-weight:700">${i.item_name}</div><div style="font-size:12px;color:var(--muted)">${i.users?.name||'-'} · ${i.users?.hospital||'-'}</div></div>
-        <div style="display:flex;gap:4px">
-          <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
-          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
-          <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';return;}
+
+  // 사용자+심포지엄 별로 그룹화
+  const groups={};
+  data.forEach(i=>{
+    const key=`${i.user_id}_${i.journey_id||'none'}`;
+    if(!groups[key])groups[key]={user:uMap[i.user_id],journey:i.journeys,items:[]};
+    groups[key].items.push(i);
+  });
+
+  el.innerHTML=Object.values(groups).map(g=>`
+    <div class="approve-item" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:800">${g.user?.name||'-'}</div>
+          <div style="font-size:12px;color:var(--muted)">${g.user?.hospital||'-'}</div>
+          ${g.journey?`<div style="font-size:11px;color:var(--accent);margin-top:2px">🏨 ${g.journey.hotel_name} · ${g.journey.symposium_date||''}</div>`:''}
         </div>
+        <span style="font-size:12px;color:var(--muted)">${g.items.length}개 품목</span>
       </div>
-    </div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';
+      <div style="border-top:1px solid var(--border);padding-top:8px">
+        ${g.items.map(i=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:700;flex:1">💊 ${i.item_name}</div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
+              <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
+              <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
 }
 
 async function approveItem(id,score){
