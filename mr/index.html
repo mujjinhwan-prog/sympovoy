@@ -232,6 +232,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <div class="tab" onclick="switchTab(this,'tab-invite')">📨 초대장</div>
       <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석현황</div>
       <div class="tab" onclick="switchTab(this,'tab-items')">💊 품목승인</div>
+      <div class="tab" onclick="switchTab(this,'tab-users')">👤 사용자</div>
     </div>
 
     <!-- 승인 탭 -->
@@ -254,7 +255,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
       <!-- STEP 1: 심포지엄 -->
       <div class="card">
-        <div class="card-title">STEP 1 · 심포지엄 선택</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="card-title" style="margin:0">STEP 1 · 심포지엄 선택</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSympoList();toast('새로고침 완료')">🔄</button>
+        </div>
         <div class="month-filter" id="mrMonthFilter"></div>
         <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
       </div>
@@ -326,11 +330,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
     <!-- 참석현황 탭 -->
     <div class="tab-page" id="tab-attendance">
       <div class="card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px">
           <div class="card-title" style="margin:0">참석 현황</div>
           <select id="attFilter" style="width:auto;font-size:13px" onchange="loadAttendance()">
             <option value="">전체</option>
           </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadAttendance();toast('새로고침 완료')">🔄</button>
         </div>
         <div id="attendanceList"></div>
       </div>
@@ -339,10 +346,33 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
     <!-- 품목승인 탭 -->
     <div class="tab-page" id="tab-items">
       <div class="card">
-        <div class="card-title">품목 승인 대기</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">품목 승인 대기</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadItems();toast('새로고침 완료')">🔄 새로고침</button>
+        </div>
         <div id="itemList"></div>
       </div>
     </div>
+
+    <!-- 사용자 관리 탭 -->
+    <div class="tab-page" id="tab-users">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">👤 내 담당 사용자</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadUserManage();toast('새로고침 완료')">🔄 새로고침</button>
+        </div>
+        <div id="userManageList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
+      </div>
+    </div>
+
+    <!-- 사용자 상세 모달 -->
+    <div class="modal-bg" id="userDetailModal">
+      <div class="modal" style="width:540px;max-width:95vw">
+        <button class="close-btn" onclick="closeModal('userDetailModal')">✕</button>
+        <div id="userDetailContent"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -462,6 +492,7 @@ function switchTab(el,id){
   if(id==='tab-attendance')loadAttendance();
   if(id==='tab-items')loadItems();
   if(id==='tab-approve')loadApproveList();
+  if(id==='tab-users')loadUserManage();
 }
 
 // 승인
@@ -990,6 +1021,135 @@ async function loadItems(){
 async function approveItem(id,score){
   await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
   toast(`${score}점 승인 완료`);loadItems();
+}
+
+// ===== 사용자 관리 =====
+async function loadUserManage(){
+  if(!currentIntroducer)return;
+  const el=document.getElementById('userManageList');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div>';
+
+  const {data:users}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).order('created_at',{ascending:false});
+  if(!users||!users.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">담당 사용자 없음</div>';return;}
+
+  // 각 사용자의 초대장 및 방문 수 조회
+  const uIds=users.map(u=>u.id);
+  const {data:invites}=await sb.from('invite_packages').select('id,user_id,journey_id,created_at,journeys(hotel_name,symposium_date)').in('user_id',uIds);
+  const {data:visits}=await sb.from('visits').select('user_id,gps_score,photo_score,item_score').in('user_id',uIds);
+  const {data:items}=await sb.from('items').select('user_id,approved_score,is_approved').in('user_id',uIds);
+
+  const invMap={};
+  (invites||[]).forEach(i=>{if(!invMap[i.user_id])invMap[i.user_id]=[];invMap[i.user_id].push(i);});
+  const visMap={};
+  (visits||[]).forEach(v=>{if(!visMap[v.user_id])visMap[v.user_id]=[];visMap[v.user_id].push(v);});
+  const itmMap={};
+  (items||[]).forEach(i=>{if(!itmMap[i.user_id])itmMap[i.user_id]=[];itmMap[i.user_id].push(i);});
+
+  el.innerHTML=users.map(u=>{
+    const uInvs=invMap[u.user_id]||invMap[u.id]||[];
+    const uVis=visMap[u.id]||[];
+    const uItm=itmMap[u.id]||[];
+    const totalScore=uVis.reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0),0)
+      +uItm.filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+    return `<div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:800;margin-bottom:2px">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${u.hospital} · ${u.license_number}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="badge badge-blue">초대장 ${uInvs.length}개</span>
+            <span class="badge badge-green">방문 ${uVis.length}회</span>
+            <span class="badge badge-blue">누적 ${totalScore}점</span>
+            <span class="badge ${u.mr_approval==='approved'?'badge-green':'badge-yellow'}">${u.mr_approval==='approved'?'승인':'대기'}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-left:10px">
+          <button class="btn btn-primary btn-sm" onclick="showUserDetail('${u.id}')">📋 상세보기</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function showUserDetail(userId){
+  const {data:u}=await sb.from('users').select('*').eq('id',userId).single();
+  const {data:invites}=await sb.from('invite_packages').select('*,journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('user_id',userId).order('created_at',{ascending:false});
+  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)').eq('user_id',userId);
+  const {data:items}=await sb.from('items').select('*,journeys(hotel_name)').eq('user_id',userId);
+
+  const totalScore=(visits||[]).reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0),0)
+    +(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+
+  const invHtml=(invites||[]).map((inv,i)=>{
+    const j=inv.journeys||{};
+    const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
+    return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:800">초대장 ${i+1} · 🏨 ${j.hotel_name||'-'}</div>
+          <div style="font-size:11px;color:var(--muted)">📅 ${period||'-'}</div>
+          ${j.symposium_name?`<div style="font-size:11px;color:var(--accent)">🎓 ${j.symposium_name}</div>`:''}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="recallInvite('${inv.id}','${j.hotel_name||''}')">📥 회수</button>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">초대장 없음</div>';
+
+  const visHtml=(visits||[]).map(v=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>🏨 ${v.journeys?.hotel_name||'-'} · ${v.journeys?.symposium_date||'-'}</span>
+      <span class="badge badge-green">${(v.gps_score||0)+(v.photo_score||0)}점</span>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">방문 기록 없음</div>';
+
+  const itmHtml=(items||[]).map(i=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>💊 ${i.item_name}</span>
+      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?(i.approved_score||0)+'점':'검토중'}</span>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">품목 없음</div>';
+
+  document.getElementById('userDetailContent').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:18px;font-weight:900;margin-bottom:4px">${u.name}</div>
+      <div style="font-size:13px;color:var(--muted)">${u.hospital} · ${u.license_number}</div>
+      <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:10px;padding:14px;text-align:center;color:#fff;margin:12px 0">
+        <div style="font-size:32px;font-weight:900">${totalScore}점</div>
+        <div style="font-size:12px;opacity:.8">누적 점수</div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">📨 초대장 (${(invites||[]).length}개)</div>
+    ${invHtml}
+    <div style="font-size:13px;font-weight:800;margin:12px 0 8px">🏅 방문 이력 (${(visits||[]).length}회)</div>
+    ${visHtml}
+    <div style="font-size:13px;font-weight:800;margin:12px 0 8px">💊 품목 이력 (${(items||[]).length}개)</div>
+    ${itmHtml}
+    <button class="btn btn-danger" style="width:100%;margin-top:16px" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 사용자 삭제</button>`;
+
+  document.getElementById('userDetailModal').classList.add('open');
+}
+
+async function recallInvite(invId,hotelName){
+  if(!confirm(`"${hotelName}" 초대장을 회수하시겠습니까?
+사용자 페이지에서 더 이상 보이지 않습니다.`))return;
+  const {error}=await sb.from('invite_packages').delete().eq('id',invId);
+  if(error){toast('회수 실패: '+error.message,false);return;}
+  toast('초대장이 회수되었습니다');
+  closeModal('userDetailModal');
+  loadUserManage();
+}
+
+async function deleteUser(userId,userName){
+  if(!confirm(`"${userName}" 사용자를 삭제하시겠습니까?
+모든 방문 기록과 초대장도 함께 삭제됩니다.`))return;
+  // 연결 데이터 순서대로 삭제
+  await sb.from('invite_packages').delete().eq('user_id',userId);
+  await sb.from('visits').delete().eq('user_id',userId);
+  await sb.from('items').delete().eq('user_id',userId);
+  const {error}=await sb.from('users').delete().eq('id',userId);
+  if(error){toast('삭제 실패: '+error.message,false);return;}
+  toast(userName+' 사용자가 삭제되었습니다');
+  if(document.getElementById('userDetailModal').classList.contains('open'))closeModal('userDetailModal');
+  loadUserManage();
 }
 
 function initTheme(){const s=localStorage.getItem('sympovoy_theme')||'light';document.documentElement.setAttribute('data-theme',s);updateThemeBtn();}
