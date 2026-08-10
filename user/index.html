@@ -460,25 +460,25 @@ async function showInviteDetail(idx){
   // 추천 장소
   let placesHtml='';
   if(locations.length>0){
+    const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#6c47d4'};
+    const typeLabel={restaurant:'🍽️ 식당',cafe:'☕ 카페',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
     const items=locations.map(l=>{
-      const icon=TYPEICON[l.place_type]||'📍';
-      const typeName=l.place_type==='restaurant'?'🍽️ 식당':l.place_type==='cafe'?'☕ 카페':l.place_type==='attraction'?'🏛️ 명소':'📍 장소';
+      const color=typeColors[l.place_type]||'#333';
       const naverUrl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
-      const addrCopy=(l.address||l.place_name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div class="place-item">
-        <div class="place-icon">${l.photo_url?`<img src="${l.photo_url}" onerror="this.outerHTML='${icon}'">`:`<span style="font-size:20px">${icon}</span>`}</div>
-        <div class="place-body">
-          <div class="place-type">${typeName}</div>
-          <div class="place-name">${l.place_name}</div>
-          ${l.address?`<div class="place-addr">${l.address}</div>`:''}
-          ${l.tip?`<span class="place-tip">💬 ${l.tip}</span>`:''}
-          <div class="place-btns">
-            <button class="pbtn pbtn-naver" onclick="window.open('${naverUrl}','_blank')">네이버</button>
-            <button class="pbtn pbtn-nav" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
-            <button class="pbtn pbtn-copy" onclick="copyAddr('${addrCopy}')">📋 주소복사</button>
-          </div>
-        </div>
-      </div>`;
+      const addr=l.address||l.place_name;
+      const safeAddr=addr.replace(/'/g,"\'");
+      return '<div style="border:3px solid '+color+';border-radius:14px;padding:16px 14px;margin-bottom:12px">'
+        +'<div style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:5px">'+(typeLabel[l.place_type]||'📍 장소')+'</div>'
+        +'<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">'+l.place_name+'</div>'
+        +(l.address?'<div onclick="copyAddr(\''+safeAddr+'\')" style="font-size:12px;color:var(--muted);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:4px;background:var(--surface2);border-radius:6px;padding:6px 10px"><span>📍</span><span style=\"flex:1\">'+l.address+'</span><span style="font-size:11px;color:'+color+';font-weight:700;white-space:nowrap;flex-shrink:0">탭하여 복사</span></div>'
+        :'')
+        +(l.tip?'<div style="font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.5">'+l.tip+'</div>':'')
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        +'<button onclick="window.open(\''+naverUrl+'\',\'_blank\')" style="background:#03c75a;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">네이버</button>'
+        +'<button onclick="window.open(\'https://map.naver.com/v5/search/'+encodeURIComponent(l.place_name)+'\',\'_blank\')" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">길찾기</button>'
+        +'<button onclick="copyAddr(\''+safeAddr+'\')" style="background:var(--surface2);color:var(--text);border:1.5px solid '+color+';border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">📋 주소복사</button>'
+        +'</div>'
+        +'</div>';
     }).join('');
     placesHtml=`<div class="card"><div class="sec-title">🗺️ 추천 장소 (${locations.length}곳)</div>${items}</div>`;
   }
