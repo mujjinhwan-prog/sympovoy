@@ -262,6 +262,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <!-- STEP 2: 추천 장소 -->
       <div class="card" id="step2Place" style="display:none">
         <div class="card-title">STEP 2 · 추천 장소 추가 (최대 6개)</div>
+        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--accent);color:var(--accent);font-size:13px">
+          📊 이 심포지엄 TOP 10 추천 장소 불러오기
+        </button>
+        <div id="top10List" style="display:none;margin-bottom:14px"></div>
         <div class="search-row">
           <input id="placeSearch" placeholder="정확한 상호 검색 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
           <select id="placeType" style="width:110px">
@@ -554,6 +558,1057 @@ async function selectSympo(el,id){
 }
 
 // 장소 검색
+// TOP 10 추천 장소 로드
+async function loadTop10(){
+  if(!selectedSympo){toast('심포지엄을 먼저 선택해주세요',false);return;}
+  const btn=document.getElementById('top10Btn');
+  btn.textContent='로딩 중...';btn.disabled=true;
+
+  const {data,error}=await sb.from('popular_locations')
+    .select('*')
+    .eq('journey_id',selectedSympo.id)
+    .order('recommend_count',{ascending:false})
+    .limit(10);
+
+  btn.textContent='📊 이 심포지엄 TOP 10 추천 장소 불러오기';
+  btn.disabled=false;
+
+  const el=document.getElementById('top10List');
+  if(!data||!data.length){
+    el.style.display='block';
+    el.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px">아직 추천 데이터가 없습니다<br>첫 번째로 추천 장소를 등록해보세요!</div>';
+    return;
+  }
+
+  el.style.display='block';
+  const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">TOP ${data.length} · 많이 추천된 장소</div>`+
+    data.map((p,i)=>{
+      const already=addedPlaces.some(a=>a.name===p.place_name);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:7px;${already?'opacity:.5':''}">
+        <div style="font-size:16px;font-weight:900;color:var(--accent);width:22px;text-align:center">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800">${typeIcon[p.place_type]||'📍'} ${p.place_name}</div>
+          ${p.address?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${p.address}</div>`:''}
+          ${p.latest_tip?`<div style="font-size:11px;color:var(--accent);margin-top:2px">💬 ${p.latest_tip}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;color:var(--muted)">추천 ${p.recommend_count}회</span>
+          ${already
+            ?'<span style="font-size:11px;color:var(--green);font-weight:700">✅ 추가됨</span>'
+            :`<button class="btn btn-primary btn-sm" onclick="addFromTop10(${i})">+ 추가</button>`
+          }
+        </div>
+      </div>`;
+    }).join('');
+  window._top10Data=data;
+}
+
+function addFromTop10(idx){
+  const p=window._top10Data[idx];
+  if(!p)return;
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  if(addedPlaces.some(a=>a.name===p.place_name)){toast('이미 추가된 장소입니다',false);return;}
+  addedPlaces.push({
+    name:p.place_name,
+    lat:p.place_lat,
+    lng:p.place_lng,
+    addr:p.address||'',
+    thumb:p.photo_url||'',
+    cat:'',
+    type:p.place_type||'restaurant',
+    tip:p.latest_tip||'',
+    link:''
+  });
+  renderPlaceGrid();
+  updatePreview();
+  toast(p.place_name+' 추가됨 ✅');
+  // 버튼 상태 업데이트
+  loadTop10();
+}
+
+let _searchPage=1;
+let _searchQuery='';
+let _allResults=[];
+
+async function searchPlace(loadMore){
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  const q=loadMore?_searchQuery:document.getElementById('placeSearch').value.trim();
+  if(!q){toast('검색어 입력',false);return;}
+  if(!loadMore){_searchPage=1;_searchQuery=q;_allResults=[];}
+  const el=document.getElementById('placeResults');
+  if(!loadMore) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
+  else {
+    // 더 검색 버튼 제거 후 로딩
+    const moreBtn=document.getElementById('moreSearchBtn');
+    if(moreBtn) moreBtn.innerHTML='<span style="color:var(--muted);font-size:13px">검색 중...</span>';
+  }
+  const startNum=(_searchPage-1)*5+1;
+  try{
+    const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${startNum}`);
+    const data=await res.json();
+    if(!data.items||!data.items.length){
+      const noMore=`<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px">더 이상 검색 결과가 없습니다</div>`;
+      if(loadMore){const btn=document.getElementById('moreSearchBtn');if(btn)btn.outerHTML=noMore;}
+      else el.innerHTML=noMore;
+      return;
+    }
+    const items=data.items.map(p=>{
+      const name=p.title.replace(/<[^>]*>/g,'');
+      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
+      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
+      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
+      const thumb=p.thumbnail||'';
+      const link=p.link||('https://search.naver.com/search.naver?query='+encodeURIComponent(name));
+      const safeName=name.replace(/'/g,"\'");
+      const safeAddr=addr.replace(/'/g,"\'");
+      const safeLink=link.replace(/'/g,"\'");
+      return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}','${thumb}','${p.category||''}','${safeLink}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${thumb?`<img src="${thumb}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:50px;height:50px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</div>`}
+          <div>
+            <div class="pname">${name}</div>
+            <div class="paddr">${addr}</div>
+            ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const moreBtn=`<div id="moreSearchBtn" style="text-align:center;margin-top:8px">
+      <button class="btn btn-ghost" style="width:100%;border:1.5px dashed var(--border);font-size:13px" onclick="_searchPage++;searchPlace(true)">
+        🔍 더 검색하기 (다음 5개)
+      </button>
+    </div>`;
+
+    if(loadMore){
+      const oldBtn=document.getElementById('moreSearchBtn');
+      if(oldBtn) oldBtn.insertAdjacentHTML('beforebegin', items);
+      if(oldBtn) oldBtn.outerHTML=moreBtn;
+      else el.insertAdjacentHTML('beforeend', items+moreBtn);
+    } else {
+      el.innerHTML=items+moreBtn;
+    }
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px">오류: ${e.message}</div>`;
+  }
+}
+
+function openTipModal(name,lat,lng,addr,thumb,cat,link){
+  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',type:document.getElementById('placeType').value};
+  document.getElementById('tipPlaceName').textContent='📍 '+name;
+  document.getElementById('tipText').value='';
+  document.getElementById('imgUrl').value=thumb||'';
+  document.getElementById('imgPreview').innerHTML=thumb?`<img src="${thumb}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
+  document.getElementById('imgUrl').oninput=function(){
+    document.getElementById('imgPreview').innerHTML=this.value?`<img src="${this.value}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
+  };
+  document.getElementById('tipModal').classList.add('open');
+  document.getElementById('placeResults').innerHTML='';
+  document.getElementById('placeSearch').value='';
+}
+
+function confirmAddPlace(){
+  if(!pendingPlace)return;
+  pendingPlace.tip=document.getElementById('tipText').value.trim();
+  const manualImg=document.getElementById('imgUrl').value.trim();
+  if(manualImg) pendingPlace.thumb=manualImg;
+  addedPlaces.push({...pendingPlace});
+  renderPlaceGrid();
+  closeModal('tipModal');
+  updatePreview();
+  toast(pendingPlace.name+' 추가됨');
+}
+
+function removePlace(i){
+  addedPlaces.splice(i,1);
+  renderPlaceGrid();
+  updatePreview();
+}
+
+const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+
+function renderPlaceGrid(){
+  const el=document.getElementById('addedPlacesGrid');
+  el.innerHTML=addedPlaces.map((p,i)=>`
+    <div class="place-grid-item">
+      ${p.thumb
+        ?`<img src="${p.thumb}" class="place-img" style="object-fit:cover" onerror="this.parentNode.querySelector('.place-img-fallback').style.display='flex';this.style.display='none'"><div class="place-img place-img-fallback" style="display:none">${typeIcon[p.type]||'📍'}</div>`
+        :`<div class="place-img">${typeIcon[p.type]||'📍'}</div>`}
+      <button class="del-btn" onclick="removePlace(${i})">✕</button>
+      <div class="place-info">
+        <div class="place-name">${p.name}</div>
+        <div class="place-cat">${typeIcon[p.type]||''} ${p.cat||''}</div>
+        ${p.tip?`<div class="place-tip">💬 ${p.tip}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// 사용자 선택
+async function loadUserSelectList(){
+  const {data}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','approved');
+  selectedUsers=[];
+  const el=document.getElementById('userSelectList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">승인된 사용자 없음</div>';return;}
+  el.innerHTML=data.map(u=>`
+    <div class="user-item">
+      <div><div class="user-name">${u.name}</div><div class="user-hosp">${u.hospital} · ${u.license_number}</div></div>
+      <input type="checkbox" value="${u.id}" onchange="toggleUser(this,'${u.id}','${u.name}')" style="width:18px;height:18px;cursor:pointer">
+    </div>
+  `).join('');
+}
+
+function toggleUser(el,id,name){
+  if(el.checked){selectedUsers.push({id,name});}
+  else{selectedUsers=selectedUsers.filter(u=>u.id!==id);}
+}
+
+// 컨셉
+function selectConcept(el,c){
+  document.querySelectorAll('.concept-card').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedConcept=c;
+  updatePreview();
+}
+
+// 미리보기
+function updatePreview(){
+  if(!selectedSympo)return;
+  const msg=document.getElementById('customMsg').value;
+  const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
+  const placesHtml=addedPlaces.map(p=>`
+    <div class="preview-place-item">
+      ${p.thumb?`<img src="${p.thumb}" class="preview-place-img" onerror="this.outerHTML='<div class=preview-place-img>${typeIcon[p.type]||'📍'}</div>'">`:`<div class="preview-place-img">${typeIcon[p.type]||'📍'}</div>`}
+      <div class="preview-place-info">
+        <div class="preview-place-name">${p.name}</div>
+        ${p.tip?`<div class="preview-place-tip">${p.tip}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+  const themes={1:'preview-c1',2:'preview-c2',3:'preview-c3'};
+  document.getElementById('previewArea').innerHTML=`
+    <div class="preview-wrap">
+      <div class="${themes[selectedConcept]}">
+        <div style="font-size:11px;opacity:.5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">초대장 미리보기</div>
+        <div class="preview-hotel">🏨 ${selectedSympo.hotel_name}</div>
+        <div class="preview-date">📅 ${period||'날짜 미정'}${selectedSympo.symposium_name?' · '+selectedSympo.symposium_name:''}</div>
+        ${msg?`<div style="font-size:13px;margin:10px 0;opacity:.85;border-left:3px solid currentColor;padding-left:10px">${msg}</div>`:''}
+        ${selectedSympo.agenda_image_url?`<div style="font-size:12px;opacity:.7;margin-bottom:6px;font-weight:700">📄 아젠다</div><img src="${selectedSympo.agenda_image_url}" style="width:100%;max-height:300px;object-fit:contain;border-radius:10px;margin-bottom:10px;background:rgba(255,255,255,.1)" onerror="this.style.display='none'">`:''}
+        ${addedPlaces.length?`<div style="font-size:12px;opacity:.7;margin-bottom:8px;font-weight:700">추천 장소 (${addedPlaces.length}곳)</div><div class="preview-places-grid">${placesHtml}</div>`:''}
+      </div>
+    </div>
+  `;
+}
+
+// 발송
+async function sendInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  if(!selectedUsers.length){toast('발송할 사용자를 선택해주세요',false);return;}
+  const msg=document.getElementById('customMsg').value;
+  let count=0;
+  for(const u of selectedUsers){
+    const {data:pkg}=await sb.from('invite_packages').insert({
+      introducer_id:currentIntroducer.id,
+      user_id:u.id,
+      journey_id:selectedSympo.id,
+      concept:selectedConcept,
+      custom_message:msg||null,
+      is_sent:true
+    }).select().single();
+    if(pkg&&addedPlaces.length){
+      await sb.from('invite_locations').insert(addedPlaces.map(p=>({
+        invite_id:pkg.id,
+        place_name:p.name,
+        place_lat:p.lat,
+        place_lng:p.lng,
+        address:p.addr,
+        place_type:p.type,
+        tip:p.tip||null,
+        photo_url:p.thumb||null,
+        place_link:p.link||null
+      })));
+    }
+    count++;
+  }
+  const names=selectedUsers.map(u=>u.name).join(', ');
+  document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
+  toast(`${count}명에게 발송 완료!`);
+}
+
+// 인쇄
+function printInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  const isPdf=selectedSympo.agenda_image_url&&selectedSympo.agenda_image_url.match(/\.pdf$/i);
+  if(isPdf){
+    window.open(selectedSympo.agenda_image_url,'_blank');
+    toast('PDF가 열렸습니다. Ctrl+P로 인쇄하세요');
+  }
+  printInviteCard();
+}
+
+function printInviteCard(){
+  if(!selectedSympo)return;
+  const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
+  const msg=document.getElementById('customMsg').value;
+  const typeIcon2={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  const placesHtml=addedPlaces.map(p=>`<div class="place"><div class="place-icon">${typeIcon2[p.type]||'📍'}</div><div class="place-info"><div class="place-name">${p.name}</div><div class="place-addr">${p.addr||''}</div>${p.tip?`<div class="place-tip">💬 ${p.tip}</div>`:''}</div></div>`).join('');
+  const agendaHtml=selectedSympo.agenda_image_url&&!selectedSympo.agenda_image_url.match(/\.pdf$/i)
+    ?`<div class="sec-title">📄 아젠다</div><img src="${selectedSympo.agenda_image_url}" style="width:100%;max-height:360px;object-fit:contain;display:block;border-radius:6px;margin-bottom:10px">`:'';
+  const pw=window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SYMPOVOY 초대장</title><style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Apple SD Gothic Neo',Malgun Gothic,sans-serif;background:#fff;color:#1a1d2e;}
+.page{width:190mm;margin:0 auto;padding:14mm 10mm;}
+.header{text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #1a1d2e;}
+.logo{font-size:18px;font-weight:900;}.logo span{color:#3b6ef5;}
+.hotel{font-size:24px;font-weight:900;margin:10px 0 4px;}
+.date{font-size:12px;color:#666;margin-bottom:3px;}
+.sympo{font-size:14px;font-weight:700;color:#3b6ef5;}
+.msg{background:#f5f6fa;border-radius:6px;padding:10px;font-size:12px;color:#555;margin:12px 0;border-left:3px solid #3b6ef5;}
+.sec-title{font-size:12px;font-weight:800;border-left:4px solid #3b6ef5;padding-left:8px;margin:14px 0 8px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.place{border:1px solid #e2e5f0;border-radius:8px;overflow:hidden;}
+.place-icon{width:100%;height:50px;background:#f5f6fa;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.place-info{padding:6px 8px;}
+.place-name{font-size:11px;font-weight:800;}
+.place-addr{font-size:9px;color:#999;margin-top:1px;}
+.place-tip{font-size:9px;color:#3b6ef5;margin-top:2px;}
+.footer{text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;}
+@media print{body{margin:0;}@page{size:A4;margin:10mm;}img{page-break-inside:avoid;}}
+</style></head><body>
+<div class="page">
+  <div class="header">
+    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="hotel">🏨 ${selectedSympo.hotel_name}</div>
+    <div class="date">📅 ${period}</div>
+    ${selectedSympo.symposium_name?`<div class="sympo">🎓 ${selectedSympo.symposium_name}</div>`:''}
+  </div>
+  ${msg?`<div class="msg">${msg}</div>`:''}
+  ${agendaHtml}
+  ${addedPlaces.length?`<div class="sec-title">🗺️ 추천 장소 (${addedPlaces.length}곳)</div><div class="grid">${placesHtml}</div>`:''}
+  <div class="footer">Powered by SYMPOVOY · Yuhan Corporation</div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},800);}</script>
+</body></html>`);
+  pw.document.close();
+}
+
+
+// 참석현황
+async function loadAttendanceFilter(){
+  const {data}=await sb.from('journeys').select('id,hotel_name,symposium_date').order('symposium_date',{ascending:false});
+  const sel=document.getElementById('attFilter');
+  if(data)data.forEach(j=>{
+    const o=document.createElement('option');
+    o.value=j.id;o.textContent=`${j.symposium_date||''} ${j.hotel_name}`;
+    sel.appendChild(o);
+  });
+}
+
+async function loadAttendance(){
+  const jid=document.getElementById('attFilter').value;
+  let q=sb.from('visits').select('*,users(name,hospital),journeys(hotel_name,symposium_date)').eq('users.introducer_id',currentIntroducer.id).order('visited_at',{ascending:false});
+  if(jid)q=q.eq('journey_id',jid);
+  const {data}=await q;
+  const el=document.getElementById('attendanceList');
+  el.innerHTML=data&&data.length?data.map(v=>`
+    <div class="user-item">
+      <div>
+        <div class="user-name">${v.users?.name||'-'}</div>
+        <div class="user-hosp">${v.users?.hospital||'-'} · ${v.journeys?.hotel_name||'-'}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="att-status-ok">✅ 도착완료</div>
+        <div style="font-size:11px;color:var(--muted)">${new Date(v.visited_at).toLocaleString('ko-KR')}</div>
+      </div>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div>';
+}
+
+// 품목 승인
+async function loadItems(){
+  if(!currentIntroducer)return;
+  const {data:myUsers}=await sb.from('users').select('id').eq('introducer_id',currentIntroducer.id);
+  if(!myUsers||!myUsers.length){document.getElementById('itemList').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">없음</div>';return;}
+  const ids=myUsers.map(u=>u.id);
+  const {data}=await sb.from('items').select('*,users(name,hospital)').in('user_id',ids).eq('is_approved',false).order('submitted_at',{ascending:false});
+  const el=document.getElementById('itemList');
+  el.innerHTML=data&&data.length?data.map(i=>`
+    <div class="approve-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:14px;font-weight:700">${i.item_name}</div>
+          <div style="font-size:12px;color:var(--muted)">${i.users?.name||'-'} · ${i.users?.hospital||'-'}</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
+          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
+          <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+        </div>
+      </div>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';
+}
+
+async function approveItem(id,score){
+  await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
+  toast(`${score}점 승인 완료`);loadItems();
+}
+
+function initTheme(){
+  const saved=localStorage.getItem('sympovoy_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved);
+  updateThemeBtn();
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('sympovoy_theme',next);
+  updateThemeBtn();
+}
+function updateThemeBtn(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=isDark?'☀️ 라이트':'🌙 다크');
+}
+initTheme();
+
+</script>
+</body>
+</html><div class=\"sec-title\">📄 아젠다</div>
+    ${selectedSympo.agenda_image_url.match(/\.pdf$/i)
+      ?'<div style=\"background:#f5f6fa;border-radius:8px;padding:16px;text-align:center;border:1px dashed #3b6ef5\"><div style=\"font-size:13px;font-weight:700;margin-bottom:6px\">📄 PDF 아젠다</div><div style=\"font-size:11px;color:#999;margin-bottom:10px\">아래 링크를 클릭하여 별도로 인쇄하세요</div><a href=\"'+selectedSympo.agenda_image_url+'\" target=\"_blank\" style=\"color:#3b6ef5;font-size:12px;font-weight:700\">PDF 열기 →</a></div>'
+      :`<img src="${selectedSympo.agenda_image_url}" class="agenda-img">`
+    }`:''}TYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYMPOVOY MR</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f8;
+  --accent:#3b6ef5;--accent2:#6c47d4;--green:#18b96a;
+  --red:#e74c3c;--yellow:#f59e0b;--text:#1a1d2e;
+  --muted:#7b82a0;--border:#e2e5f0;--radius:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
+
+/* 로그인 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--surface);border-radius:20px;box-shadow:0 8px 40px rgba(59,110,245,.12);padding:44px 36px;width:100%;max-width:400px;text-align:center;}
+.logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;}
+.logo span{color:var(--accent);}
+.logo-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.form-group{margin-bottom:14px;text-align:left;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;}
+input,select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;}
+.btn:hover{opacity:.88;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-success{background:var(--green);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-warning{background:var(--yellow);color:#fff;}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;}
+
+/* 앱 */
+.app{display:none;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar .logo{font-size:18px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-name{font-size:13px;font-weight:700;color:var(--text);}
+.content{max-width:1000px;margin:0 auto;padding:24px 20px;}
+
+/* 탭 */
+.tab-bar{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:24px;}
+.tab{flex:1;padding:9px;text-align:center;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.tab-page{display:none;}
+.tab-page.active{display:block;}
+
+/* 카드 */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.card-title{font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text);}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+
+/* 심포지엄 선택 */
+.sympo-card{border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.sympo-card:hover{border-color:var(--accent);}
+.sympo-card.selected{border-color:var(--accent);background:rgba(59,110,245,.05);}
+.sympo-card .hotel{font-size:15px;font-weight:800;}
+.sympo-card .date{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* 장소 검색 */
+.search-row{display:flex;gap:8px;margin-bottom:10px;}
+.search-row input{flex:1;}
+.place-result{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .2s;margin-bottom:6px;}
+.place-result:hover{border-color:var(--accent);}
+.place-result .pname{font-size:14px;font-weight:700;}
+.place-result .paddr{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* 추천 장소 그리드 */
+.place-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.place-grid-item{background:var(--surface2);border-radius:12px;overflow:hidden;border:1.5px solid var(--border);position:relative;}
+.place-grid-item .place-img{width:100%;height:100px;object-fit:cover;background:linear-gradient(135deg,#e8f4fd,#f0f7ff);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.place-grid-item .place-info{padding:10px;}
+.place-grid-item .place-name{font-size:13px;font-weight:800;margin-bottom:2px;}
+.place-grid-item .place-cat{font-size:11px;color:var(--accent);}
+.place-grid-item .place-tip{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+.place-grid-item .del-btn{position:absolute;top:6px;right:6px;background:rgba(231,76,60,.9);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+
+/* 사용자 선택 */
+.user-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.user-item:last-child{border-bottom:none;}
+.user-name{font-weight:700;font-size:14px;}
+.user-hosp{font-size:12px;color:var(--muted);}
+
+/* 초대장 미리보기 */
+.preview-wrap{border-radius:var(--radius);overflow:hidden;margin:16px 0;}
+.preview-c1{background:linear-gradient(135deg,#1a1d2e,#2d3561);color:#fff;padding:28px;}
+.preview-c2{background:linear-gradient(135deg,#fff9f0,#fff3dc);color:#1a1d2e;padding:28px;border:2px solid #f59e0b;}
+.preview-c3{background:linear-gradient(135deg,#f0f7ff,#e8f4fd);color:#1a1d2e;padding:28px;border-left:5px solid #3b6ef5;}
+.preview-hotel{font-size:22px;font-weight:900;margin-bottom:4px;}
+.preview-date{font-size:13px;opacity:.7;margin-bottom:12px;}
+.preview-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.preview-place-item{background:rgba(255,255,255,.15);border-radius:8px;overflow:hidden;}
+.preview-place-img{width:100%;height:70px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.preview-place-info{padding:6px 8px;}
+.preview-place-name{font-size:11px;font-weight:700;}
+.preview-place-tip{font-size:10px;opacity:.7;margin-top:2px;}
+
+/* 컨셉 */
+.concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.concept-card{border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;text-align:center;}
+.concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(59,110,245,.05);}
+.concept-icon{font-size:28px;margin-bottom:6px;}
+.concept-title{font-size:13px;font-weight:800;}
+.concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* 승인 */
+.approve-item{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.att-status-ok{color:var(--green);font-weight:700;font-size:12px;}
+.att-status-wait{color:var(--muted);font-size:12px;}
+
+/* 배지 */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:rgba(24,185,106,.12);color:var(--green);}
+.badge-yellow{background:rgba(245,158,11,.12);color:var(--yellow);}
+.badge-blue{background:rgba(59,110,245,.12);color:var(--accent);}
+.badge-red{background:rgba(231,76,60,.12);color:var(--red);}
+
+/* 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:26px;width:460px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* 인쇄 */
+@media print {
+  .topbar,.tab-bar,.no-print{display:none!important;}
+  body{background:#fff!important;color:#000!important;}
+  .card{box-shadow:none!important;border:1px solid #ddd!important;}
+  .print-invite{display:block!important;}
+}
+.print-invite{display:none;}
+
+/* 인쇄용 초대장 스타일 */
+.print-page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm;background:#fff;font-family:'Apple SD Gothic Neo',sans-serif;}
+.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1a1d2e;}
+.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#1a1d2e;}
+.print-logo span{color:#3b6ef5;}
+.print-hotel{font-size:28px;font-weight:900;color:#1a1d2e;margin:16px 0 6px;}
+.print-date{font-size:14px;color:#666;margin-bottom:4px;}
+.print-sympo{font-size:16px;font-weight:700;color:#3b6ef5;margin-bottom:16px;}
+.print-section{margin-bottom:20px;}
+.print-section-title{font-size:14px;font-weight:800;color:#1a1d2e;border-left:4px solid #3b6ef5;padding-left:10px;margin-bottom:12px;}
+.print-agenda-img{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #eee;}
+.print-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.print-place-item{border:1px solid #e2e5f0;border-radius:8px;overflow:hidden;}
+.print-place-icon{width:100%;height:60px;background:#f5f6fa;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.print-place-info{padding:8px 10px;}
+.print-place-name{font-size:12px;font-weight:800;color:#1a1d2e;}
+.print-place-addr{font-size:10px;color:#999;margin-top:2px;}
+.print-place-tip{font-size:10px;color:#3b6ef5;margin-top:3px;}
+.print-msg{background:#f5f6fa;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #3b6ef5;}
+.print-footer{text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;}
+
+@media(max-width:600px){
+  .place-grid{grid-template-columns:repeat(2,1fr);}
+  .preview-places-grid{grid-template-columns:repeat(2,1fr);}
+  .concept-grid{grid-template-columns:1fr;}
+}
+
+/* ===== 라이트 모드 ===== */
+:root[data-theme="light"] {
+  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
+  --accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;
+  --text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:12px;
+}
+/* ===== 다크 모드 ===== */
+:root[data-theme="dark"] {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
+  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
+  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+}
+.theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
+.theme-btn:hover{border-color:var(--accent);}
+
+/* 월별 필터 */
+.month-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.month-chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);transition:all .2s;}
+.month-chip:hover{border-color:var(--accent);color:var(--accent);}
+.month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- 로그인 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="logo">SYMPO<span>VOY</span></div>
+    <p class="logo-sub">MR 전용 페이지</p>
+    <div id="step1">
+      <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <div class="form-group"><label>사번</label><input id="lEmpId" placeholder="8자리 사번" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep1()">확인</button>
+    </div>
+    <div id="step2" style="display:none">
+      <div id="step2Msg" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px;background:var(--surface2);border-radius:8px;line-height:1.6"></div>
+      <div class="form-group"><label id="pwLabel">비밀번호</label><input type="password" id="lPw" onkeydown="if(event.key==='Enter')checkStep2()"></div>
+      <div class="form-group" id="pwConfirmWrap" style="display:none">
+        <label>비밀번호 확인</label><input type="password" id="lPwConfirm" onkeydown="if(event.key==='Enter')checkStep2()">
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep2()">로그인</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="backToStep1()">← 다시 입력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 앱 -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="topbar-right">
+      <span class="topbar-name" id="topName"></span>
+      <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tab-bar no-print">
+      <div class="tab active" onclick="switchTab(this,'tab-approve')">👥 승인</div>
+      <div class="tab" onclick="switchTab(this,'tab-invite')">📨 초대장</div>
+      <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석현황</div>
+      <div class="tab" onclick="switchTab(this,'tab-items')">💊 품목승인</div>
+    </div>
+
+    <!-- 승인 탭 -->
+    <div class="tab-page active" id="tab-approve">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">승인 대기 사용자</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadApproveList();toast('새로고침 완료')">🔄 새로고침</button>
+        </div>
+        <div id="approveList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">승인된 사용자</div>
+        <div id="approvedList"></div>
+      </div>
+    </div>
+
+    <!-- 초대장 탭 -->
+    <div class="tab-page" id="tab-invite">
+
+      <!-- STEP 1: 심포지엄 -->
+      <div class="card">
+        <div class="card-title">STEP 1 · 심포지엄 선택</div>
+        <div class="month-filter" id="mrMonthFilter"></div>
+        <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
+      </div>
+
+      <!-- STEP 2: 추천 장소 -->
+      <div class="card" id="step2Place" style="display:none">
+        <div class="card-title">STEP 2 · 추천 장소 추가 (최대 6개)</div>
+        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--accent);color:var(--accent);font-size:13px">
+          📊 이 심포지엄 TOP 10 추천 장소 불러오기
+        </button>
+        <div id="top10List" style="display:none;margin-bottom:14px"></div>
+        <div class="search-row">
+          <input id="placeSearch" placeholder="정확한 상호 검색 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
+          <select id="placeType" style="width:110px">
+            <option value="restaurant">🍽️ 식당</option>
+            <option value="attraction">🏛️ 명소</option>
+            <option value="cafe">☕ 카페</option>
+            <option value="shopping">🛍️ 쇼핑</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
+        </div>
+        <div id="placeResults"></div>
+        <div class="place-grid" id="addedPlacesGrid"></div>
+      </div>
+
+      <!-- STEP 3: 사용자 선택 -->
+      <div class="card" id="step3User" style="display:none">
+        <div class="card-title">STEP 3 · 발송할 사용자 선택</div>
+        <div id="userSelectList"><div style="color:var(--muted);font-size:13px">승인된 사용자 로딩 중...</div></div>
+      </div>
+
+      <!-- STEP 4: 컨셉 & 메시지 -->
+      <div class="card" id="step4Concept" style="display:none">
+        <div class="card-title">STEP 4 · 초대장 컨셉 & 메시지</div>
+        <div class="concept-grid">
+          <div class="concept-card selected" onclick="selectConcept(this,1)">
+            <div class="concept-icon">🌙</div>
+            <div class="concept-title">프리미엄 다크</div>
+            <div class="concept-desc">격식있는 고급스러운 분위기</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,2)">
+            <div class="concept-icon">🌸</div>
+            <div class="concept-title">웜 골드</div>
+            <div class="concept-desc">따뜻하고 환영하는 느낌</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,3)">
+            <div class="concept-icon">💎</div>
+            <div class="concept-title">클린 블루</div>
+            <div class="concept-desc">깔끔하고 신뢰감 있는 느낌</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>개인 메시지 (선택)</label>
+          <textarea id="customMsg" rows="3" placeholder="안녕하세요! 이번 심포지엄에 초대합니다 😊" oninput="updatePreview()"></textarea>
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="previewArea"></div>
+
+        <div style="display:flex;gap:8px;margin-top:14px" class="no-print">
+          <button class="btn btn-primary" style="flex:1" onclick="sendInvite()">📨 초대장 발송</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="printInvite()">🖨️ 인쇄</button>
+          <button class="btn btn-ghost btn-sm" onclick="updatePreview()">👁️ 미리보기</button>
+        </div>
+        <div id="sendResult" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- 참석현황 탭 -->
+    <div class="tab-page" id="tab-attendance">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div class="card-title" style="margin:0">참석 현황</div>
+          <select id="attFilter" style="width:auto;font-size:13px" onchange="loadAttendance()">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <div id="attendanceList"></div>
+      </div>
+    </div>
+
+    <!-- 품목승인 탭 -->
+    <div class="tab-page" id="tab-items">
+      <div class="card">
+        <div class="card-title">품목 승인 대기</div>
+        <div id="itemList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 팁 입력 모달 -->
+<div class="modal-bg" id="tipModal">
+  <div class="modal">
+    <div class="modal-title" id="tipPlaceName"></div>
+    <div class="form-group">
+      <label>소개 팁</label>
+      <textarea id="tipText" rows="2" placeholder="예) 물회가 정말 맛있어요! 점심에 가세요 🐟"></textarea>
+    </div>
+    <div class="form-group">
+      <label>대표 이미지 URL <span style="font-size:10px;color:var(--muted)">(선택 · 네이버플레이스 사진 우클릭→이미지주소복사)</span></label>
+      <input id="imgUrl" placeholder="https://...">
+      <div id="imgPreview" style="margin-top:6px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="confirmAddPlace()">추가</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('tipModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://sgmmeibexipozsywxpyk.supabase.co';
+const SB_KEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+let currentIntroducer=null;
+let selectedSympo=null;
+let selectedConcept=1;
+let addedPlaces=[];
+let pendingPlace=null;
+let selectedUsers=[];
+let _introFound=null;
+
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=ok?'var(--green)':'var(--red)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// 로그인 STEP1
+async function checkStep1(){
+  const name=document.getElementById('lName').value.trim();
+  const emp=document.getElementById('lEmpId').value.trim();
+  if(!name||!emp){toast('이름과 사번을 입력해주세요',false);return;}
+  const {data}=await sb.from('introducers').select('*').eq('employee_id',emp).eq('name',name).single();
+  if(!data){toast('등록된 MR 정보가 없습니다',false);return;}
+  _introFound=data;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+  if(!data.password){
+    document.getElementById('pwLabel').textContent='새 비밀번호 설정';
+    document.getElementById('step2Msg').innerHTML=`👋 <strong>${data.name}</strong>님, 처음 로그인하시는군요!<br>비밀번호를 설정해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='block';
+  } else {
+    document.getElementById('pwLabel').textContent='비밀번호';
+    document.getElementById('step2Msg').innerHTML=`✅ <strong>${data.name}</strong>님 확인되었습니다.`;
+    document.getElementById('pwConfirmWrap').style.display='none';
+  }
+  setTimeout(()=>document.getElementById('lPw').focus(),100);
+}
+
+async function checkStep2(){
+  const pw=document.getElementById('lPw').value;
+  if(!pw||pw.length<4){toast('비밀번호 4자 이상',false);return;}
+  if(!_introFound.password){
+    if(pw!==document.getElementById('lPwConfirm').value){toast('비밀번호 불일치',false);return;}
+    await sb.from('introducers').update({password:pw}).eq('id',_introFound.id);
+    _introFound.password=pw;
+  } else {
+    if(pw!==_introFound.password){toast('비밀번호 오류',false);return;}
+  }
+  currentIntroducer=_introFound;
+  localStorage.setItem('mr_session',JSON.stringify(currentIntroducer));
+  enterApp();
+}
+
+function backToStep1(){
+  _introFound=null;
+  document.getElementById('step1').style.display='block';
+  document.getElementById('step2').style.display='none';
+}
+
+function doLogout(){
+  localStorage.removeItem('mr_session');
+  location.reload();
+}
+
+function enterApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('topName').textContent=currentIntroducer.name;
+  loadApproveList();
+  loadSympoList();
+  loadAttendanceFilter();
+  loadItems();
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('mr_session');
+  if(saved){currentIntroducer=JSON.parse(saved);enterApp();}
+});
+
+// 탭
+function switchTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='tab-attendance')loadAttendance();
+  if(id==='tab-items')loadItems();
+  if(id==='tab-approve')loadApproveList();
+}
+
+// 승인
+async function loadApproveList(){
+  if(!currentIntroducer)return;
+  const {data:pending}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','pending');
+  const {data:approved}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','approved');
+  const el=document.getElementById('approveList');
+  el.innerHTML=pending&&pending.length?pending.map(u=>`
+    <div class="approve-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:800">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${u.hospital} · ${u.license_number}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✅ 승인</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">❌ 거절</button>
+        </div>
+      </div>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';
+  const el2=document.getElementById('approvedList');
+  el2.innerHTML=approved&&approved.length?approved.map(u=>`
+    <div class="user-item">
+      <div><div class="user-name">${u.name}</div><div class="user-hosp">${u.hospital}</div></div>
+      <span class="badge badge-green">승인됨</span>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">없음</div>';
+}
+
+async function approveUser(id){
+  await sb.from('users').update({mr_approval:'approved',is_approved:true}).eq('id',id);
+  toast('승인 완료!');loadApproveList();
+}
+async function rejectUser(id){
+  if(!confirm('거절하시겠습니까?'))return;
+  await sb.from('users').update({mr_approval:'rejected'}).eq('id',id);
+  toast('거절 처리됨');loadApproveList();
+}
+
+// 심포지엄
+let _mrActiveMonth='all';
+
+function buildMrMonthFilter(data){
+  const el=document.getElementById('mrMonthFilter');
+  if(!el)return;
+  const months=new Set();
+  (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
+  const sorted=[...months].sort().reverse();
+  if(!sorted.length){el.innerHTML='';return;}
+  let html='<span class="month-chip active" data-month="all" onclick="filterMrSympo(this.dataset.month)">전체</span>';
+  sorted.forEach(m=>{
+    const parts=m.split('-');
+    html+='<span class="month-chip" data-month="'+m+'" onclick="filterMrSympo(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
+  });
+  el.innerHTML=html;
+}
+
+function filterMrSympo(month){
+  _mrActiveMonth=month;
+  document.querySelectorAll('#mrMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?window._sympoDB:window._sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
+  renderMrSympoList(filtered);
+}
+
+function renderMrSympoList(data){
+  const el=document.getElementById('sympoList');
+  el.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
+  el.innerHTML=data&&data.length?data.map(j=>`
+    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')" style="margin-bottom:0">
+      <div class="hotel" style="font-size:13px">🏨 ${j.hotel_name}</div>
+      <div class="date" style="font-size:11px;margin-top:4px">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</div>
+      ${j.symposium_name?`<div style="font-size:11px;color:var(--accent);margin-top:4px">🎓 ${j.symposium_name}</div>`:''}
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">해당 월 심포지엄 없음</div>';
+}
+
+async function loadSympoList(){
+  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
+  window._sympoDB=data||[];
+  buildMrMonthFilter(data||[]);
+  const el=document.getElementById('sympoList');
+  renderMrSympoList(data||[]);
+}
+
+async function selectSympo(el,id){
+  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSympo=window._sympoDB.find(j=>j.id===id);
+  addedPlaces=[];
+  renderPlaceGrid();
+  document.getElementById('step2Place').style.display='block';
+  document.getElementById('step3User').style.display='block';
+  document.getElementById('step4Concept').style.display='block';
+  await loadUserSelectList();
+  updatePreview();
+}
+
+// 장소 검색
+// TOP 10 추천 장소 로드
+async function loadTop10(){
+  if(!selectedSympo){toast('심포지엄을 먼저 선택해주세요',false);return;}
+  const btn=document.getElementById('top10Btn');
+  btn.textContent='로딩 중...';btn.disabled=true;
+
+  const {data,error}=await sb.from('popular_locations')
+    .select('*')
+    .eq('journey_id',selectedSympo.id)
+    .order('recommend_count',{ascending:false})
+    .limit(10);
+
+  btn.textContent='📊 이 심포지엄 TOP 10 추천 장소 불러오기';
+  btn.disabled=false;
+
+  const el=document.getElementById('top10List');
+  if(!data||!data.length){
+    el.style.display='block';
+    el.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px">아직 추천 데이터가 없습니다<br>첫 번째로 추천 장소를 등록해보세요!</div>';
+    return;
+  }
+
+  el.style.display='block';
+  const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">TOP ${data.length} · 많이 추천된 장소</div>`+
+    data.map((p,i)=>{
+      const already=addedPlaces.some(a=>a.name===p.place_name);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:7px;${already?'opacity:.5':''}">
+        <div style="font-size:16px;font-weight:900;color:var(--accent);width:22px;text-align:center">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800">${typeIcon[p.place_type]||'📍'} ${p.place_name}</div>
+          ${p.address?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${p.address}</div>`:''}
+          ${p.latest_tip?`<div style="font-size:11px;color:var(--accent);margin-top:2px">💬 ${p.latest_tip}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;color:var(--muted)">추천 ${p.recommend_count}회</span>
+          ${already
+            ?'<span style="font-size:11px;color:var(--green);font-weight:700">✅ 추가됨</span>'
+            :`<button class="btn btn-primary btn-sm" onclick="addFromTop10(${i})">+ 추가</button>`
+          }
+        </div>
+      </div>`;
+    }).join('');
+  window._top10Data=data;
+}
+
+function addFromTop10(idx){
+  const p=window._top10Data[idx];
+  if(!p)return;
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  if(addedPlaces.some(a=>a.name===p.place_name)){toast('이미 추가된 장소입니다',false);return;}
+  addedPlaces.push({
+    name:p.place_name,
+    lat:p.place_lat,
+    lng:p.place_lng,
+    addr:p.address||'',
+    thumb:p.photo_url||'',
+    cat:'',
+    type:p.place_type||'restaurant',
+    tip:p.latest_tip||'',
+    link:''
+  });
+  renderPlaceGrid();
+  updatePreview();
+  toast(p.place_name+' 추가됨 ✅');
+  // 버튼 상태 업데이트
+  loadTop10();
+}
+
 let _searchPage=1;
 let _searchQuery='';
 let _allResults=[];
