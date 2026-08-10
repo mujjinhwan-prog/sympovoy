@@ -523,7 +523,7 @@ function activateGPS(e){
     pos=>{
       const d=getDist(pos.coords.latitude,pos.coords.longitude,CJ.hotel_lat,CJ.hotel_lng);
       if(d<=300)checkVisited();
-      else toast(`호텔까지 ${Math.round(d)}m — 300m 이내에서 인증 가능합니다`,3500);
+      else toast(`${CJ.hotel_name} 300m 내에서 다시한번 도착인증 부탁드려요^^`,3500);
     },
     ()=>toast('GPS 오류: 위치 권한을 허용해주세요'),
     {enableHighAccuracy:true,timeout:12000}
