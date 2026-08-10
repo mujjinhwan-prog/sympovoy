@@ -269,7 +269,7 @@ const SBURL='https://sgmmeibexipozsywxpyk.supabase.co';
 const SBKEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
 const sb=supabase.createClient(SBURL,SBKEY);
 const NAMU='https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png';
-const TCOL={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#6c47d4'};
+const TCOL={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
 const TLAB={restaurant:'🍽️ 식당',cafe:'☕ 카페',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
 
 let CU=null, CJ=null, allInvites=[], visitId=null;
@@ -434,23 +434,25 @@ async function showDetail(idx){
       const col=TCOL[l.place_type]||'#333';
       const lab=TLAB[l.place_type]||'📍 장소';
       const addr=l.address||'';
+      const phone=l.phone||'';
       const nurl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
-      const sa=addr.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div class="place-card" style="border:3px solid ${col}">
-        <div class="place-type-label" style="color:${col}">${lab}</div>
-        <div class="place-name-big">${l.place_name}</div>
-        ${addr?`<div class="place-addr-row" onclick="copyAddr('${sa}')">
-          <span>📍</span>
-          <span class="place-addr-text">${addr}</span>
-          <span class="place-addr-copy" style="color:${col}">탭하여 복사</span>
-        </div>`:''}
-        ${l.tip?`<div class="place-tip">💬 ${l.tip}</div>`:''}
-        <div class="place-btns">
-          <button class="pbtn pbtn-naver" onclick="window.open('${nurl}','_blank')">네이버</button>
-          <button class="pbtn pbtn-nav" onclick="window.open('https://map.naver.com/v5/search/${encodeURIComponent(l.place_name)}','_blank')">길찾기</button>
-          ${addr?`<button class="pbtn pbtn-copy" style="border-color:${col}" onclick="copyAddr('${sa}')">📋 주소복사</button>`:''}
-        </div>
-      </div>`;
+      const sa=addr.replace(/'/g,"\'");
+      const phoneHtml=phone?'<div style="display:flex;align-items:center;gap:6px;padding:5px 0;font-size:13px"><span>📞</span><a href="tel:'+phone+'" style="color:var(--accent);font-weight:700;text-decoration:none">'+phone+'</a></div>':'';
+      const addrHtml=addr?'<div class="place-addr-row" onclick="copyAddr(\''+sa+'\')"><span>📍</span><span class="place-addr-text">'+addr+'</span><span class="place-addr-copy" style="color:'+col+'">탭하여 복사</span></div>':'';
+      const tipHtml=l.tip?'<div class="place-tip">💬 '+l.tip+'</div>':'';
+      const copyBtn=addr?'<button class="pbtn pbtn-copy" style="border-color:'+col+'" onclick="copyAddr(\''+sa+'\')">📋 주소복사</button>':'';
+      return '<div class="place-card" style="border:3px solid '+col+'">'
+        +'<div class="place-type-label" style="color:'+col+'">'+lab+'</div>'
+        +'<div class="place-name-big">'+l.place_name+'</div>'
+        +addrHtml
+        +phoneHtml
+        +tipHtml
+        +'<div class="place-btns">'
+        +'<button class="pbtn pbtn-naver" onclick="window.open(\''+nurl+'\',\'_blank\')">네이버</button>'
+        +'<button class="pbtn pbtn-nav" onclick="window.open(\'https://map.naver.com/v5/search/'+encodeURIComponent(l.place_name)+'\',\'_blank\')">길찾기</button>'
+        +copyBtn
+        +'</div>'
+        +'</div>';
     }).join('');
     plHtml=`<div class="card"><div class="sec-title">🗺️ 추천 장소 (${locs.length}곳)</div>${cards}</div>`;
   }
@@ -472,10 +474,14 @@ async function showDetail(idx){
     ${plHtml}
     <div class="card">
       <div class="sec-title">💊 강의 품목 입력</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${J.hotel_name} 심포지엄 품목을 MR에게 전송하세요</div>
-      <div id="iItemList"></div>
-      <button class="add-item-btn" onclick="addItem()">+ 품목 추가</button>
-      <button class="send-btn" onclick="sendItems('${J.id}')">MR · 관리자에게 전송하기 📤</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${J.hotel_name} 심포지엄에서 강의된 품목을 입력하세요 (최대 4개)</div>
+      <div id="iItemList">
+        <div class="item-row"><span>💊</span><input placeholder="품목 1" type="text"></div>
+        <div class="item-row"><span>💊</span><input placeholder="품목 2" type="text"></div>
+        <div class="item-row"><span>💊</span><input placeholder="품목 3" type="text"></div>
+        <div class="item-row"><span>💊</span><input placeholder="품목 4" type="text"></div>
+      </div>
+      <button class="send-btn" style="margin-top:10px" onclick="sendItems('${J.id}')">MR · 관리자에게 전송하기 📤</button>
       <div style="font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 8px">📋 제출 이력</div>
       ${ihHtml}
     </div>`;
