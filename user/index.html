@@ -542,7 +542,7 @@ function startGPSWatch(){
 async function checkVisited(){
   if(!CU||!CJ)return;
   const {data}=await sb.from('visits').select('id').eq('user_id',CU.id).eq('journey_id',CJ.id).single();
-  if(data){toast('이미 방문 인증 완료! ✅');return;}
+  if(data){toast('이미 도착인증되셨습니다! ✅');return;}
   showSpin();
 }
 
