@@ -231,8 +231,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <div class="tab active" onclick="switchTab(this,'tab-approve')">👥 승인</div>
       <div class="tab" onclick="switchTab(this,'tab-invite')">📨 초대장</div>
       <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석현황</div>
-      <div class="tab" onclick="switchTab(this,'tab-items')">💊 품목승인</div>
-      <div class="tab" onclick="switchTab(this,'tab-users')">👤 사용자</div>
+      <div class="tab" onclick="switchTab(this,'tab-users')">👤 사용자·품목</div>
     </div>
 
     <!-- 승인 탭 -->
@@ -1199,58 +1198,110 @@ async function loadUserManage(){
 
 async function showUserDetail(userId){
   const {data:u}=await sb.from('users').select('*').eq('id',userId).single();
-  const {data:invites}=await sb.from('invite_packages').select('*,journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('user_id',userId).order('created_at',{ascending:false});
+  const {data:invites}=await sb.from('invite_packages')
+    .select('*,journeys(id,hotel_name,symposium_name,symposium_date,symposium_date_end)')
+    .eq('user_id',userId).order('created_at',{ascending:false});
   const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)').eq('user_id',userId);
-  const {data:items}=await sb.from('items').select('*,journeys(hotel_name)').eq('user_id',userId);
+  const {data:items}=await sb.from('items').select('*').eq('user_id',userId);
 
-  const totalScore=(visits||[]).reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0),0)
-    +(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+  // 점수 계산
+  const visScore=(visits||[]).reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0),0);
+  const itmScore=(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+  const totalScore=visScore+itmScore;
 
-  const invHtml=(invites||[]).map((inv,i)=>{
+  // 심포지엄별 품목 그룹화
+  const itmByJ={};
+  (items||[]).forEach(i=>{
+    const jid=i.journey_id||'none';
+    if(!itmByJ[jid])itmByJ[jid]=[];
+    itmByJ[jid].push(i);
+  });
+
+  // 방문 정보 맵
+  const visMap={};
+  (visits||[]).forEach(v=>{visMap[v.journey_id]=v;});
+
+  // 심포지엄별 통합 섹션 생성
+  const sympoHtml=(invites||[]).map((inv,idx)=>{
     const j=inv.journeys||{};
-    const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
-    return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:13px;font-weight:800">초대장 ${i+1} · 🏨 ${j.hotel_name||'-'}</div>
-          <div style="font-size:11px;color:var(--muted)">📅 ${period||'-'}</div>
-          ${j.symposium_name?`<div style="font-size:11px;color:var(--accent)">🎓 ${j.symposium_name}</div>`:''}
+    const jid=j.id;
+    const period=(j.symposium_date||'')+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
+    const vis=visMap[jid];
+    const jItems=itmByJ[jid]||[];
+    const visScore2=vis?(v=>((v.gps_score||0)+(v.photo_score||0)))(vis):0;
+    const itmScore2=jItems.filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+    const sympoTotal=visScore2+itmScore2;
+
+    const itemsHtml=jItems.length?jItems.map(i=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700">💊 ${i.item_name}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${i.is_approved
+            ?`<span class="badge badge-green">${i.approved_score||0}점 ✅</span>`
+            :`<div style="display:flex;gap:4px">
+                <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
+                <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
+                <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1점</button>
+              </div>`
+          }
         </div>
-        <button class="btn btn-danger btn-sm" onclick="recallInvite('${inv.id}','${j.hotel_name||''}')">📥 회수</button>
+      </div>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:8px 0">등록된 품목 없음</div>';
+
+    return `<div style="border:1.5px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden">
+      <div style="background:var(--surface2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:800">🏨 ${j.hotel_name||'-'}</div>
+          <div style="font-size:11px;color:var(--muted)">📅 ${period||'-'}${j.symposium_name?' · 🎓 '+j.symposium_name:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:900;color:var(--accent)">${sympoTotal}점</div>
+          <div style="display:flex;gap:4px;margin-top:3px;justify-content:flex-end">
+            ${vis?`<span class="badge badge-green">방문 ${visScore2}점</span>`:'<span class="badge badge-yellow">미방문</span>'}
+            <span class="badge badge-blue">품목 ${itmScore2}점</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:6px 14px 12px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 4px">💊 강의 품목 (${jItems.length}개)</div>
+        ${itemsHtml}
+        ${jItems.filter(i=>!i.is_approved).length?`<div style="font-size:11px;color:var(--yellow);margin-top:6px">⏳ 미승인 ${jItems.filter(i=>!i.is_approved).length}개</div>`:''}
+      </div>
+      <div style="padding:0 14px 12px;display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" onclick="recallInvite('${inv.id}','${j.hotel_name||''}')">📥 초대장 회수</button>
       </div>
     </div>`;
-  }).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">초대장 없음</div>';
-
-  const visHtml=(visits||[]).map(v=>`
-    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <span>🏨 ${v.journeys?.hotel_name||'-'} · ${v.journeys?.symposium_date||'-'}</span>
-      <span class="badge badge-green">${(v.gps_score||0)+(v.photo_score||0)}점</span>
-    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">방문 기록 없음</div>';
-
-  const itmHtml=(items||[]).map(i=>`
-    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <span>💊 ${i.item_name}</span>
-      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?(i.approved_score||0)+'점':'검토중'}</span>
-    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">품목 없음</div>';
+  }).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">참석 이력 없음</div>';
 
   document.getElementById('userDetailContent').innerHTML=`
     <div style="margin-bottom:16px">
-      <div style="font-size:18px;font-weight:900;margin-bottom:4px">${u.name}</div>
-      <div style="font-size:13px;color:var(--muted)">${u.hospital} · ${u.license_number}</div>
-      <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:10px;padding:14px;text-align:center;color:#fff;margin:12px 0">
-        <div style="font-size:32px;font-weight:900">${totalScore}점</div>
-        <div style="font-size:12px;opacity:.8">누적 점수</div>
+      <div style="font-size:18px;font-weight:900;margin-bottom:3px">${u.name}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${u.hospital} · ${u.license_number}</div>
+      <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:12px;padding:16px;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div><div style="font-size:28px;font-weight:900">${totalScore}</div><div style="font-size:11px;opacity:.8">총 점수</div></div>
+        <div><div style="font-size:28px;font-weight:900">${(invites||[]).length}</div><div style="font-size:11px;opacity:.8">심포지엄</div></div>
+        <div><div style="font-size:28px;font-weight:900">${(items||[]).length}</div><div style="font-size:11px;opacity:.8">품목</div></div>
       </div>
     </div>
-    <div style="font-size:13px;font-weight:800;margin-bottom:8px">📨 초대장 (${(invites||[]).length}개)</div>
-    ${invHtml}
-    <div style="font-size:13px;font-weight:800;margin:12px 0 8px">🏅 방문 이력 (${(visits||[]).length}회)</div>
-    ${visHtml}
-    <div style="font-size:13px;font-weight:800;margin:12px 0 8px">💊 품목 이력 (${(items||[]).length}개)</div>
-    ${itmHtml}
-    <button class="btn btn-danger" style="width:100%;margin-top:16px" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 사용자 삭제</button>`;
+    <div style="font-size:14px;font-weight:800;margin-bottom:10px">📋 심포지엄별 상세</div>
+    ${sympoHtml}
+    <button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 사용자 삭제</button>`;
 
   document.getElementById('userDetailModal').classList.add('open');
+}
+
+// 인라인 품목 승인 (상세 팝업 내)
+async function approveItemInline(id,score,btn){
+  await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
+  toast(`${score}점 승인 완료 ✅`);
+  // 해당 행 UI 즉시 업데이트
+  const row=btn.closest('div[style*="border-bottom"]');
+  if(row){
+    const nameEl=row.querySelector('div[style*="font-weight:700"]');
+    const name=nameEl?nameEl.textContent:'';
+    row.innerHTML=`<div style="font-size:13px;font-weight:700">${name}</div><span class="badge badge-green">${score}점 ✅</span>`;
+    row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';row.style.padding='8px 0';row.style.borderBottom='1px solid var(--border)';
+  }
 }
 
 async function recallInvite(invId,hotelName){
