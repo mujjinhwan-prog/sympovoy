@@ -860,6 +860,54 @@ function updatePreview(){
 }
 
 
+// ===== 장소 저장 공통 처리 =====
+// 409(Conflict) 방지: 중복 제거 → 기존 행 삭제 → 삭제 검증 → 삽입
+async function saveInviteLocations(invId,places){
+  // 1) 같은 장소가 두 번 담긴 경우 제거 (이름+좌표 기준)
+  const seen=new Set();
+  const uniq=[];
+  for(const p of (places||[])){
+    const key=(p.name||'')+'|'+(p.lat||'')+'|'+(p.lng||'');
+    if(seen.has(key))continue;
+    seen.add(key);
+    uniq.push(p);
+  }
+
+  // 2) 기존 장소 삭제
+  const {error:delErr}=await sb.from('invite_locations').delete().eq('invite_id',invId);
+  if(delErr){
+    console.error('[invite_locations DELETE]',delErr);
+    toast('기존 장소 삭제 실패: '+delErr.message,false);
+    return false;
+  }
+
+  // 3) 삭제 검증 — RLS로 DELETE가 막히면 에러 없이 0건만 지워지고 이후 INSERT가 409를 냄
+  const {data:left,error:chkErr}=await sb.from('invite_locations').select('id').eq('invite_id',invId);
+  if(chkErr){
+    console.error('[invite_locations SELECT]',chkErr);
+  }else if(left&&left.length){
+    console.error('[invite_locations] 삭제되지 않은 기존 행 '+left.length+'건',left);
+    toast('기존 장소가 삭제되지 않았습니다. Supabase RLS의 DELETE 정책을 확인하세요',false);
+    return false;
+  }
+
+  if(!uniq.length)return true;
+
+  // 4) 삽입
+  const rows=uniq.map(p=>({
+    invite_id:invId,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
+    address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
+    photo_url:p.thumb||null,place_link:p.link||null
+  }));
+  const {error:insErr}=await sb.from('invite_locations').insert(rows);
+  if(insErr){
+    console.error('[invite_locations INSERT]',insErr,rows);
+    toast('장소 저장 실패 ['+(insErr.code||'?')+'] '+insErr.message,false);
+    return false;
+  }
+  return true;
+}
+
 // 발송
 async function sendInvite(){
   if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
@@ -868,15 +916,16 @@ async function sendInvite(){
   // 수정 모드
   if(window._editInviteId){
     const invId=window._editInviteId;
-    // 기존 장소 삭제 후 재등록
-    await sb.from('invite_locations').delete().eq('invite_id',invId);
-    await sb.from('invite_packages').update({concept:selectedConcept,custom_message:msg||null,is_sent:true}).eq('id',invId);
-    if(addedPlaces.length){
-      await sb.from('invite_locations').insert(addedPlaces.map(p=>({
-        invite_id:invId,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
-        address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
-        photo_url:p.thumb||null,place_link:p.link||null
-      })));
+    const {error:updErr}=await sb.from('invite_packages').update({concept:selectedConcept,custom_message:msg||null,is_sent:true}).eq('id',invId);
+    if(updErr){
+      console.error('[invite_packages UPDATE]',updErr);
+      toast('초대장 수정 실패: '+updErr.message,false);
+      return;
+    }
+    const ok=await saveInviteLocations(invId,addedPlaces);
+    if(!ok){
+      document.getElementById('sendResult').innerHTML=`<div style="background:rgba(255,90,90,.1);border:1px solid var(--red,#ff5a5a);border-radius:8px;padding:12px;font-size:13px;color:var(--red,#ff5a5a);font-weight:700">⚠️ 초대장 내용은 저장되었으나 추천 장소 저장에 실패했습니다. F12 콘솔을 확인해주세요.</div>`;
+      return; // 수정 모드 유지 — 다시 시도 가능
     }
     window._editInviteId=null;window._editUserId=null;
     document.getElementById('sendInviteBtn').textContent='📨 초대장 발송';
@@ -890,22 +939,27 @@ async function sendInvite(){
   // 신규 발송
   if(!selectedUsers.length){toast('발송할 사용자를 선택해주세요',false);return;}
   let count=0;
+  const failed=[];
   for(const u of selectedUsers){
-    const {data:pkg}=await sb.from('invite_packages').insert({
+    const {data:pkg,error:pkgErr}=await sb.from('invite_packages').insert({
       introducer_id:currentIntroducer.id,user_id:u.id,journey_id:selectedSympo.id,
       concept:selectedConcept,custom_message:msg||null,is_sent:true
     }).select().single();
-    if(pkg&&addedPlaces.length){
-      await sb.from('invite_locations').insert(addedPlaces.map(p=>({
-        invite_id:pkg.id,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
-        address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
-        photo_url:p.thumb||null,place_link:p.link||null
-      })));
+    if(pkgErr||!pkg){
+      console.error('[invite_packages INSERT]',u.name,pkgErr);
+      failed.push(u.name);
+      continue;
     }
+    const ok=await saveInviteLocations(pkg.id,addedPlaces);
+    if(!ok){failed.push(u.name+'(장소)');continue;}
     count++;
   }
-  const names=selectedUsers.map(u=>u.name).join(', ');
-  document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
+  const names=selectedUsers.filter(u=>!failed.some(f=>f.indexOf(u.name)===0)).map(u=>u.name).join(', ');
+  if(failed.length){
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(255,90,90,.1);border:1px solid var(--red,#ff5a5a);border-radius:8px;padding:12px;font-size:13px;color:var(--red,#ff5a5a);font-weight:700">⚠️ 실패: ${failed.join(', ')}${count?`<br>✅ 성공: ${names}`:''}<br><span style="font-weight:500">F12 콘솔에서 상세 오류를 확인하세요.</span></div>`;
+  }else{
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
+  }
   toast(`${count}명에게 발송 완료!`);
   loadSentInvites();
 }
@@ -1102,9 +1156,10 @@ async function loadSentInvites(){
 async function deleteInvite(invId,hotel,userName){
   if(!confirm(`"${userName}"님께 보낸 ${hotel} 초대장을 삭제하시겠습니까?
 사용자 페이지에서 더 이상 보이지 않습니다.`))return;
-  await sb.from('invite_locations').delete().eq('invite_id',invId);
+  const {error:locErr}=await sb.from('invite_locations').delete().eq('invite_id',invId);
+  if(locErr){console.error('[invite_locations DELETE]',locErr);toast('장소 삭제 실패: '+locErr.message,false);return;}
   const {error}=await sb.from('invite_packages').delete().eq('id',invId);
-  if(error){toast('삭제 실패',false);return;}
+  if(error){console.error('[invite_packages DELETE]',error);toast('삭제 실패: '+error.message,false);return;}
   toast('초대장이 삭제되었습니다');
   loadSentInvites();
 }
