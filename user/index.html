@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SYMPOVOY 사용자</title>
+<meta name="app-build" content="2026-08-12-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -78,7 +79,22 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .agenda-img{width:100%;max-height:500px;object-fit:contain;border-radius:10px;margin-top:8px;display:block;}
 
 /* 추천 장소 */
-.place-card{border-radius:14px;padding:16px;margin-bottom:12px;}
+/* 타입별 색 — 라이트/다크에서 각각 대비가 확보되도록 CSS 변수로 분리 */
+.pt-restaurant{--pc:#1a7a4e;}
+.pt-cafe{--pc:#c98400;}
+.pt-attraction{--pc:#2d6a8a;}
+.pt-shopping{--pc:#e91e8c;}
+.pt-default{--pc:#5a6178;}
+:root[data-theme="dark"] .pt-restaurant{--pc:#3ddc97;}
+:root[data-theme="dark"] .pt-cafe{--pc:#f5c451;}
+:root[data-theme="dark"] .pt-attraction{--pc:#5aa8ce;}
+:root[data-theme="dark"] .pt-shopping{--pc:#ff5fb0;}
+:root[data-theme="dark"] .pt-default{--pc:#9aa2bb;}
+
+.place-card{border-radius:14px;padding:16px;margin-bottom:12px;border:3px solid var(--pc);}
+.place-card .place-type-label{color:var(--pc);}
+.place-card .place-addr-copy{color:var(--pc);}
+.place-card .pbtn-copy{border-color:var(--pc);}
 .place-photo-wrap{position:relative;width:100%;height:160px;border-radius:11px;overflow:hidden;margin-bottom:12px;background:var(--surface2);}
 .place-photo{width:100%;height:100%;object-fit:cover;display:block;}
 .place-photo-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;line-height:1;text-shadow:0 4px 14px rgba(0,0,0,.25);}
@@ -495,16 +511,16 @@ async function showDetail(idx){
   if(locs&&locs.length>0){
     console.log('[DEBUG] Rendering', locs.length, 'places');
     const cards=locs.map(l=>{
-      const col=TCOL[l.place_type]||'#333';
+      const ptype=TICON[l.place_type]?l.place_type:'default';
       const lab=TLAB[l.place_type]||'📍 장소';
       const addr=l.address||'';
       const phone=l.phone||'';
       const nurl=l.place_link||('https://search.naver.com/search.naver?query='+encodeURIComponent(l.place_name));
       const sa=addr.replace(/'/g,"\'");
       const phoneHtml=phone?'<div style="display:flex;align-items:center;gap:6px;padding:5px 0;font-size:13px"><span>📞</span><a href="tel:'+phone+'" style="color:var(--accent);font-weight:700;text-decoration:none">'+phone+'</a></div>':'';
-      const addrHtml=addr?'<div class="place-addr-row" onclick="copyAddr(\''+sa+'\')"><span>📍</span><span class="place-addr-text">'+addr+'</span><span class="place-addr-copy" style="color:'+col+'">탭하여 복사</span></div>':'';
+      const addrHtml=addr?'<div class="place-addr-row" onclick="copyAddr(\''+sa+'\')"><span>📍</span><span class="place-addr-text">'+addr+'</span><span class="place-addr-copy">탭하여 복사</span></div>':'';
       const tipHtml=l.tip?'<div class="place-tip">💬 '+l.tip+'</div>':'';
-      const copyBtn=addr?'<button class="pbtn pbtn-copy" style="border-color:'+col+'" onclick="copyAddr(\''+sa+'\')">📋 주소복사</button>':'';
+      const copyBtn=addr?'<button class="pbtn pbtn-copy" onclick="copyAddr(\''+sa+'\')">📋 주소복사</button>':'';
 
       // 상단 이미지 — 링크된 이미지가 있으면 사진, 없으면 같은 크기의 타입 이모지 블록
       const icon=TICON[l.place_type]||'📍';
@@ -514,7 +530,7 @@ async function showDetail(idx){
       if(photo){
         const su=photo.replace(/"/g,'&quot;');
         photoHtml='<div class="place-photo-wrap" style="background:'+grad+'">'
-          +'<img src="'+su+'" class="place-photo" loading="lazy" '
+          +'<img src="'+su+'" class="place-photo" loading="lazy" referrerpolicy="no-referrer" '
           +'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
           +'<div class="place-photo-fb" style="display:none">'+icon+'</div>'
           +'</div>';
@@ -524,9 +540,9 @@ async function showDetail(idx){
           +'</div>';
       }
 
-      return '<div class="place-card" style="border:3px solid '+col+'">'
+      return '<div class="place-card pt-'+ptype+'">'
         +photoHtml
-        +'<div class="place-type-label" style="color:'+col+'">'+lab+'</div>'
+        +'<div class="place-type-label">'+lab+'</div>'
         +'<div class="place-name-big">'+l.place_name+'</div>'
         +addrHtml
         +phoneHtml
