@@ -150,6 +150,59 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1d2e;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* ===================================================================
+   PC 대응 — 모바일 구성을 그대로 유지한 채 화면 중앙에 폰 프레임으로 표시
+   =================================================================== */
+@media (min-width:600px){
+  /* html에 배경을 주어야 body 배경이 캔버스 전체로 번지지 않음 */
+  html{background:#0b0e18;}
+  html[data-theme="dark"]{background:#05070d;}
+
+  body{
+    width:430px;
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    box-shadow:0 0 0 1px rgba(255,255,255,.06),0 24px 70px rgba(0,0,0,.55);
+    position:relative;
+  }
+
+  /* 하단 탭바 — 뷰포트 전체가 아니라 프레임 폭에 맞춤 */
+  .btab{
+    left:50%;
+    right:auto;
+    width:430px;
+    transform:translateX(-50%);
+  }
+
+  /* 오버레이 — 프레임 안쪽만 덮도록 */
+  .gps-overlay,.done-overlay{
+    left:50%;
+    right:auto;
+    width:430px;
+    transform:translateX(-50%);
+  }
+
+  /* PC 마우스 인터랙션 보강 */
+  .icard{transition:border-color .2s,transform .15s,box-shadow .2s;}
+  .icard:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.14);}
+  .tbtn:hover,.pbtn:hover,.mc:hover{filter:brightness(1.08);}
+  .login-btn:hover,.send-btn:hover,.done-btn:hover{filter:brightness(1.08);}
+  .bti:hover{color:var(--accent);}
+  .place-addr-row:hover{filter:brightness(.97);}
+
+  /* 스크롤바를 프레임에 어울리게 */
+  body::-webkit-scrollbar{width:8px;}
+  body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+}
+
+/* 넓은 화면에서 프레임 좌우 여백을 살짝 더 어둡게 */
+@media (min-width:1000px){
+  html{background:radial-gradient(circle at 50% 0%,#161b2e 0%,#0b0e18 60%);background-attachment:fixed;}
+  html[data-theme="dark"]{background:radial-gradient(circle at 50% 0%,#0d1120 0%,#05070d 60%);background-attachment:fixed;}
+}
 </style>
 </head>
 <body>
@@ -622,10 +675,14 @@ async function completeSpin(){
 
 function launchConfetti(){
   const cols=['#3b6ef5','#18b96a','#f59e0b','#e74c3c','#6c47d4','#4f8ef7'];
+  // PC에서는 body가 430px 프레임이므로 폭죽도 프레임 안에서만 떨어지게 함
+  const r=document.body.getBoundingClientRect();
+  const fLeft=r.left+window.scrollX;
+  const fWidth=r.width||window.innerWidth;
   for(let i=0;i<60;i++){
     setTimeout(()=>{
       const el=document.createElement('div');
-      el.style.cssText=`position:fixed;top:-10px;left:${Math.random()*100}vw;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'2px'};z-index:700;pointer-events:none;animation:fall ${1.5+Math.random()*2}s ease-in forwards;`;
+      el.style.cssText='position:fixed;top:-10px;left:'+(fLeft+Math.random()*fWidth)+'px;width:'+(6+Math.random()*8)+'px;height:'+(6+Math.random()*8)+'px;background:'+cols[Math.floor(Math.random()*cols.length)]+';border-radius:'+(Math.random()>.5?'50%':'2px')+';z-index:700;pointer-events:none;animation:fall '+(1.5+Math.random()*2)+'s ease-in forwards;';
       document.body.appendChild(el);
       setTimeout(()=>el.remove(),4000);
     },Math.random()*1200);
