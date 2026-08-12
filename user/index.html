@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SYMPOVOY 사용자</title>
-<meta name="app-build" content="2026-08-12-c">
+<meta name="app-build" content="2026-08-12-d">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -135,7 +135,10 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .stamp-item{background:var(--surface2);border-radius:12px;padding:12px 6px;text-align:center;border:2px solid transparent;}
 .stamp-item.done{background:rgba(24,185,106,.08);border-color:var(--green);}
 .stamp-img{width:32px;height:32px;border-radius:50%;margin-bottom:4px;}
-.stamp-name{font-size:10px;font-weight:700;color:var(--muted);}
+.stamp-name{font-size:11px;font-weight:800;color:var(--muted);line-height:1.25;word-break:keep-all;}
+.stamp-date{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:-.2px;white-space:nowrap;}
+.stamp-item.done .stamp-date{color:var(--green);opacity:.85;}
+.stamp-score{font-size:10px;font-weight:700;color:var(--green);margin-top:3px;}
 .stamp-item.done .stamp-name{color:var(--green);}
 .mf{display:flex;flex-wrap:wrap;gap:5px;padding:10px 14px 0;}
 .mc{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);}
@@ -318,7 +321,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
         </div>
       </div>
       <div class="mf" id="stampMF"></div>
-      <div style="font-size:13px;font-weight:800;padding:12px 14px 6px">🏅 방문 도장</div>
+      <div style="font-size:13px;font-weight:800;padding:12px 14px 6px">🏅 도장깨기</div>
       <div class="stamp-grid" id="stampGrid"></div>
     </div>
   </div>
@@ -850,7 +853,7 @@ async function uploadPhoto(input){
 // ====== 도장판 ======
 async function loadStamp(){
   if(!CU)return;
-  const {data:vs}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)').eq('user_id',CU.id);
+  const {data:vs}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date,symposium_date_end)').eq('user_id',CU.id);
   if(!vs)return;
   _visits=vs;
   const g=vs.reduce((s,v)=>s+(v.gps_score||0),0);
@@ -877,13 +880,34 @@ function filterStamp(m){
   renderStamp(m==='all'?_visits:_visits.filter(v=>(v.journeys?.symposium_date||v.visited_at||'').startsWith(m)));
 }
 
+// 행사 기간을 26.8.15~16 형태로 압축 표기
+function fmtPeriod(start,end){
+  if(!start)return '';
+  const sp=String(start).split('-');
+  if(sp.length<3)return String(start);
+  const sy=sp[0].slice(2),sm=parseInt(sp[1],10),sd=parseInt(sp[2].slice(0,2),10);
+  const head=sy+'.'+sm+'.'+sd;
+  if(!end||end===start)return head;
+  const ep=String(end).split('-');
+  if(ep.length<3)return head;
+  const ey=ep[0].slice(2),em=parseInt(ep[1],10),ed=parseInt(ep[2].slice(0,2),10);
+  if(ey===sy&&em===sm)return head+'~'+ed;          // 같은 달
+  if(ey===sy)return head+'~'+em+'.'+ed;            // 같은 해, 다른 달
+  return head+'~'+ey+'.'+em+'.'+ed;                // 해가 넘어감
+}
+
 function renderStamp(vs){
-  document.getElementById('stampGrid').innerHTML=vs.length?vs.map(v=>`
+  document.getElementById('stampGrid').innerHTML=vs.length?vs.map(v=>{
+    const j=v.journeys||{};
+    const period=fmtPeriod(j.symposium_date,j.symposium_date_end);
+    return `
     <div class="stamp-item done">
       <img class="stamp-img" src="${NAMU}">
-      <div class="stamp-name">${(v.journeys?.hotel_name||'').slice(0,6)}</div>
-      <div style="font-size:10px;color:var(--green);margin-top:2px">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</div>
-    </div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">방문 기록 없음</div>';
+      <div class="stamp-name">${(j.hotel_name||'').slice(0,8)}</div>
+      ${period?`<div class="stamp-date">${period}</div>`:''}
+      <div class="stamp-score">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</div>
+    </div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">방문 기록 없음</div>';
 }
 </script>
 </body>
