@@ -79,6 +79,9 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 /* 추천 장소 */
 .place-card{border-radius:14px;padding:16px;margin-bottom:12px;}
+.place-photo-wrap{position:relative;width:100%;height:160px;border-radius:11px;overflow:hidden;margin-bottom:12px;background:var(--surface2);}
+.place-photo{width:100%;height:100%;object-fit:cover;display:block;}
+.place-photo-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;line-height:1;text-shadow:0 4px 14px rgba(0,0,0,.25);}
 .place-type-label{font-size:11px;font-weight:700;margin-bottom:5px;}
 .place-name-big{font-size:18px;font-weight:900;color:var(--text);margin-bottom:7px;}
 .place-addr-row{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:8px;padding:8px 10px;margin-bottom:7px;cursor:pointer;}
@@ -324,6 +327,14 @@ const sb=supabase.createClient(SBURL,SBKEY);
 const NAMU='https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png';
 const TCOL={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
 const TLAB={restaurant:'🍽️ 식당',cafe:'☕ 카페',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
+const TICON={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+const TGRAD={
+  restaurant:'linear-gradient(135deg,#1a3a2e 0%,#3d7a5e 100%)',
+  cafe:'linear-gradient(135deg,#b87a00 0%,#f5c451 100%)',
+  attraction:'linear-gradient(135deg,#2d6a8a 0%,#5aa8ce 100%)',
+  shopping:'linear-gradient(135deg,#b01568 0%,#f472b6 100%)'
+};
+const TGRAD_DEF='linear-gradient(135deg,#3a3f55 0%,#6d748f 100%)';
 
 let CU=null, CJ=null, allInvites=[], visitId=null;
 let spinActive=false, spinRot=0, spinTotal=0, lastX=0, isDragging=false;
@@ -494,7 +505,27 @@ async function showDetail(idx){
       const addrHtml=addr?'<div class="place-addr-row" onclick="copyAddr(\''+sa+'\')"><span>📍</span><span class="place-addr-text">'+addr+'</span><span class="place-addr-copy" style="color:'+col+'">탭하여 복사</span></div>':'';
       const tipHtml=l.tip?'<div class="place-tip">💬 '+l.tip+'</div>':'';
       const copyBtn=addr?'<button class="pbtn pbtn-copy" style="border-color:'+col+'" onclick="copyAddr(\''+sa+'\')">📋 주소복사</button>':'';
+
+      // 상단 이미지 — 링크된 이미지가 있으면 사진, 없으면 같은 크기의 타입 이모지 블록
+      const icon=TICON[l.place_type]||'📍';
+      const grad=TGRAD[l.place_type]||TGRAD_DEF;
+      const photo=(l.photo_url||'').trim();
+      let photoHtml;
+      if(photo){
+        const su=photo.replace(/"/g,'&quot;');
+        photoHtml='<div class="place-photo-wrap" style="background:'+grad+'">'
+          +'<img src="'+su+'" class="place-photo" loading="lazy" '
+          +'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+          +'<div class="place-photo-fb" style="display:none">'+icon+'</div>'
+          +'</div>';
+      }else{
+        photoHtml='<div class="place-photo-wrap" style="background:'+grad+'">'
+          +'<div class="place-photo-fb">'+icon+'</div>'
+          +'</div>';
+      }
+
       return '<div class="place-card" style="border:3px solid '+col+'">'
+        +photoHtml
         +'<div class="place-type-label" style="color:'+col+'">'+lab+'</div>'
         +'<div class="place-name-big">'+l.place_name+'</div>'
         +addrHtml
