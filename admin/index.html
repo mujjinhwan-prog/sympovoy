@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-08-13-e">
+<meta name="app-build" content="2026-08-13-f">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -719,7 +719,42 @@ async function showUserDetail(userId){
   document.getElementById('detailPanel').classList.add('open');
 }
 async function approveUser(id){await sb.from('users').update({is_approved:true}).eq('id',id);toast('승인 완료');loadUsers();}
-async function delUser(id){if(!confirm('삭제?'))return;await sb.from('users').delete().eq('id',id);toast('삭제 완료');loadUsers();}
+// users를 참조하는 자식 테이블 — 새 테이블이 생기면 여기에만 추가
+const USER_CHILD_TABLES=['symposium_history','items','visits','invite_packages'];
+
+async function delUser(id){
+  if(!confirm('이 사용자를 삭제하시겠습니까?\n방문 기록·초대장·품목이 모두 함께 삭제됩니다.'))return;
+
+  // 1) 초대장에 딸린 장소 먼저
+  const {data:pkgs}=await sb.from('invite_packages').select('id').eq('user_id',id);
+  const pkgIds=(pkgs||[]).map(p=>p.id);
+  if(pkgIds.length){
+    const {error:locErr}=await sb.from('invite_locations').delete().in('invite_id',pkgIds);
+    if(locErr){console.error('[invite_locations]',locErr);toast('삭제 실패(장소): '+locErr.message,false);return;}
+  }
+
+  // 2) users를 참조하는 자식 행 제거
+  for(const t of USER_CHILD_TABLES){
+    const {error}=await sb.from(t).delete().eq('user_id',id);
+    if(error&&error.code!=='42P01'){
+      console.error('['+t+']',error);
+      toast('삭제 실패('+t+'): '+error.message,false);
+      return;
+    }
+  }
+
+  // 3) 사용자 본인
+  const {error}=await sb.from('users').delete().eq('id',id);
+  if(error){
+    console.error('[users]',error);
+    const m=/on table "([^"]+)"\s*$/.exec(error.message||'');
+    const hint=m?'\n아직 "'+m[1]+'" 테이블에 이 사용자의 데이터가 남아 있습니다.':'';
+    toast('삭제 실패: '+error.message+hint,false);
+    return;
+  }
+  toast('삭제 완료');
+  loadUsers();
+}
 async function addUser(){
   const n=document.getElementById('uName').value.trim();
   const h=document.getElementById('uHosp').value.trim();
