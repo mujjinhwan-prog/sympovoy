@@ -3,29 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SYMPOVOY 사용자</title>
-<meta name="app-build" content="2026-08-12-e">
+<title>SympoYooHoo user</title>
+<meta name="app-build" content="2026-08-13-e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-:root{--bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f8;--accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;--text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:16px;}
-:root[data-theme="dark"]{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;--text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;}
+:root{--bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:16px;}
+:root[data-theme="dark"]{--bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;--text:#e7ece8;--muted:#8b958f;--border:#28302a;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d1a,#1a1d2e);}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d0b,#17251d);}
 .login-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px 24px;width:100%;max-width:380px;}
 .login-logo{text-align:center;margin-bottom:10px;}
 .login-logo img{width:70px;height:70px;border-radius:50%;border:3px solid rgba(255,255,255,.2);}
 .login-title{font-size:22px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;}
-.login-title span{color:#4f8ef7;}
+.login-title span{color:#4fbf85;}
 .login-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center;}
 .login-input{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;padding:12px 15px;color:#fff;font-size:15px;outline:none;margin-bottom:10px;font-family:inherit;}
 .login-input::placeholder{color:rgba(255,255,255,.35);}
-.login-input:focus{border-color:#4f8ef7;}
-.login-btn{width:100%;background:#4f8ef7;border:none;border-radius:12px;padding:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;}
+.login-input:focus{border-color:#4fbf85;}
+.login-btn{width:100%;background:#4fbf85;border:none;border-radius:12px;padding:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;}
 .login-hint{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:12px;line-height:1.6;}
 
-.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d1a,#1a1d2e);flex-direction:column;text-align:center;}
+.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d0b,#17251d);flex-direction:column;text-align:center;}
 .pend-icon{font-size:60px;margin-bottom:14px;animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .pend-info{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 18px;margin-bottom:18px;width:100%;max-width:320px;text-align:left;}
@@ -34,9 +34,9 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 .app{display:none;}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.tl{display:flex;align-items:center;gap:7px;}
+.tl{display:flex;align-items:center;gap:7px;min-width:0;}
 .tl img{width:26px;height:26px;border-radius:50%;}
-.tl span{font-size:16px;font-weight:900;}
+.tl .wm{font-size:15px;}
 .tl em{color:var(--accent);font-style:normal;}
 .tr{display:flex;align-items:center;gap:5px;}
 .tbtn{background:var(--surface2);border:1px solid var(--border);border-radius:18px;padding:4px 10px;font-size:11px;color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;}
@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .igrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px;}
 .icard{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;}
 .icard.past{opacity:.5;filter:grayscale(.5);}
-.icard.upcoming{border-color:var(--accent);box-shadow:0 4px 14px rgba(59,110,245,.15);}
+.icard.upcoming{border-color:var(--accent);box-shadow:0 4px 14px rgba(20,107,69,.15);}
 .icard-bar{position:absolute;top:0;left:0;right:0;height:4px;}
 .icard-num{font-size:10px;color:var(--muted);font-weight:700;margin-top:3px;margin-bottom:5px;}
 .icard-hotel{font-size:13px;font-weight:800;line-height:1.3;margin-bottom:3px;}
@@ -66,10 +66,10 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 /* 초대장 상세 */
 .back-btn{display:flex;align-items:center;gap:7px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--border);background:var(--surface);}
 .hotel-hero{border-radius:var(--radius);padding:22px 18px;margin:12px 14px;position:relative;overflow:hidden;}
-.hotel-hero.c1{background:linear-gradient(135deg,#1a1d2e,#2d3561);color:#fff;}
-.hotel-hero.c2{background:linear-gradient(135deg,#6b3a1f,#c17f24);color:#fff;}
-.hotel-hero.c3{background:linear-gradient(135deg,#1a3a6e,#3b6ef5);color:#fff;}
-.hotel-hero.past{background:linear-gradient(135deg,#444,#666);color:#fff;}
+.hotel-hero.c1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#fff;}
+.hotel-hero.c2{background:linear-gradient(135deg,#2c3020,#7d8447);color:#fff;}
+.hotel-hero.c3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#fff;}
+.hotel-hero.past{background:linear-gradient(135deg,#383e3a,#616964);color:#fff;}
 .gps-hint-btn{display:block;width:100%;margin-top:14px;background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;backdrop-filter:blur(3px);transition:background .18s;}
 .gps-hint-btn:hover{background:rgba(255,255,255,.32);}
 .gps-hint-btn:active{transform:scale(.98);}
@@ -82,16 +82,16 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 /* 추천 장소 */
 /* 타입별 색 — 라이트/다크에서 각각 대비가 확보되도록 CSS 변수로 분리 */
-.pt-restaurant{--pc:#1a7a4e;}
-.pt-cafe{--pc:#c98400;}
-.pt-attraction{--pc:#2d6a8a;}
-.pt-shopping{--pc:#e91e8c;}
-.pt-default{--pc:#5a6178;}
-:root[data-theme="dark"] .pt-restaurant{--pc:#3ddc97;}
-:root[data-theme="dark"] .pt-cafe{--pc:#f5c451;}
-:root[data-theme="dark"] .pt-attraction{--pc:#5aa8ce;}
-:root[data-theme="dark"] .pt-shopping{--pc:#ff5fb0;}
-:root[data-theme="dark"] .pt-default{--pc:#9aa2bb;}
+.pt-restaurant{--pc:#146b45;}
+.pt-cafe{--pc:#5f7434;}
+.pt-attraction{--pc:#38574f;}
+.pt-shopping{--pc:#2b3133;}
+.pt-default{--pc:#5c6663;}
+:root[data-theme="dark"] .pt-restaurant{--pc:#5cc994;}
+:root[data-theme="dark"] .pt-cafe{--pc:#a6c069;}
+:root[data-theme="dark"] .pt-attraction{--pc:#7fa8a0;}
+:root[data-theme="dark"] .pt-shopping{--pc:#aab3b0;}
+:root[data-theme="dark"] .pt-default{--pc:#909a96;}
 
 .place-card{border-radius:14px;padding:16px;margin-bottom:12px;border:3px solid var(--pc);}
 .place-card .place-type-label{color:var(--pc);}
@@ -121,11 +121,11 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .irow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
 .irow:last-child{border-bottom:none;}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
-.badge-green{background:rgba(24,185,106,.12);color:var(--green);}
-.badge-blue{background:rgba(59,110,245,.12);color:var(--accent);}
+.badge-green{background:rgba(20,107,69,.12);color:var(--green);}
+.badge-blue{background:rgba(20,107,69,.12);color:var(--accent);}
 
 /* 도장판 */
-.score-hero{background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:var(--radius);padding:20px;text-align:center;color:#fff;margin:12px 14px;}
+.score-hero{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:var(--radius);padding:20px;text-align:center;color:#fff;margin:12px 14px;}
 .score-num{font-size:50px;font-weight:900;line-height:1;}
 .score-bd{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px;}
 .score-bd-item{background:rgba(255,255,255,.15);border-radius:10px;padding:9px 5px;text-align:center;}
@@ -133,7 +133,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .score-bd-label{font-size:10px;opacity:.8;margin-top:1px;}
 .stamp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:8px 14px 14px;}
 .stamp-item{background:var(--surface2);border-radius:12px;padding:12px 6px;text-align:center;border:2px solid transparent;}
-.stamp-item.done{background:rgba(24,185,106,.08);border-color:var(--green);}
+.stamp-item.done{background:rgba(20,107,69,.08);border-color:var(--green);}
 .stamp-img{width:32px;height:32px;border-radius:50%;margin-bottom:4px;}
 .stamp-name{font-size:11px;font-weight:800;color:var(--muted);line-height:1.25;word-break:keep-all;}
 .stamp-date{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:-.2px;white-space:nowrap;}
@@ -148,7 +148,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .gps-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;flex-direction:column;align-items:center;justify-content:center;}
 .gps-overlay.show{display:flex;}
 .gps-card{background:#fff;border-radius:28px;padding:32px 24px;text-align:center;width:88%;max-width:320px;}
-.gps-hotel{font-size:15px;font-weight:800;color:#1a1d2e;margin-bottom:3px;}
+.gps-hotel{font-size:15px;font-weight:800;color:#13191b;margin-bottom:3px;}
 .gps-sub{font-size:12px;color:#7b82a0;margin-bottom:22px;line-height:1.5;}
 .spin-wrap{position:relative;width:180px;height:180px;margin:0 auto 18px;}
 .spin-ring{position:absolute;inset:0;border-radius:50%;border:3px dashed #e2e5f0;animation:spinRing 3s linear infinite;}
@@ -157,7 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .spin-logo img{width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;}
 .spin-hint{font-size:12px;color:#7b82a0;margin-bottom:12px;}
 .spin-progress{width:100%;height:8px;background:#f0f2f8;border-radius:4px;overflow:hidden;}
-.spin-bar{height:100%;background:linear-gradient(90deg,#3b6ef5,#6c47d4);border-radius:4px;width:0%;transition:width .05s;}
+.spin-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;width:0%;transition:width .05s;}
 
 /* ===== 도장 꽝 애니메이션 ===== */
 .stamp-slam{position:absolute;top:50%;left:50%;width:152px;height:152px;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(3.2) rotate(-45deg);}
@@ -189,13 +189,13 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .done-card{text-align:center;color:#fff;padding:36px 24px;}
 .done-anim{font-size:80px;margin-bottom:14px;animation:popIn .5s cubic-bezier(.68,-.55,.27,1.55);}
 @keyframes popIn{0%{transform:scale(0);}100%{transform:scale(1);}}
-.done-btn{background:#fff;color:#1a1d2e;border:none;border-radius:14px;padding:13px 36px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:block;width:100%;}
+.done-btn{background:#fff;color:#13191b;border:none;border-radius:14px;padding:13px 36px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:block;width:100%;}
 .done-skip{background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px;}
 
 /* 폭죽 */
 @keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
 
-.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#1a1d2e;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#13191b;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
 /* ===================================================================
@@ -250,6 +250,22 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
   html{background:radial-gradient(circle at 50% 0%,#161b2e 0%,#0b0e18 60%);background-attachment:fixed;}
   html[data-theme="dark"]{background:radial-gradient(circle at 50% 0%,#0d1120 0%,#05070d 60%);background-attachment:fixed;}
 }
+
+/* ===== 워드마크 SympoYooHoo =====
+   나머지 글자는 아주 밝은 그레이(#e8ece8).
+   라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
+.wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
+    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
+    line-height:1.15;white-space:nowrap;}
+.wm i{font-style:normal;font-weight:900;}
+.wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
+.wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
+
+/* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
+:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+
+/* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
+.wm.on-dark{background:transparent;padding:0;}
 </style>
 </head>
 <body>
@@ -259,7 +275,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo"><img src="https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png"></div>
-    <div class="login-title">SYMPO<span>VOY</span></div>
+    <div class="login-title"><span class="wm on-dark"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
     <p class="login-sub">심포지엄 도장깨기</p>
     <input class="login-input" id="lName" placeholder="이름">
     <input class="login-input" id="lHospital" placeholder="병원명">
@@ -284,7 +300,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
   <div class="topbar">
     <div class="tl">
       <img src="https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png">
-      <span>SYMPO<em>VOY</em></span>
+      <span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span>
     </div>
     <div class="tr">
       <button class="tbtn" onclick="toggleTheme()">🌙 다크</button>
@@ -361,7 +377,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
     <div class="done-anim">🎉</div>
     <div style="font-size:26px;font-weight:900;margin-bottom:6px">도장 꽝! 도착 완료</div>
     <div style="font-size:14px;opacity:.7;margin-bottom:4px" id="doneHotelName"></div>
-    <div style="font-size:44px;font-weight:900;color:#4f8ef7;margin-bottom:4px">+10점</div>
+    <div style="font-size:44px;font-weight:900;color:#4fbf85;margin-bottom:4px">+10점</div>
     <div style="font-size:12px;opacity:.6;margin-bottom:20px">방문 인증 점수 적립!</div>
     <button class="done-btn" onclick="afterComplete()">📸 사진 업로드 (+5점)</button>
     <button class="done-skip" onclick="skipPhoto()">건너뛰기</button>
@@ -375,16 +391,16 @@ const SBURL='https://sgmmeibexipozsywxpyk.supabase.co';
 const SBKEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
 const sb=supabase.createClient(SBURL,SBKEY);
 const NAMU='https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png';
-const TCOL={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
+const TCOL={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
 const TLAB={restaurant:'🍽️ 추천 맛집',cafe:'☕ 카페',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
 const TICON={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
 const TGRAD={
-  restaurant:'linear-gradient(135deg,#1a3a2e 0%,#3d7a5e 100%)',
-  cafe:'linear-gradient(135deg,#b87a00 0%,#f5c451 100%)',
-  attraction:'linear-gradient(135deg,#2d6a8a 0%,#5aa8ce 100%)',
-  shopping:'linear-gradient(135deg,#b01568 0%,#f472b6 100%)'
+  restaurant:'linear-gradient(135deg,#0d4a30 0%,#2f8a5c 100%)',
+  cafe:'linear-gradient(135deg,#4c5c28 0%,#8ba354 100%)',
+  attraction:'linear-gradient(135deg,#2e4340 0%,#63847f 100%)',
+  shopping:'linear-gradient(135deg,#232829 0%,#5a6462 100%)'
 };
-const TGRAD_DEF='linear-gradient(135deg,#3a3f55 0%,#6d748f 100%)';
+const TGRAD_DEF='linear-gradient(135deg,#39413c 0%,#6b7570 100%)';
 
 let CU=null, CJ=null, allInvites=[], visitId=null;
 let spinActive=false, spinRot=0, spinTotal=0, lastX=0, isDragging=false;
@@ -479,7 +495,7 @@ async function loadAllInvites(){
   const {data:journeys}=await sb.from('journeys').select('*').in('id',jIds);
   const jMap={};(journeys||[]).forEach(j=>jMap[j.id]=j);
   const today=new Date().toISOString().slice(0,10);
-  const bColors=['#3b6ef5','#c17f24','#4f8ef7'];
+  const bColors=['#146b45','#c17f24','#4fbf85'];
 
   grid.innerHTML=pkgs.map((p,i)=>{
     const j=jMap[p.journey_id]||{};
@@ -489,7 +505,7 @@ async function loadAllInvites(){
     const period=j.symposium_date?(j.symposium_date+(j.symposium_date_end?'\n~'+j.symposium_date_end:'')):'-';
     const badge=isPast?`<span class="badge-past">지난 일정</span>`:isUp?`<span class="badge-new">예정</span>`:'';
     return `<div class="icard ${isPast?'past':isUp?'upcoming':''}" onclick="showDetail(${i})">
-      <div class="icard-bar" style="background:${bColors[(p.concept-1)%3]||'#3b6ef5'}"></div>
+      <div class="icard-bar" style="background:${bColors[(p.concept-1)%3]||'#146b45'}"></div>
       ${badge}
       <div class="icard-num">초대장 ${i+1}</div>
       <div class="icard-hotel">🏨 ${j.hotel_name||'-'}</div>
@@ -600,7 +616,7 @@ async function showDetail(idx){
       <div style="font-size:10px;opacity:.5;text-transform:uppercase;margin-bottom:4px">초대장 ${idx+1}${isPast?' · 지난 일정':''}</div>
       <div class="hotel-name">🏨 ${J.hotel_name}</div>
       <div class="hotel-date">📅 ${period||'날짜 미정'}</div>
-      ${J.symposium_name?`<div style="font-size:13px;font-weight:700;color:#4f8ef7;margin-top:2px">🎓 ${J.symposium_name}</div>`:''}
+      ${J.symposium_name?`<div style="font-size:13px;font-weight:700;color:#4fbf85;margin-top:2px">🎓 ${J.symposium_name}</div>`:''}
       ${pkg.custom_message?`<div style="font-size:12px;margin-top:9px;opacity:.85;border-left:3px solid rgba(255,255,255,.5);padding-left:9px">${pkg.custom_message}</div>`:''}
       ${!isPast?`<button class="gps-hint-btn" onclick="activateGPS(event)">${visited?'✅ 방문 완료':'🎯 도착 스탬프 찍기'}</button>`:''}
     </div>
@@ -821,7 +837,7 @@ async function completeSpin(){
 }
 
 function launchConfetti(){
-  const cols=['#3b6ef5','#18b96a','#f59e0b','#e74c3c','#6c47d4','#4f8ef7'];
+  const cols=['#146b45','#2f8a5c','#5f7434','#8ba354','#1b1f1d','#c9d2cc','#4fbf85'];
   // PC에서는 body가 430px 프레임이므로 폭죽도 프레임 안에서만 떨어지게 함
   const r=document.body.getBoundingClientRect();
   const fLeft=r.left+window.scrollX;
