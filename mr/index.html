@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SYMPOVOY MR</title>
-<meta name="app-build" content="2026-08-13-b">
+<title>SympoYooHoo MR</title>
+<meta name="app-build" content="2026-08-13-e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -39,7 +39,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 앱 */
 .app{display:none;}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.topbar .logo{font-size:18px;}
+.topbar .logo{font-size:17px;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .topbar-name{font-size:13px;font-weight:700;color:var(--text);}
 .content{max-width:1000px;margin:0 auto;padding:24px 20px;}
@@ -188,6 +188,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .month-chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);transition:all .2s;}
 .month-chip:hover{border-color:var(--accent);color:var(--accent);}
 .month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ===== 워드마크 SympoYooHoo =====
+   나머지 글자는 아주 밝은 그레이(#e8ece8).
+   라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
+.wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
+    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
+    line-height:1.15;white-space:nowrap;}
+.wm i{font-style:normal;font-weight:900;}
+.wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
+.wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
+
+/* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
+:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+
+/* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
+.wm.on-dark{background:transparent;padding:0;}
 </style>
 </head>
 <body>
@@ -197,7 +213,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 <!-- 로그인 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
     <p class="logo-sub">MR 전용 페이지</p>
     <div id="step1">
       <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
@@ -219,7 +235,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 <!-- 앱 -->
 <div class="app" id="app">
   <div class="topbar">
-    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
     <div class="topbar-right">
       <span class="topbar-name" id="topName"></span>
       <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
@@ -855,7 +871,7 @@ function updatePreview(){
           <div style="font-size:12px;font-weight:800;margin:12px 0 8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:14px;background:#1a3a5e;border-radius:3px;display:inline-block"></span>🗺️ 가시는길 추천장소</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${placesHtml}</div>
         `:''}
-        <div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa">Powered by SYMPOVOY · Yuhan Corporation</div>
+        <div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa">Powered by SympoYooHoo · Yuhan Corporation</div>
       </div>
     </div>`;
 }
@@ -998,7 +1014,7 @@ function printInviteCard(){
     ?'<img src="'+selectedSympo.agenda_image_url+'" style="width:60%;display:block;margin:0 auto;max-height:250px;object-fit:contain;border-radius:8px">'
     :'';
 
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SYMPOVOY 초대장</title>'
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SympoYooHoo 초대장</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
     +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#13191b;}'
@@ -1025,7 +1041,7 @@ function printInviteCard(){
     +(msg?'<div class="msg-box">'+msg+'</div>':'')
     +(agendaHtml?'<div class="sec-title"><div class="sec-title-bar"></div>🗒️ 아젠다</div><div class="agenda-wrap">'+agendaHtml+'</div>':'')
     +(addedPlaces.length?'<div class="sec-title"><div class="sec-title-bar"></div>🗺️ 가시는길 추천장소</div><div class="places-grid">'+placesHtml+'</div>':'')
-    +'<div class="footer">Powered by SYMPOVOY · Yuhan Corporation</div>'
+    +'<div class="footer">Powered by SympoYooHoo · Yuhan Corporation</div>'
     +'</div>'
     +'<script>window.onload=function(){setTimeout(function(){window.print();},800);}<\/script>'
     +'</body></html>';
