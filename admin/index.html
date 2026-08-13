@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SYMPOVOY 관리자</title>
+<title>SympoYooHoo admin</title>
+<meta name="app-build" content="2026-08-13-e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
-  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
-  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
+  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
+  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
 }
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
@@ -19,6 +20,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:48px 40px;width:360px;text-align:center;}
 .logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:6px;}
 .logo span{color:var(--accent);}
+.brand .logo{font-size:19px;}
 .sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
 input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
@@ -28,8 +30,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .btn:hover{opacity:.85;}
 .btn-full{width:100%;}
 .btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+/* 목록 안의 작은 버튼은 아웃라인으로 — 색 덩어리를 줄임 */
+.btn-sm.btn-primary{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
+.btn-sm.btn-primary:hover{background:var(--accent);color:#fff;}
 .btn-success{background:var(--green);color:#fff;}
-.btn-danger{background:var(--red);color:#fff;}
+.btn-danger{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-danger:hover{background:rgba(179,38,30,.10);color:var(--red);border-color:var(--red);}
 .btn-ghost{background:var(--surface2);color:var(--text);}
 .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;}
 
@@ -60,18 +67,18 @@ tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
 
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-.badge-green{background:rgba(46,204,113,.15);color:var(--green);}
-.badge-yellow{background:rgba(243,156,18,.15);color:var(--yellow);}
-.badge-red{background:rgba(231,76,60,.15);color:var(--red);}
-.badge-blue{background:rgba(79,142,247,.15);color:var(--accent);}
+.badge-green{background:rgba(20,107,69,.16);color:var(--green);}
+.badge-yellow{background:rgba(143,115,32,.14);color:var(--yellow);}
+.badge-red{background:rgba(179,38,30,.14);color:var(--red);}
+.badge-blue{background:rgba(20,107,69,.10);color:var(--accent);}
 
 .score-btn{padding:4px 10px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;margin-right:3px;}
-.s5{background:rgba(46,204,113,.2);color:var(--green);}
-.s3{background:rgba(243,156,18,.2);color:var(--yellow);}
-.s1{background:rgba(231,76,60,.2);color:var(--red);}
+.s5{background:rgba(20,107,69,.20);color:var(--green);}
+.s3{background:rgba(143,115,32,.20);color:var(--yellow);}
+.s1{background:rgba(179,38,30,.20);color:var(--red);}
 
 .j-chip{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:11px;margin:2px;cursor:pointer;transition:all .15s;}
-.j-chip:hover,.j-chip.done{border-color:var(--green);color:var(--green);background:rgba(46,204,113,.08);}
+.j-chip:hover,.j-chip.done{border-color:var(--green);color:var(--green);background:rgba(20,107,69,.08);}
 
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center;padding:16px;}
 .modal-bg.open{display:flex;}
@@ -89,7 +96,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .place-result:hover{border-color:var(--accent);}
 .place-result .pname{font-size:14px;font-weight:700;}
 .place-result .paddr{font-size:12px;color:var(--muted);margin-top:2px;}
-.selected-hotel{display:none;background:rgba(46,204,113,.08);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--green);}
+.selected-hotel{display:none;background:rgba(20,107,69,.08);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--green);}
 
 /* 아젠다 업로드 */
 .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s;font-size:13px;}
@@ -116,18 +123,30 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 /* ===== 라이트 모드 ===== */
 :root[data-theme="light"] {
-  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
-  --accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;
-  --text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:12px;
+  --bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;
+  --accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;
+  --text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:12px;
 }
 /* ===== 다크 모드 ===== */
 :root[data-theme="dark"] {
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
-  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
-  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
+  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
+  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
 }
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
+
+/* ===== 워드마크 SympoYooHoo =====
+   나머지 글자는 아주 밝은 그레이(#e8ece8).
+   라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
+.wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
+    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
+    line-height:1.15;white-space:nowrap;}
+.wm i{font-style:normal;font-weight:900;}
+.wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
+.wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
+:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+.wm.on-dark{background:transparent;padding:0;}
 </style>
 </head>
 <body>
@@ -137,7 +156,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- 로그인 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="logo">SYMPO<span>VOY</span></div>
+    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
     <p class="sub">관리자 전용 페이지</p>
     <input type="password" id="pwInput" placeholder="관리자 비밀번호" class="mb12" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
@@ -148,7 +167,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="app" id="app">
   <div class="sidebar">
     <div class="brand">
-      <div class="logo">SYMPO<span>VOY</span></div>
+      <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
       <small style="color:var(--muted);font-size:11px">관리자</small>
     </div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage(this)">📊 대시보드</div>
@@ -679,7 +698,7 @@ async function showUserDetail(userId){
     <div style="font-size:12px;color:var(--muted);margin-bottom:4px">담당 MR: ${u.introducers?.name||'-'} (${u.introducers?.email||'-'})</div>
 
     <!-- 점수 요약 -->
-    <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:10px;padding:16px;color:#fff;text-align:center;margin:14px 0">
+    <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;padding:16px;color:#fff;text-align:center;margin:14px 0">
       <div style="font-size:36px;font-weight:900">${total}점</div>
       <div style="font-size:12px;opacity:.8;margin-top:4px">누적 점수</div>
       <div style="display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12px">
