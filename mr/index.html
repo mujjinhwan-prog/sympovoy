@@ -4,20 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SYMPOVOY MR</title>
+<meta name="app-build" content="2026-08-13-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f8;
-  --accent:#3b6ef5;--accent2:#6c47d4;--green:#18b96a;
-  --red:#e74c3c;--yellow:#f59e0b;--text:#1a1d2e;
-  --muted:#7b82a0;--border:#e2e5f0;--radius:14px;
-}
+:root{--bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:14px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
 /* 로그인 */
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-.login-box{background:var(--surface);border-radius:20px;box-shadow:0 8px 40px rgba(59,110,245,.12);padding:44px 36px;width:100%;max-width:400px;text-align:center;}
+.login-box{background:var(--surface);border-radius:20px;box-shadow:0 8px 40px rgba(20,107,69,.12);padding:44px 36px;width:100%;max-width:400px;text-align:center;}
 .logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;}
 .logo span{color:var(--accent);}
 .logo-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
@@ -58,7 +54,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 심포지엄 선택 */
 .sympo-card{border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
 .sympo-card:hover{border-color:var(--accent);}
-.sympo-card.selected{border-color:var(--accent);background:rgba(59,110,245,.05);}
+.sympo-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
 .sympo-card .hotel{font-size:15px;font-weight:800;}
 .sympo-card .date{font-size:12px;color:var(--muted);margin-top:2px;}
 
@@ -73,7 +69,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 추천 장소 그리드 */
 .place-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
 .place-grid-item{background:var(--surface2);border-radius:12px;overflow:hidden;border:1.5px solid var(--border);position:relative;}
-.place-grid-item .place-img{width:100%;height:100px;object-fit:cover;background:linear-gradient(135deg,#e8f4fd,#f0f7ff);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.place-grid-item .place-img{width:100%;height:100px;object-fit:cover;background:linear-gradient(135deg,#e6efe8,#f2f7f3);display:flex;align-items:center;justify-content:center;font-size:32px;}
 .place-grid-item .place-info{padding:10px;}
 .place-grid-item .place-name{font-size:13px;font-weight:800;margin-bottom:2px;}
 .place-grid-item .place-cat{font-size:11px;color:var(--accent);}
@@ -88,9 +84,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* 초대장 미리보기 */
 .preview-wrap{border-radius:var(--radius);overflow:hidden;margin:16px 0;}
-.preview-c1{background:linear-gradient(135deg,#1a1d2e,#2d3561);color:#fff;padding:28px;}
-.preview-c2{background:linear-gradient(135deg,#fff9f0,#fff3dc);color:#1a1d2e;padding:28px;border:2px solid #f59e0b;}
-.preview-c3{background:linear-gradient(135deg,#f0f7ff,#e8f4fd);color:#1a1d2e;padding:28px;border-left:5px solid #3b6ef5;}
+.preview-c1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#fff;padding:28px;}
+.preview-c2{background:linear-gradient(135deg,#f8f6ee,#efeada);color:#13191b;padding:28px;border:2px solid #8f7320;}
+.preview-c3{background:linear-gradient(135deg,#f2f7f3,#e6efe8);color:#13191b;padding:28px;border-left:5px solid #146b45;}
 .preview-hotel{font-size:22px;font-weight:900;margin-bottom:4px;}
 .preview-date{font-size:13px;opacity:.7;margin-bottom:12px;}
 .preview-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
@@ -103,7 +99,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 컨셉 */
 .concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
 .concept-card{border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;text-align:center;}
-.concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(59,110,245,.05);}
+.concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
 .concept-icon{font-size:28px;margin-bottom:6px;}
 .concept-title{font-size:13px;font-weight:800;}
 .concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -115,9 +111,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* 배지 */
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-.badge-green{background:rgba(24,185,106,.12);color:var(--green);}
+.badge-green{background:rgba(20,107,69,.12);color:var(--green);}
 .badge-yellow{background:rgba(245,158,11,.12);color:var(--yellow);}
-.badge-blue{background:rgba(59,110,245,.12);color:var(--accent);}
+.badge-blue{background:rgba(20,107,69,.12);color:var(--accent);}
 .badge-red{background:rgba(231,76,60,.12);color:var(--red);}
 
 /* 모달 */
@@ -142,23 +138,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* 인쇄용 초대장 스타일 */
 .print-page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm;background:#fff;font-family:'Apple SD Gothic Neo',sans-serif;}
-.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1a1d2e;}
-.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#1a1d2e;}
-.print-logo span{color:#3b6ef5;}
-.print-hotel{font-size:28px;font-weight:900;color:#1a1d2e;margin:16px 0 6px;}
+.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #13191b;}
+.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#13191b;}
+.print-logo span{color:#146b45;}
+.print-hotel{font-size:28px;font-weight:900;color:#13191b;margin:16px 0 6px;}
 .print-date{font-size:14px;color:#666;margin-bottom:4px;}
-.print-sympo{font-size:16px;font-weight:700;color:#3b6ef5;margin-bottom:16px;}
+.print-sympo{font-size:16px;font-weight:700;color:#146b45;margin-bottom:16px;}
 .print-section{margin-bottom:20px;}
-.print-section-title{font-size:14px;font-weight:800;color:#1a1d2e;border-left:4px solid #3b6ef5;padding-left:10px;margin-bottom:12px;}
+.print-section-title{font-size:14px;font-weight:800;color:#13191b;border-left:4px solid #146b45;padding-left:10px;margin-bottom:12px;}
 .print-agenda-img{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #eee;}
 .print-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .print-place-item{border:1px solid #e2e5f0;border-radius:8px;overflow:hidden;}
 .print-place-icon{width:100%;height:60px;background:#f5f6fa;display:flex;align-items:center;justify-content:center;font-size:28px;}
 .print-place-info{padding:8px 10px;}
-.print-place-name{font-size:12px;font-weight:800;color:#1a1d2e;}
+.print-place-name{font-size:12px;font-weight:800;color:#13191b;}
 .print-place-addr{font-size:10px;color:#999;margin-top:2px;}
-.print-place-tip{font-size:10px;color:#3b6ef5;margin-top:3px;}
-.print-msg{background:#f5f6fa;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #3b6ef5;}
+.print-place-tip{font-size:10px;color:#146b45;margin-top:3px;}
+.print-msg{background:#f5f6fa;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #146b45;}
 .print-footer{text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;}
 
 @media(max-width:600px){
@@ -169,15 +165,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* ===== 라이트 모드 ===== */
 :root[data-theme="light"] {
-  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;
-  --accent:#3b6ef5;--green:#18b96a;--red:#e74c3c;--yellow:#f59e0b;
-  --text:#1a1d2e;--muted:#7b82a0;--border:#e2e5f0;--radius:12px;
+  --bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;
+  --accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;
+  --text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:12px;
 }
 /* ===== 다크 모드 ===== */
 :root[data-theme="dark"] {
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;
-  --accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
-  --text:#e8eaf0;--muted:#8890a8;--border:#2a2f45;--radius:12px;
+  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
+  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
+  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
 }
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
@@ -306,17 +302,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         <div class="concept-grid">
           <div class="concept-card selected" onclick="selectConcept(this,1)">
             <div class="concept-icon">🌙</div>
-            <div class="concept-title">프리미엄 다크</div>
+            <div class="concept-title">딥 그린</div>
             <div class="concept-desc">격식있는 고급스러운 분위기</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,2)">
             <div class="concept-icon">🌸</div>
-            <div class="concept-title">웜 골드</div>
+            <div class="concept-title">웜 올리브</div>
             <div class="concept-desc">따뜻하고 환영하는 느낌</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,3)">
-            <div class="concept-icon">💎</div>
-            <div class="concept-title">클린 블루</div>
+            <div class="concept-icon">🌿</div>
+            <div class="concept-title">클린 그린</div>
             <div class="concept-desc">깔끔하고 신뢰감 있는 느낌</div>
           </div>
         </div>
@@ -826,12 +822,12 @@ function updatePreview(){
   if(!selectedSympo)return;
   const msg=document.getElementById('customMsg').value;
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
-  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
+  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
   const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
 
   const placesHtml=addedPlaces.map(p=>`
     <div style="border:3px solid ${typeColors[p.type]||'#333'};border-radius:14px;padding:14px 12px;">
-      <div style="font-size:14px;font-weight:900;color:#1a1d2e;margin-bottom:4px">${typeIcon[p.type]||'📍'} ${p.name}</div>
+      <div style="font-size:14px;font-weight:900;color:#13191b;margin-bottom:4px">${typeIcon[p.type]||'📍'} ${p.name}</div>
       ${p.addr?`<div style="font-size:11px;color:#666;margin-bottom:4px">${p.addr}</div>`:''}
       ${p.tip?`<div style="font-size:11px;color:#444;margin-top:4px">💬 ${p.tip}</div>`:''}
     </div>`).join('');
@@ -840,10 +836,10 @@ function updatePreview(){
     ?`<img src="${selectedSympo.agenda_image_url}" style="width:70%;display:block;margin:8px auto;max-height:200px;object-fit:contain;border-radius:6px">`:'';
 
   document.getElementById('previewArea').innerHTML=`
-    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:14px;background:#fff;color:#1a1d2e">
+    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:14px;background:#fff;color:#13191b">
       <div style="background:#1a3a5e;color:#fff;text-align:center;padding:10px 16px;font-size:16px;font-weight:900">Symposium 가시는길</div>
       <div style="padding:16px">
-        <div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #1a1d2e;margin-bottom:12px">
+        <div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #13191b;margin-bottom:12px">
           <div style="font-size:20px;font-weight:900;margin-bottom:4px">🏨 ${selectedSympo.hotel_name}</div>
           <div style="font-size:12px;color:#555;margin-bottom:3px">📅 ${period}</div>
           ${selectedSympo.symposium_name?`<div style="font-size:13px;font-weight:700;color:#1a3a5e">🎓 ${selectedSympo.symposium_name}</div>`:''}
@@ -930,7 +926,7 @@ async function sendInvite(){
     window._editInviteId=null;window._editUserId=null;
     document.getElementById('sendInviteBtn').textContent='📨 초대장 발송';
     document.getElementById('sendInviteBtn').style.background='';
-    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ 초대장이 수정되었습니다!</div>`;
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(20,107,69,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ 초대장이 수정되었습니다!</div>`;
     toast('초대장 수정 완료!');
     loadSentInvites();
     return;
@@ -958,7 +954,7 @@ async function sendInvite(){
   if(failed.length){
     document.getElementById('sendResult').innerHTML=`<div style="background:rgba(255,90,90,.1);border:1px solid var(--red,#ff5a5a);border-radius:8px;padding:12px;font-size:13px;color:var(--red,#ff5a5a);font-weight:700">⚠️ 실패: ${failed.join(', ')}${count?`<br>✅ 성공: ${names}`:''}<br><span style="font-weight:500">F12 콘솔에서 상세 오류를 확인하세요.</span></div>`;
   }else{
-    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(24,185,106,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(20,107,69,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
   }
   toast(`${count}명에게 발송 완료!`);
   loadSentInvites();
@@ -980,13 +976,13 @@ function printInviteCard(){
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
   const msg=document.getElementById('customMsg').value;
 
-  const typeColors={restaurant:'#1a3a2e',cafe:'#f0a500',attraction:'#2d6a8a',shopping:'#e91e8c'};
+  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
   const typeLabel={restaurant:'식당',cafe:'카페',attraction:'명소',shopping:'쇼핑'};
 
   const placesHtml=addedPlaces.map(p=>{
     const color=typeColors[p.type]||'#333';
     return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
-      +'<div style="font-size:22px;font-weight:900;color:#1a1d2e;margin-bottom:6px">'+p.name+'</div>'
+      +'<div style="font-size:22px;font-weight:900;color:#13191b;margin-bottom:6px">'+p.name+'</div>'
       +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
       +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
       +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
@@ -1000,10 +996,10 @@ function printInviteCard(){
   const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SYMPOVOY 초대장</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
-    +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#1a1d2e;}'
+    +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#13191b;}'
     +'.page{width:190mm;margin:0 auto;padding:12mm 14mm;}'
     +'.title-box{background:#1a3a5e;color:#fff;text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
-    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #1a1d2e;}'
+    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #13191b;}'
     +'.hotel-name{font-size:28px;font-weight:900;margin-bottom:5px;}'
     +'.hotel-date{font-size:13px;color:#555;margin-bottom:4px;}'
     +'.hotel-sympo{font-size:15px;font-weight:700;color:#1a3a5e;}'
@@ -1089,7 +1085,7 @@ async function loadItems(){
           <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
             <div style="font-size:14px;font-weight:700;flex:1">💊 ${i.item_name}</div>
             <div style="display:flex;gap:4px;flex-shrink:0">
-              <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
+              <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
               <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
               <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
             </div>
@@ -1130,9 +1126,9 @@ async function loadSentInvites(){
     const u=p.users||{};
     const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
     const places=locMap[p.id]||[];
-    const cColors={1:'#3b6ef5',2:'#c17f24',3:'#4f8ef7'};
+    const cColors={1:'#146b45',2:'#c17f24',3:'#4fbf85'};
     return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
-      <div style="background:${cColors[p.concept]||'#3b6ef5'};padding:10px 14px;color:#fff">
+      <div style="background:${cColors[p.concept]||'#146b45'};padding:10px 14px;color:#fff">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:13px;font-weight:800">🏨 ${j.hotel_name||'-'}</div>
@@ -1294,7 +1290,7 @@ async function showUserDetail(userId){
           ${i.is_approved
             ?`<span class="badge badge-green">${i.approved_score||0}점 ✅</span>`
             :`<div style="display:flex;gap:4px">
-                <button class="btn btn-sm" style="background:rgba(24,185,106,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
+                <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
                 <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
                 <button class="btn btn-sm" style="background:rgba(231,76,60,.15);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1점</button>
               </div>`
@@ -1332,7 +1328,7 @@ async function showUserDetail(userId){
     <div style="margin-bottom:16px">
       <div style="font-size:18px;font-weight:900;margin-bottom:3px">${u.name}</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${u.hospital} · ${u.license_number}</div>
-      <div style="background:linear-gradient(135deg,var(--accent),#6c47d4);border-radius:12px;padding:16px;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+      <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;padding:16px;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div><div style="font-size:28px;font-weight:900">${totalScore}</div><div style="font-size:11px;opacity:.8">총 점수</div></div>
         <div><div style="font-size:28px;font-weight:900">${(invites||[]).length}</div><div style="font-size:11px;opacity:.8">심포지엄</div></div>
         <div><div style="font-size:28px;font-weight:900">${(items||[]).length}</div><div style="font-size:11px;opacity:.8">품목</div></div>
