@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SympoYooHoo user</title>
-<meta name="app-build" content="2026-08-13-g">
+<meta name="app-build" content="2026-08-13-i">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -70,6 +70,29 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .hotel-hero.c2{background:linear-gradient(135deg,#2c3020,#7d8447);color:#fff;}
 .hotel-hero.c3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#fff;}
 .hotel-hero.past{background:linear-gradient(135deg,#383e3a,#616964);color:#fff;}
+
+/* ===== 초대장 컨셉 테마 — 히어로 아래 카드까지 전체에 적용 ===== */
+.invite-theme{--ic:var(--accent);--ic-soft:rgba(20,107,69,.08);}
+.invite-theme.ic1{--ic:#2f8a5c;--ic-soft:rgba(47,138,92,.10);}
+.invite-theme.ic2{--ic:#7d8447;--ic-soft:rgba(125,132,71,.12);}
+.invite-theme.ic3{--ic:#146b45;--ic-soft:rgba(20,107,69,.09);}
+:root[data-theme="dark"] .invite-theme.ic1{--ic:#4fd18c;}
+:root[data-theme="dark"] .invite-theme.ic2{--ic:#a6c069;}
+:root[data-theme="dark"] .invite-theme.ic3{--ic:#4fbf85;}
+.invite-theme.icpast{--ic:#7c847f;--ic-soft:rgba(124,132,127,.10);}
+
+/* 섹션 제목 앞에 컨셉 색 바 */
+.invite-theme .sec-title::before{content:'';width:5px;height:15px;background:var(--ic);border-radius:3px;flex-shrink:0;}
+/* 카드 상단에 컨셉 색 라인 */
+.invite-theme .card{border-top:3px solid var(--ic);}
+/* 컨셉 2(웜 올리브)는 각진 모서리, 1은 크게 둥글게 — 형태로도 구분 */
+.invite-theme.ic1 .card,.invite-theme.ic1 .place-card{border-radius:18px;}
+.invite-theme.ic2 .card,.invite-theme.ic2 .place-card{border-radius:5px;}
+.invite-theme.ic2 .place-photo-wrap{border-radius:3px;}
+.invite-theme.ic1 .place-photo-wrap{border-radius:14px;}
+/* 아젠다·품목 영역의 강조 요소도 컨셉 색을 따름 */
+.invite-theme .send-btn{background:var(--ic);}
+.invite-theme .item-row{background:var(--ic-soft);}
 .gps-hint-btn{display:block;width:100%;margin-top:14px;background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;backdrop-filter:blur(3px);transition:background .18s;}
 .gps-hint-btn:hover{background:rgba(255,255,255,.32);}
 .gps-hint-btn:active{transform:scale(.98);}
@@ -391,8 +414,8 @@ const SBKEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
 const sb=supabase.createClient(SBURL,SBKEY);
 const NAMU='https://sgmmeibexipozsywxpyk.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png';
 const TCOL={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
-const TLAB={restaurant:'🍽️ 추천 맛집',cafe:'☕ 카페',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
-const TICON={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+const TLAB={restaurant:'🍽️ 맛집',cafe:'🍰 디저트',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
+const TICON={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 const TGRAD={
   restaurant:'linear-gradient(135deg,#0d4a30 0%,#2f8a5c 100%)',
   cafe:'linear-gradient(135deg,#4c5c28 0%,#8ba354 100%)',
@@ -626,12 +649,14 @@ async function showDetail(idx){
   const {data:mi}=await sb.from('items').select('*').eq('user_id',CU.id).eq('journey_id',J.id).order('submitted_at',{ascending:false});
   const ihHtml=(mi&&mi.length)?mi.map(i=>`<div class="irow"><div><div style="font-size:13px;font-weight:700">${i.item_name}</div><div style="font-size:11px;color:var(--muted)">${new Date(i.submitted_at).toLocaleDateString('ko-KR')}</div></div><span class="badge ${i.is_approved?'badge-green':'badge-blue'}">${i.is_approved?(i.approved_score||0)+'점':'검토중'}</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">제출 이력 없음</div>';
 
+  const icClass=isPast?'icpast':('ic'+(pkg.concept||1));
   document.getElementById('inviteDetailContent').innerHTML=`
+    <div class="invite-theme ${icClass}">
     <div class="hotel-hero ${isPast?'past':cClass[pkg.concept]||'c1'}">
       <div style="font-size:10px;opacity:.5;text-transform:uppercase;margin-bottom:4px">초대장 ${idx+1}${isPast?' · 지난 일정':''}</div>
       <div class="hotel-name">🏨 ${J.hotel_name}</div>
       <div class="hotel-date">📅 ${period||'날짜 미정'}</div>
-      ${J.symposium_name?`<div style="font-size:13px;font-weight:700;color:#4fbf85;margin-top:2px">🎓 ${J.symposium_name}</div>`:''}
+      ${J.symposium_name?`<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.92);margin-top:2px">🎓 ${J.symposium_name}</div>`:''}
       ${pkg.custom_message?`<div style="font-size:12px;margin-top:9px;opacity:.85;border-left:3px solid rgba(255,255,255,.5);padding-left:9px">${pkg.custom_message}</div>`:''}
       ${!isPast?`<button class="gps-hint-btn" onclick="activateGPS(event)">${visited?'✅ 방문 완료':'🎯 도착 스탬프 찍기'}</button>`:''}
     </div>
@@ -649,6 +674,7 @@ async function showDetail(idx){
       <button class="send-btn" style="margin-top:10px" onclick="sendItems('${J.id}')">MR · 관리자에게 전송하기 📤</button>
       <div style="font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 8px">📋 제출 이력</div>
       ${ihHtml}
+    </div>
     </div>`;
 }
 
