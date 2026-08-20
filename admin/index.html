@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-08-13-i">
+<meta name="app-build" content="2026-08-20-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -94,6 +94,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .search-row input{flex:1;}
 .place-result{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;margin-bottom:6px;}
 .place-result:hover{border-color:var(--accent);}
+.place-result.picked{border-color:var(--accent);background:rgba(79,191,133,.10);}
+.place-result.picked .pname::after{content:" ✓";color:var(--accent);}
 .place-result .pname{font-size:14px;font-weight:700;}
 .place-result .paddr{font-size:12px;color:var(--muted);margin-top:2px;}
 .selected-hotel{display:none;background:rgba(20,107,69,.08);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--green);}
@@ -477,6 +479,7 @@ function openSympoModal(){
   document.getElementById('sName').value='';
   document.getElementById('hotelSearch').value='';
   document.getElementById('hotelResults').innerHTML='';
+  lastHotelResults=[];
   document.getElementById('selectedHotelBox').style.display='none';
   document.getElementById('agendaUrl').value='';
   document.getElementById('agendaPreview').style.display='none';
@@ -491,8 +494,12 @@ function editSympo(j){
   document.getElementById('sDateStart').value=j.symposium_date||'';
   document.getElementById('sDateEnd').value=j.symposium_date_end||'';
   document.getElementById('sName').value=j.symposium_name||'';
-  document.getElementById('selectedHotelBox').textContent='✅ '+j.hotel_name;
+  document.getElementById('selectedHotelBox').innerHTML='✅ '+j.hotel_name
+    +' <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="clearHotel()">변경</button>';
   document.getElementById('selectedHotelBox').style.display='block';
+  document.getElementById('hotelSearch').value='';
+  document.getElementById('hotelResults').innerHTML='';
+  lastHotelResults=[];
   document.getElementById('agendaUrl').value=j.agenda_image_url||'';
   if(j.agenda_image_url&&j.agenda_image_url.match(/\.(jpg|jpeg|png|gif|webp)$/i)){
     document.getElementById('agendaPreview').src=j.agenda_image_url;
@@ -502,47 +509,129 @@ function editSympo(j){
 }
 
 // 네이버 지역 검색 - Supabase Edge Function 프록시
+// 네이버 지역검색은 한 번에 최대 5건만 돌려줌.
+// 원하는 장소가 안 나오는 일이 잦아 키워드 변형을 여러 개 동시에 던져 합침.
+const HOTEL_HINTS=['호텔','리조트','컨벤션','컨벤션센터','웨딩','아트홀','타워'];
+let lastHotelResults=[];
+
+async function fetchNaver(q){
+  try{
+    const res=await fetch('https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query='+encodeURIComponent(q));
+    const data=await res.json();
+    return (data.items||[]);
+  }catch(e){
+    console.error('[검색]',q,e);
+    return [];
+  }
+}
+
 async function searchHotel(){
   const q=document.getElementById('hotelSearch').value.trim();
   if(!q){toast('검색어를 입력해주세요',false);return;}
   const el=document.getElementById('hotelResults');
   el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
-  try{
-    const res=await fetch(
-      `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`
-    );
-    const data=await res.json();
-    if(!data.items||!data.items.length){
-      el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
-      return;
-    }
-    el.innerHTML=data.items.map(p=>{
-      // 네이버 검색결과 HTML태그 제거
-      const name=p.title.replace(/<[^>]*>/g,'');
-      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
-      const cat=p.category||'';
-      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
-      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
-      const safeName=name.replace(/'/g,"\\'");
-      const safeAddr=addr.replace(/'/g,"\\'");
-      return `<div class="place-result" onclick="selectHotel(${lat},${lng},'${safeName}','${safeAddr}')">
-        <div class="pname">${name}</div>
-        <div class="paddr">${addr}</div>
-        ${cat?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${cat}</div>`:''}
-      </div>`;
-    }).join('');
-  }catch(e){
-    console.error('검색 오류:',e);
-    el.innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px">오류: ${e.message}</div>`;
-  }
+
+  // 원문 + 보조 키워드를 병렬로 조회
+  const variants=[q];
+  if(!HOTEL_HINTS.some(h=>q.includes(h))) variants.push(q+' 호텔');
+  variants.push(q+' 컨벤션');
+
+  const batches=await Promise.all(variants.map(fetchNaver));
+
+  // 상호+주소 기준 중복 제거
+  const seen=new Set(); const merged=[];
+  batches.forEach(items=>items.forEach(p=>{
+    const name=(p.title||'').replace(/<[^>]*>/g,'');
+    const addr=((p.roadAddress||p.address||'')).replace(/<[^>]*>/g,'');
+    const key=name+'|'+addr;
+    if(seen.has(key))return;
+    seen.add(key);
+    merged.push({name,addr,cat:p.category||'',
+      lat:p.mapy?parseFloat(p.mapy)/1e7:0,
+      lng:p.mapx?parseFloat(p.mapx)/1e7:0});
+  }));
+
+  // 검색어와 상호가 더 비슷한 것부터
+  const norm=t=>t.replace(/\s/g,'');
+  const nq=norm(q);
+  merged.sort((a,b)=>{
+    const sa=norm(a.name).includes(nq)?0:1;
+    const sb=norm(b.name).includes(nq)?0:1;
+    if(sa!==sb)return sa-sb;
+    return a.name.length-b.name.length;
+  });
+
+  lastHotelResults=merged;
+  renderHotelResults();
 }
 
-function selectHotel(lat,lng,name,addr){
-  selectedHotel={name,lat:parseFloat(lat),lng:parseFloat(lng)};
-  document.getElementById('selectedHotelBox').textContent='✅ '+name+' — '+addr;
+function renderHotelResults(selIdx){
+  const el=document.getElementById('hotelResults');
+  if(!lastHotelResults.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px;line-height:1.7">'
+      +'검색 결과 없음<br>'
+      +'· 지역명을 붙여보세요 (예: 중구 웨스틴조선)<br>'
+      +'· 상호를 줄여보세요 (예: 웨스틴조선)<br>'
+      +'· 그래도 안 나오면 아래 <b>직접 입력</b>을 쓰세요'
+      +'</div>'+manualEntryHtml();
+    return;
+  }
+  el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 2px 8px">'
+    +lastHotelResults.length+'건 — 원하는 곳이 없으면 검색어를 바꿔 다시 검색하세요</div>'
+    +lastHotelResults.map((p,i)=>
+      '<div class="place-result'+(i===selIdx?' picked':'')+'" onclick="selectHotel('+i+')">'
+      +'<div class="pname">'+p.name+'</div>'
+      +'<div class="paddr">'+p.addr+'</div>'
+      +(p.cat?'<div style="font-size:11px;color:var(--accent);margin-top:2px">'+p.cat+'</div>':'')
+      +'</div>').join('')
+    +manualEntryHtml();
+}
+
+function manualEntryHtml(){
+  return '<details style="margin-top:8px">'
+    +'<summary style="cursor:pointer;font-size:12px;color:var(--muted);padding:6px 2px">✏️ 검색으로 못 찾겠다면 — 직접 입력</summary>'
+    +'<div style="display:grid;gap:6px;margin-top:6px">'
+    +'<input id="mhName" placeholder="장소명 (예: 웨스틴 조선 서울)">'
+    +'<input id="mhAddr" placeholder="주소">'
+    +'<div style="display:flex;gap:6px">'
+    +'<input id="mhLat" placeholder="위도 (예: 37.5645)" inputmode="decimal">'
+    +'<input id="mhLng" placeholder="경도 (예: 126.9810)" inputmode="decimal">'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--muted);line-height:1.6">네이버지도에서 장소 우클릭 → 좌표 확인, 또는 구글맵에서 핀을 찍으면 나오는 숫자를 넣으세요. 좌표는 도착 스탬프(GPS 인증)에 쓰입니다.</div>'
+    +'<button class="btn btn-primary btn-sm" onclick="useManualHotel()">이 장소로 지정</button>'
+    +'</div></details>';
+}
+
+function useManualHotel(){
+  const name=document.getElementById('mhName').value.trim();
+  const addr=document.getElementById('mhAddr').value.trim();
+  const lat=parseFloat(document.getElementById('mhLat').value);
+  const lng=parseFloat(document.getElementById('mhLng').value);
+  if(!name){toast('장소명을 입력하세요',false);return;}
+  if(!isFinite(lat)||!isFinite(lng)){toast('위도·경도를 숫자로 입력하세요',false);return;}
+  selectedHotel={name,lat,lng};
+  document.getElementById('selectedHotelBox').innerHTML='✅ '+name+(addr?' — '+addr:'')
+    +' <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="clearHotel()">변경</button>';
   document.getElementById('selectedHotelBox').style.display='block';
-  document.getElementById('hotelResults').innerHTML='';
-  document.getElementById('hotelSearch').value='';
+  toast(name+' 지정됨');
+}
+
+function selectHotel(i){
+  const p=lastHotelResults[i];
+  if(!p)return;
+  selectedHotel={name:p.name,lat:parseFloat(p.lat),lng:parseFloat(p.lng)};
+  document.getElementById('selectedHotelBox').innerHTML='✅ '+p.name+' — '+p.addr
+    +' <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="clearHotel()">변경</button>';
+  document.getElementById('selectedHotelBox').style.display='block';
+  // 목록과 검색어를 지우지 않음 — 잘못 골랐을 때 바로 다시 선택할 수 있게
+  renderHotelResults(i);
+}
+
+function clearHotel(){
+  selectedHotel=null;
+  document.getElementById('selectedHotelBox').style.display='none';
+  document.getElementById('hotelSearch').focus();
+  document.getElementById('hotelSearch').select();
 }
 
 async function uploadAgenda(input){
