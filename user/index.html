@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SympoYooHoo user</title>
-<meta name="app-build" content="2026-08-13-e">
+<meta name="app-build" content="2026-08-13-g">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -279,7 +279,6 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
     <p class="login-sub">심포지엄 도장깨기</p>
     <input class="login-input" id="lName" placeholder="이름">
     <input class="login-input" id="lHospital" placeholder="병원명">
-    <input class="login-input" id="lLicense" placeholder="면허번호">
     <input class="login-input" id="lMrEmpId" placeholder="MR 사번 (8자리 숫자)" maxlength="8" inputmode="numeric">
     <button class="login-btn" onclick="doLogin()">승인 요청하기</button>
     <p class="login-hint">담당 MR에게 사번을 확인하세요<br>MR 승인 후 서비스 이용이 가능합니다</p>
@@ -419,21 +418,37 @@ function doLogout(){localStorage.removeItem('sv_session');location.reload();}
 async function doLogin(){
   const name=document.getElementById('lName').value.trim();
   const hosp=document.getElementById('lHospital').value.trim();
-  const lic=document.getElementById('lLicense').value.trim();
   const emp=document.getElementById('lMrEmpId').value.trim();
-  if(!name||!hosp||!lic||!emp){toast('모두 입력해주세요');return;}
-  // 기존 사용자 확인
-  let {data:u}=await sb.from('users').select('*').eq('license_number',lic).eq('name',name).single();
+  if(!name||!hosp||!emp){toast('모두 입력해주세요');return;}
+
+  // 기존 사용자 확인 — 면허번호 대신 이름+병원으로 식별
+  const {data:rows,error:selErr}=await sb.from('users')
+    .select('*').eq('name',name).eq('hospital',hosp).limit(1);
+  if(selErr){console.error('[users select]',selErr);toast('조회 오류: '+selErr.message);return;}
+  const u=(rows&&rows[0])||null;
   if(u){
     if(u.mr_approval==='approved'){CU=u;localStorage.setItem('sv_session',JSON.stringify(u));enterApp();return;}
     const {data:mr}=await sb.from('introducers').select('*').eq('id',u.introducer_id).single();
     showPend(u,mr);return;
   }
+
   // MR 확인
   const {data:mr}=await sb.from('introducers').select('*').eq('employee_id',emp).single();
   if(!mr){toast('존재하지 않는 MR 사번입니다');return;}
-  const {data:nu,error}=await sb.from('users').insert({name,hospital:hosp,license_number:lic,introducer_id:mr.id,mr_approval:'pending',is_approved:false}).select().single();
-  if(error||!nu){toast('오류: '+(error?.message||'등록 실패'));return;}
+
+  const {data:nu,error}=await sb.from('users')
+    .insert({name,hospital:hosp,introducer_id:mr.id,mr_approval:'pending',is_approved:false})
+    .select().single();
+  if(error||!nu){
+    console.error('[users insert]',error);
+    // license_number 컬럼이 NOT NULL로 남아 있으면 여기서 걸림
+    if(error&&error.code==='23502'){
+      toast('등록 실패: DB의 license_number 컬럼을 NULL 허용으로 바꿔야 합니다');
+    }else{
+      toast('오류: '+(error?.message||'등록 실패'));
+    }
+    return;
+  }
   localStorage.setItem('sv_session',JSON.stringify(nu));
   showPend(nu,mr);
 }
