@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-08-13-g">
+<meta name="app-build" content="2026-08-13-h">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -106,6 +106,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .concept-card{border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;text-align:center;}
 .concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
 .concept-icon{font-size:28px;margin-bottom:6px;}
+.concept-swatch{height:38px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:-.2px;}
+.sw1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#4fd18c;}
+.sw2{background:linear-gradient(135deg,#2c3020,#7d8447);color:#f0ecd8;}
+.sw3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#ffffff;}
 .concept-title{font-size:13px;font-weight:800;}
 .concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
 
@@ -322,17 +326,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         <div class="card-title">STEP 4 · 초대장 컨셉 & 메시지</div>
         <div class="concept-grid">
           <div class="concept-card selected" onclick="selectConcept(this,1)">
-            <div class="concept-icon">🌙</div>
+            <div class="concept-swatch sw1">Aa 딥 그린</div>
             <div class="concept-title">딥 그린</div>
             <div class="concept-desc">격식있는 고급스러운 분위기</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,2)">
-            <div class="concept-icon">🌸</div>
+            <div class="concept-swatch sw2">Aa 웜 올리브</div>
             <div class="concept-title">웜 올리브</div>
             <div class="concept-desc">따뜻하고 환영하는 느낌</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,3)">
-            <div class="concept-icon">🌿</div>
+            <div class="concept-swatch sw3">Aa 클린 그린</div>
             <div class="concept-title">클린 그린</div>
             <div class="concept-desc">깔끔하고 신뢰감 있는 느낌</div>
           </div>
@@ -343,12 +347,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         </div>
 
         <!-- 미리보기 -->
+        <div style="font-size:12px;font-weight:800;color:var(--muted);margin-top:16px">👁️ 실시간 미리보기 — 컨셉을 바꾸면 즉시 반영됩니다</div>
         <div id="previewArea"></div>
 
         <div style="display:flex;gap:8px;margin-top:14px" class="no-print">
           <button class="btn btn-primary" id="sendInviteBtn" style="flex:1" onclick="sendInvite()">📨 초대장 발송</button>
           <button class="btn btn-ghost" style="flex:1" onclick="printInvite()">🖨️ 인쇄</button>
-          <button class="btn btn-ghost btn-sm" onclick="updatePreview()">👁️ 미리보기</button>
+          <button class="btn btn-ghost" onclick="updatePreview()">👁️ 새로고침</button>
         </div>
         <div id="sendResult" style="margin-top:10px"></div>
       </div>
@@ -839,43 +844,81 @@ function selectConcept(el,c){
   updatePreview();
 }
 
+// ===== 초대장 컨셉 테마 =====
+// user 페이지의 .hotel-hero.c1/c2/c3 와 색을 맞춤
+const CONCEPTS={
+  1:{name:'딥 그린',
+     header:'linear-gradient(135deg,#0e1512,#1f4030)', headerText:'#ffffff',
+     page:'#0f1512', text:'#e7ece8', sub:'#9aa8a0',
+     accent:'#4fd18c', line:'#2a352e',
+     msgBg:'rgba(79,209,140,.10)', cardBg:'rgba(255,255,255,.04)',
+     radius:'16px', titleFont:'900'},
+  2:{name:'웜 올리브',
+     header:'linear-gradient(135deg,#2c3020,#7d8447)', headerText:'#ffffff',
+     page:'#f8f6ee', text:'#20241a', sub:'#6b6a55',
+     accent:'#6b7f3a', line:'#ddd7c2',
+     msgBg:'rgba(125,132,71,.10)', cardBg:'#fffdf6',
+     radius:'4px', titleFont:'800'},
+  3:{name:'클린 그린',
+     header:'linear-gradient(135deg,#10402b,#2f8a5c)', headerText:'#ffffff',
+     page:'#ffffff', text:'#13191b', sub:'#5f6b64',
+     accent:'#146b45', line:'#e2e9e3',
+     msgBg:'rgba(20,107,69,.07)', cardBg:'#f5f9f6',
+     radius:'12px', titleFont:'900'}
+};
+function currentTheme(){return CONCEPTS[selectedConcept]||CONCEPTS[1];}
+
 function updatePreview(){
-  if(!selectedSympo)return;
+  const area=document.getElementById('previewArea');
+  if(!selectedSympo){
+    area.innerHTML='<div style="border:1px dashed var(--border);border-radius:12px;padding:22px;text-align:center;color:var(--muted);font-size:13px;margin-top:14px">STEP 1에서 심포지엄을 먼저 선택하세요</div>';
+    return;
+  }
+  const t=currentTheme();
   const msg=document.getElementById('customMsg').value;
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
-  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
+  const typeColors={restaurant:'#146b45',cafe:'#5f7434',attraction:'#38574f',shopping:'#2b3133'};
   const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
 
-  const placesHtml=addedPlaces.map(p=>`
-    <div style="border:3px solid ${typeColors[p.type]||'#333'};border-radius:14px;padding:14px 12px;">
-      <div style="font-size:14px;font-weight:900;color:#13191b;margin-bottom:4px">${typeIcon[p.type]||'📍'} ${p.name}</div>
-      ${p.addr?`<div style="font-size:11px;color:#666;margin-bottom:4px">${p.addr}</div>`:''}
-      ${p.tip?`<div style="font-size:11px;color:#444;margin-top:4px">💬 ${p.tip}</div>`:''}
-    </div>`).join('');
+  // 컨셉 1은 어두운 배경이라 타입 색을 밝은 톤으로 교체
+  const darkTypeColors={restaurant:'#5cc994',cafe:'#a6c069',attraction:'#7fa8a0',shopping:'#aab3b0'};
+  const tc=(selectedConcept===1)?darkTypeColors:typeColors;
+
+  const placesHtml=addedPlaces.map(p=>{
+    const col=tc[p.type]||t.accent;
+    const img=p.thumb
+      ?'<img src="'+p.thumb+'" style="width:100%;height:78px;object-fit:cover;display:block">'
+      :'<div style="height:78px;display:flex;align-items:center;justify-content:center;font-size:30px;background:'+col+'22">'+(typeIcon[p.type]||'📍')+'</div>';
+    return '<div style="border:2px solid '+col+';border-radius:'+t.radius+';overflow:hidden;background:'+t.cardBg+'">'
+      +img
+      +'<div style="padding:8px 10px 10px">'
+      +'<div style="font-size:13px;font-weight:'+t.titleFont+';color:'+t.text+';margin-bottom:3px">'+(typeIcon[p.type]||'📍')+' '+p.name+'</div>'
+      +(p.addr?'<div style="font-size:10px;color:'+t.sub+';line-height:1.45">'+p.addr+'</div>':'')
+      +(p.tip?'<div style="font-size:10px;color:'+t.sub+';margin-top:4px">💬 '+p.tip+'</div>':'')
+      +'</div></div>';
+  }).join('');
 
   const agendaHtml=selectedSympo.agenda_image_url&&!selectedSympo.agenda_image_url.match(/\.pdf$/i)
-    ?`<img src="${selectedSympo.agenda_image_url}" style="width:70%;display:block;margin:8px auto;max-height:200px;object-fit:contain;border-radius:6px">`:'';
+    ?'<img src="'+selectedSympo.agenda_image_url+'" style="width:72%;display:block;margin:8px auto;max-height:200px;object-fit:contain;border-radius:'+t.radius+'">':'';
 
-  document.getElementById('previewArea').innerHTML=`
-    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:14px;background:#fff;color:#13191b">
-      <div style="background:#1a3a5e;color:#fff;text-align:center;padding:10px 16px;font-size:16px;font-weight:900">Symposium 가시는길</div>
-      <div style="padding:16px">
-        <div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #13191b;margin-bottom:12px">
-          <div style="font-size:20px;font-weight:900;margin-bottom:4px">🏨 ${selectedSympo.hotel_name}</div>
-          <div style="font-size:12px;color:#555;margin-bottom:3px">📅 ${period}</div>
-          ${selectedSympo.symposium_name?`<div style="font-size:13px;font-weight:700;color:#1a3a5e">🎓 ${selectedSympo.symposium_name}</div>`:''}
-        </div>
-        ${msg?`<div style="background:#f5f7fa;border-left:4px solid #1a3a5e;padding:8px 12px;font-size:12px;color:#444;margin-bottom:12px;border-radius:4px;line-height:1.6">${msg}</div>`:''}
-        ${agendaHtml?`<div style="font-size:12px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:14px;background:#1a3a5e;border-radius:3px;display:inline-block"></span>🗒️ 아젠다</div>${agendaHtml}`:''}
-        ${addedPlaces.length?`
-          <div style="font-size:12px;font-weight:800;margin:12px 0 8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:14px;background:#1a3a5e;border-radius:3px;display:inline-block"></span>🗺️ 가시는길 추천장소</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${placesHtml}</div>
-        `:''}
-        <div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa">Powered by SympoYooHoo · Yuhan Corporation</div>
-      </div>
-    </div>`;
+  const secTitle=(icon,label)=>'<div style="font-size:12px;font-weight:800;color:'+t.text+';margin:14px 0 8px;display:flex;align-items:center;gap:6px">'
+    +'<span style="width:5px;height:14px;background:'+t.accent+';border-radius:3px;display:inline-block"></span>'+icon+' '+label+'</div>';
+
+  area.innerHTML=
+    '<div style="border:1px solid '+t.line+';border-radius:14px;overflow:hidden;margin-top:14px;background:'+t.page+';color:'+t.text+'">'
+    +'<div style="background:'+t.header+';color:'+t.headerText+';text-align:center;padding:11px 16px;font-size:16px;font-weight:900;letter-spacing:-.5px">Symposium 가시는길</div>'
+    +'<div style="padding:16px">'
+    +'<div style="text-align:center;padding-bottom:12px;border-bottom:2px solid '+t.accent+';margin-bottom:12px">'
+    +'<div style="font-size:20px;font-weight:900;margin-bottom:4px">🏨 '+selectedSympo.hotel_name+'</div>'
+    +'<div style="font-size:12px;color:'+t.sub+';margin-bottom:3px">📅 '+period+'</div>'
+    +(selectedSympo.symposium_name?'<div style="font-size:13px;font-weight:700;color:'+t.accent+'">🎓 '+selectedSympo.symposium_name+'</div>':'')
+    +'</div>'
+    +(msg?'<div style="background:'+t.msgBg+';border-left:4px solid '+t.accent+';padding:9px 12px;font-size:12px;color:'+t.text+';margin-bottom:12px;border-radius:'+t.radius+';line-height:1.6">'+msg+'</div>':'')
+    +(agendaHtml?secTitle('🗒️','아젠다')+agendaHtml:'')
+    +(addedPlaces.length?secTitle('🗺️','가시는길 추천장소')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+placesHtml+'</div>':'')
+    +'<div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid '+t.line+';font-size:10px;color:'+t.sub+'">Powered by SympoYooHoo · Yuhan Corporation</div>'
+    +'</div></div>';
 }
-
 
 // ===== 장소 저장 공통 처리 =====
 // 409(Conflict) 방지: 중복 제거 → 기존 행 삭제 → 삭제 검증 → 삽입
@@ -997,6 +1040,14 @@ function printInviteCard(){
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
   const msg=document.getElementById('customMsg').value;
 
+  // 인쇄는 흰 종이 기준이므로 헤더 그라데이션만 컨셉을 따르고 본문은 밝은 톤 유지
+  const PRINT_THEME={
+    1:{header:'linear-gradient(135deg,#0e1512,#1f4030)',headerText:'#ffffff',printAccent:'#1f4030',msgBg:'#eef3f0'},
+    2:{header:'linear-gradient(135deg,#2c3020,#7d8447)',headerText:'#ffffff',printAccent:'#5f7434',msgBg:'#f6f4e9'},
+    3:{header:'linear-gradient(135deg,#10402b,#2f8a5c)',headerText:'#ffffff',printAccent:'#146b45',msgBg:'#eef5f0'}
+  };
+  const PT=PRINT_THEME[selectedConcept]||PRINT_THEME[1];
+
   const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
   const typeLabel={restaurant:'식당',cafe:'카페',attraction:'명소',shopping:'쇼핑'};
 
@@ -1019,14 +1070,14 @@ function printInviteCard(){
     +'*{margin:0;padding:0;box-sizing:border-box;}'
     +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#13191b;}'
     +'.page{width:190mm;margin:0 auto;padding:12mm 14mm;}'
-    +'.title-box{background:#1a3a5e;color:#fff;text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
+    +'.title-box{background:'+PT.header+';color:'+PT.headerText+';text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
     +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #13191b;}'
     +'.hotel-name{font-size:28px;font-weight:900;margin-bottom:5px;}'
     +'.hotel-date{font-size:13px;color:#555;margin-bottom:4px;}'
-    +'.hotel-sympo{font-size:15px;font-weight:700;color:#1a3a5e;}'
-    +'.msg-box{background:#f5f7fa;border-left:4px solid #1a3a5e;border-radius:4px;padding:10px 14px;font-size:12px;color:#444;margin:14px 0;line-height:1.6;}'
+    +'.hotel-sympo{font-size:15px;font-weight:700;color:'+PT.printAccent+';}'
+    +'.msg-box{background:'+PT.msgBg+';border-left:4px solid '+PT.printAccent+';border-radius:4px;padding:10px 14px;font-size:12px;color:#444;margin:14px 0;line-height:1.6;}'
     +'.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:16px 0 10px;}'
-    +'.sec-title-bar{width:5px;height:16px;background:#1a3a5e;border-radius:3px;}'
+    +'.sec-title-bar{width:5px;height:16px;background:'+PT.printAccent+';border-radius:3px;}'
     +'.agenda-wrap{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:6px;}'
     +'.places-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}'
     +'.footer{text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;}'
