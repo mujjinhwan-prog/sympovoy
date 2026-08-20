@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-08-13-h">
+<meta name="app-build" content="2026-08-13-i">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -304,9 +304,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         <div class="search-row">
           <input id="placeSearch" placeholder="정확한 상호 검색 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
           <select id="placeType" style="width:110px">
-            <option value="restaurant">🍽️ 식당</option>
+            <option value="restaurant">🍽️ 맛집</option>
             <option value="attraction">🏛️ 명소</option>
-            <option value="cafe">☕ 카페</option>
+            <option value="cafe">🍰 디저트</option>
             <option value="shopping">🛍️ 쇼핑</option>
           </select>
           <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
@@ -650,7 +650,7 @@ async function loadTop10(){
   }
 
   el.style.display='block';
-  const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'🍰',shopping:'🛍️'};
   el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">TOP ${data.length} · 많이 추천된 장소</div>`+
     data.map((p,i)=>{
       const already=addedPlaces.some(a=>a.name===p.place_name);
@@ -797,7 +797,7 @@ function removePlace(i){
   updatePreview();
 }
 
-const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'🍰',shopping:'🛍️'};
 
 function renderPlaceGrid(){
   const el=document.getElementById('addedPlacesGrid');
@@ -878,7 +878,7 @@ function updatePreview(){
   const msg=document.getElementById('customMsg').value;
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
   const typeColors={restaurant:'#146b45',cafe:'#5f7434',attraction:'#38574f',shopping:'#2b3133'};
-  const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+  const typeIcon={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 
   // 컨셉 1은 어두운 배경이라 타입 색을 밝은 톤으로 교체
   const darkTypeColors={restaurant:'#5cc994',cafe:'#a6c069',attraction:'#7fa8a0',shopping:'#aab3b0'};
@@ -906,7 +906,8 @@ function updatePreview(){
 
   area.innerHTML=
     '<div style="border:1px solid '+t.line+';border-radius:14px;overflow:hidden;margin-top:14px;background:'+t.page+';color:'+t.text+'">'
-    +'<div style="background:'+t.header+';color:'+t.headerText+';text-align:center;padding:11px 16px;font-size:16px;font-weight:900;letter-spacing:-.5px">Symposium 가시는길</div>'
+    +'<div style="background:'+t.header+';color:'+t.headerText+';text-align:center;padding:11px 16px;font-size:16px;font-weight:900;letter-spacing:-.5px;position:relative">Symposium 가시는길'
+      +'<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;opacity:.65;letter-spacing:0">'+t.name+'</span></div>'
     +'<div style="padding:16px">'
     +'<div style="text-align:center;padding-bottom:12px;border-bottom:2px solid '+t.accent+';margin-bottom:12px">'
     +'<div style="font-size:20px;font-weight:900;margin-bottom:4px">🏨 '+selectedSympo.hotel_name+'</div>'
@@ -1049,7 +1050,7 @@ function printInviteCard(){
   const PT=PRINT_THEME[selectedConcept]||PRINT_THEME[1];
 
   const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
-  const typeLabel={restaurant:'식당',cafe:'카페',attraction:'명소',shopping:'쇼핑'};
+  const typeLabel={restaurant:'맛집',cafe:'디저트',attraction:'명소',shopping:'쇼핑'};
 
   const placesHtml=addedPlaces.map(p=>{
     const color=typeColors[p.type]||'#333';
@@ -1191,7 +1192,7 @@ async function loadSentInvites(){
   const {data:locs}=await sb.from('invite_locations').select('*').in('invite_id',pkgIds);
   const locMap={};
   (locs||[]).forEach(l=>{if(!locMap[l.invite_id])locMap[l.invite_id]=[];locMap[l.invite_id].push(l);});
-  const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+  const typeIcon={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 
   el.innerHTML=pkgs.map((p,i)=>{
     const j=p.journeys||{};
