@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-08-13-f">
+<meta name="app-build" content="2026-08-13-g">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -215,7 +215,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           </select>
         </div>
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>면허번호</th><th>담당 MR</th><th>MR 사번</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>담당 MR</th><th>MR 사번</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
           <tbody id="approvalTb"></tbody></table>
         </div>
       </div>
@@ -250,7 +250,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
         <div class="month-filter" id="userMonthFilter"></div>
         <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>면허번호</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>이름</th><th>병원명</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
           <tbody id="userTb"></tbody></table>
         </div>
       </div>
@@ -283,7 +283,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="page-title">📋 전체 DB</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>면허번호</th><th>참석 여정</th><th>누적점수</th></tr></thead>
+          <table><thead><tr><th>이름</th><th>병원명</th><th>참석 여정</th><th>누적점수</th></tr></thead>
           <tbody id="dbTb"></tbody></table>
         </div>
       </div>
@@ -349,7 +349,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="form-group"><label>이름</label><input id="uName" placeholder="홍길동"></div>
       <div class="form-group"><label>병원명</label><input id="uHosp" placeholder="서울대병원"></div>
     </div>
-    <div class="form-group"><label>면허번호</label><input id="uLic" placeholder="123456"></div>
     <div class="modal-footer">
       <button class="btn btn-primary btn-sm" onclick="addUser()">저장</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('addUserModal')">취소</button>
@@ -642,7 +641,6 @@ async function renderUsersTable(users){
     return `<tr>
       <td>${u.name}</td>
       <td>${u.hospital}</td>
-      <td>${u.license_number}</td>
       <td>${u.introducers?.name||'-'}</td>
       <td style="font-size:12px">${u.introducers?.email||'-'}</td>
       <td>${chips}</td>
@@ -653,7 +651,7 @@ async function renderUsersTable(users){
         <button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')">삭제</button>
       </td>
     </tr>`;
-  }).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  }).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
 // 사용자 상세 보기
@@ -694,7 +692,7 @@ async function showUserDetail(userId){
   document.getElementById('detailContent').innerHTML=`
     <button class="close-btn" onclick="document.getElementById('detailPanel').classList.remove('open')">✕</button>
     <h3 style="font-size:17px;font-weight:800;margin-bottom:4px">${u.name}</h3>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${u.hospital} · ${u.license_number}</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${u.hospital}</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:4px">담당 MR: ${u.introducers?.name||'-'} (${u.introducers?.email||'-'})</div>
 
     <!-- 점수 요약 -->
@@ -758,13 +756,18 @@ async function delUser(id){
 async function addUser(){
   const n=document.getElementById('uName').value.trim();
   const h=document.getElementById('uHosp').value.trim();
-  const l=document.getElementById('uLic').value.trim();
-  if(!n||!h||!l){toast('모두 입력',false);return;}
-  await sb.from('users').insert({name:n,hospital:h,license_number:l,is_approved:true});
+  if(!n||!h){toast('모두 입력',false);return;}
+  const {error}=await sb.from('users').insert({name:n,hospital:h,is_approved:true});
+  if(error){
+    console.error('[users insert]',error);
+    if(error.code==='23502'){toast('추가 실패: DB의 license_number 컬럼을 NULL 허용으로 바꿔야 합니다',false);}
+    else{toast('추가 실패: '+error.message,false);}
+    return;
+  }
   toast('추가 완료');closeModal('addUserModal');loadUsers();
 }
 function openAddUser(){
-  ['uName','uHosp','uLic'].forEach(id=>document.getElementById(id).value='');
+  ['uName','uHosp'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('addUserModal').classList.add('open');
 }
 
@@ -832,7 +835,6 @@ function renderApproval(data){
     <tr>
       <td>${u.name}</td>
       <td>${u.hospital}</td>
-      <td>${u.license_number}</td>
       <td>${u.introducers?.name||'-'}</td>
       <td>${u.introducers?.employee_id||'-'}</td>
       <td>${statusMap[u.mr_approval]||'-'}</td>
@@ -842,7 +844,7 @@ function renderApproval(data){
         ${u.mr_approval!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="adminRejectUser('${u.id}')">거절</button>`:''}
       </td>
     </tr>
-  `).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
 async function adminApproveUser(id){
@@ -869,13 +871,13 @@ async function loadDB(){
       const h=(v.journeys?.hotel_name||'').slice(0,4);
       return `<span class="j-chip done" onclick="showDetail('${v.id}')">${d}${h}</span>`;
     }).join('');
-    return `<tr><td>${u.name}</td><td>${u.hospital}</td><td>${u.license_number}</td><td>${chips||'<span style="color:var(--muted)">없음</span>'}</td><td><span class="badge badge-blue">${total}점</span></td></tr>`;
-  }).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+    return `<tr><td>${u.name}</td><td>${u.hospital}</td><td>${chips||'<span style="color:var(--muted)">없음</span>'}</td><td><span class="badge badge-blue">${total}점</span></td></tr>`;
+  }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
 // 상세
 async function showDetail(vid){
-  const {data:v}=await sb.from('visits').select('*,users(name,hospital,license_number),journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('id',vid).single();
+  const {data:v}=await sb.from('visits').select('*,users(name,hospital),journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('id',vid).single();
   const {data:items}=await sb.from('items').select('*').eq('user_id',v.user_id).eq('journey_id',v.journey_id);
   const total=(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0);
   const period=v.journeys?.symposium_date+(v.journeys?.symposium_date_end?' ~ '+v.journeys.symposium_date_end:'');
@@ -883,7 +885,6 @@ async function showDetail(vid){
     <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">📋 방문 상세</h3>
     <div class="d-row"><span class="d-label">사용자</span><span class="d-val">${v.users?.name}</span></div>
     <div class="d-row"><span class="d-label">병원</span><span class="d-val">${v.users?.hospital}</span></div>
-    <div class="d-row"><span class="d-label">면허번호</span><span class="d-val">${v.users?.license_number}</span></div>
     <div class="d-row"><span class="d-label">장소</span><span class="d-val">${v.journeys?.hotel_name}</span></div>
     <div class="d-row"><span class="d-label">기간</span><span class="d-val">${period||'-'}</span></div>
     <div class="d-row"><span class="d-label">방문인증</span><span class="d-val" style="color:var(--green)">+${v.gps_score||10}점</span></div>
