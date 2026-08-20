@@ -3,122 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SympoYooHoo admin</title>
+<title>SympoYooHoo MR</title>
 <meta name="app-build" content="2026-08-13-g">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
-  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
-  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
-}
+:root{--bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:14px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:48px 40px;width:360px;text-align:center;}
-.logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:6px;}
+/* 로그인 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--surface);border-radius:20px;box-shadow:0 8px 40px rgba(20,107,69,.12);padding:44px 36px;width:100%;max-width:400px;text-align:center;}
+.logo{font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;}
 .logo span{color:var(--accent);}
-.brand .logo{font-size:19px;}
-.sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
-input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
+.logo-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.form-group{margin-bottom:14px;text-align:left;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;}
+input,select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
-.mb12{margin-bottom:12px;}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;font-family:inherit;}
-.btn:hover{opacity:.85;}
-.btn-full{width:100%;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;}
+.btn:hover{opacity:.88;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-primary:hover{background:var(--accent2);}
 /* 목록 안의 작은 버튼은 아웃라인으로 — 색 덩어리를 줄임 */
 .btn-sm.btn-primary{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
 .btn-sm.btn-primary:hover{background:var(--accent);color:#fff;}
 .btn-success{background:var(--green);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);}
 .btn-danger{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
 .btn-danger:hover{background:rgba(179,38,30,.10);color:var(--red);border-color:var(--red);}
-.btn-ghost{background:var(--surface2);color:var(--text);}
-.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;}
+.btn-warning{background:var(--yellow);color:#fff;}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;}
 
+/* 앱 */
 .app{display:none;}
-.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;z-index:100;overflow-y:auto;}
-.sidebar .brand{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:var(--muted);font-size:14px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover,.nav-item.active{color:var(--text);background:var(--surface2);border-left-color:var(--accent);}
-.main{margin-left:220px;padding:28px;min-height:100vh;}
-.page{display:none;}
-.page.active{display:block;}
-.page-title{font-size:20px;font-weight:800;margin-bottom:20px;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar .logo{font-size:17px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-name{font-size:13px;font-weight:700;color:var(--text);}
+.content{max-width:1000px;margin:0 auto;padding:24px 20px;}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
-.card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+/* 탭 */
+.tab-bar{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:24px;}
+.tab{flex:1;padding:9px;text-align:center;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.tab-page{display:none;}
+.tab-page.active{display:block;}
 
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-.stat-num{font-size:30px;font-weight:800;color:var(--accent);}
-.stat-label{font-size:12px;color:var(--muted);margin-top:3px;}
+/* 카드 */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.card-title{font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text);}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;}
 
-.table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:9px 12px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
-td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(255,255,255,.02);}
+/* 심포지엄 선택 */
+.sympo-card{border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.sympo-card:hover{border-color:var(--accent);}
+.sympo-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
+.sympo-card .hotel{font-size:15px;font-weight:800;}
+.sympo-card .date{font-size:12px;color:var(--muted);margin-top:2px;}
 
-.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-.badge-green{background:rgba(20,107,69,.16);color:var(--green);}
-.badge-yellow{background:rgba(143,115,32,.14);color:var(--yellow);}
-.badge-red{background:rgba(179,38,30,.14);color:var(--red);}
-.badge-blue{background:rgba(20,107,69,.10);color:var(--accent);}
-
-.score-btn{padding:4px 10px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;margin-right:3px;}
-.s5{background:rgba(20,107,69,.20);color:var(--green);}
-.s3{background:rgba(143,115,32,.20);color:var(--yellow);}
-.s1{background:rgba(179,38,30,.20);color:var(--red);}
-
-.j-chip{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:11px;margin:2px;cursor:pointer;transition:all .15s;}
-.j-chip:hover,.j-chip.done{border-color:var(--green);color:var(--green);background:rgba(20,107,69,.08);}
-
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center;padding:16px;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px;width:520px;max-height:88vh;overflow-y:auto;}
-.modal-title{font-size:16px;font-weight:800;margin-bottom:18px;}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-group{margin-bottom:12px;}
-.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
-
-/* 호텔 검색 */
+/* 장소 검색 */
 .search-row{display:flex;gap:8px;margin-bottom:10px;}
 .search-row input{flex:1;}
-.place-result{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;margin-bottom:6px;}
+.place-result{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .2s;margin-bottom:6px;}
 .place-result:hover{border-color:var(--accent);}
 .place-result .pname{font-size:14px;font-weight:700;}
 .place-result .paddr{font-size:12px;color:var(--muted);margin-top:2px;}
-.selected-hotel{display:none;background:rgba(20,107,69,.08);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--green);}
 
-/* 아젠다 업로드 */
-.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s;font-size:13px;}
-.upload-zone:hover{border-color:var(--accent);}
+/* 추천 장소 그리드 */
+.place-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.place-grid-item{background:var(--surface2);border-radius:12px;overflow:hidden;border:1.5px solid var(--border);position:relative;}
+.place-grid-item .place-img{width:100%;height:100px;object-fit:cover;background:linear-gradient(135deg,#e6efe8,#f2f7f3);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.place-grid-item .place-info{padding:10px;}
+.place-grid-item .place-name{font-size:13px;font-weight:800;margin-bottom:2px;}
+.place-grid-item .place-cat{font-size:11px;color:var(--accent);}
+.place-grid-item .place-tip{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+.place-grid-item .del-btn{position:absolute;top:6px;right:6px;background:rgba(179,38,30,.9);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
 
-/* 상세 패널 */
-.detail-panel{display:none;position:fixed;top:0;right:0;width:460px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:200;padding:24px;overflow-y:auto;}
-.detail-panel.open{display:block;}
-.close-btn{position:absolute;top:18px;right:18px;background:var(--surface2);border:none;color:var(--text);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px;}
-.d-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
-.d-row:last-child{border-bottom:none;}
-.d-label{color:var(--muted);font-size:12px;}
-.d-val{font-size:13px;font-weight:600;}
+/* 사용자 선택 */
+.user-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.user-item:last-child{border-bottom:none;}
+.user-name{font-weight:700;font-size:14px;}
+.user-hosp{font-size:12px;color:var(--muted);}
 
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;}
+/* 초대장 미리보기 */
+.preview-wrap{border-radius:var(--radius);overflow:hidden;margin:16px 0;}
+.preview-c1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#fff;padding:28px;}
+.preview-c2{background:linear-gradient(135deg,#f8f6ee,#efeada);color:#13191b;padding:28px;border:2px solid #8f7320;}
+.preview-c3{background:linear-gradient(135deg,#f2f7f3,#e6efe8);color:#13191b;padding:28px;border-left:5px solid #146b45;}
+.preview-hotel{font-size:22px;font-weight:900;margin-bottom:4px;}
+.preview-date{font-size:13px;opacity:.7;margin-bottom:12px;}
+.preview-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.preview-place-item{background:rgba(255,255,255,.15);border-radius:8px;overflow:hidden;}
+.preview-place-img{width:100%;height:70px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.preview-place-info{padding:6px 8px;}
+.preview-place-name{font-size:11px;font-weight:700;}
+.preview-place-tip{font-size:10px;opacity:.7;margin-top:2px;}
+
+/* 컨셉 */
+.concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.concept-card{border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;text-align:center;}
+.concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
+.concept-icon{font-size:28px;margin-bottom:6px;}
+.concept-title{font-size:13px;font-weight:800;}
+.concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* 승인 */
+.approve-item{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.att-status-ok{color:var(--green);font-weight:700;font-size:12px;}
+.att-status-wait{color:var(--muted);font-size:12px;}
+
+/* 배지 */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:rgba(20,107,69,.16);color:var(--green);}
+.badge-yellow{background:rgba(143,115,32,.12);color:var(--yellow);}
+.badge-blue{background:rgba(20,107,69,.10);color:var(--accent);}
+.badge-red{background:rgba(179,38,30,.10);color:var(--red);}
+
+/* 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:26px;width:460px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.1);}
 .toast.show{transform:translateY(0);opacity:1;}
 
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%);}
-  .main{margin-left:0;padding:16px;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .detail-panel{width:100%;}
+/* 인쇄 */
+@media print {
+  .topbar,.tab-bar,.no-print{display:none!important;}
+  body{background:#fff!important;color:#000!important;}
+  .card{box-shadow:none!important;border:1px solid #ddd!important;}
+  .print-invite{display:block!important;}
+}
+.print-invite{display:none;}
+
+/* 인쇄용 초대장 스타일 */
+.print-page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm;background:#fff;font-family:'Apple SD Gothic Neo',sans-serif;}
+.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #13191b;}
+.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#13191b;}
+.print-logo span{color:#146b45;}
+.print-hotel{font-size:28px;font-weight:900;color:#13191b;margin:16px 0 6px;}
+.print-date{font-size:14px;color:#666;margin-bottom:4px;}
+.print-sympo{font-size:16px;font-weight:700;color:#146b45;margin-bottom:16px;}
+.print-section{margin-bottom:20px;}
+.print-section-title{font-size:14px;font-weight:800;color:#13191b;border-left:4px solid #146b45;padding-left:10px;margin-bottom:12px;}
+.print-agenda-img{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #eee;}
+.print-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.print-place-item{border:1px solid #e2e5f0;border-radius:8px;overflow:hidden;}
+.print-place-icon{width:100%;height:60px;background:#f5f6fa;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.print-place-info{padding:8px 10px;}
+.print-place-name{font-size:12px;font-weight:800;color:#13191b;}
+.print-place-addr{font-size:10px;color:#999;margin-top:2px;}
+.print-place-tip{font-size:10px;color:#146b45;margin-top:3px;}
+.print-msg{background:#f5f6fa;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #146b45;}
+.print-footer{text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;}
+
+@media(max-width:600px){
+  .place-grid{grid-template-columns:repeat(2,1fr);}
+  .preview-places-grid{grid-template-columns:repeat(2,1fr);}
+  .concept-grid{grid-template-columns:1fr;}
 }
 
 /* ===== 라이트 모드 ===== */
@@ -136,6 +183,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
 
+/* 월별 필터 */
+.month-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.month-chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface2);transition:all .2s;}
+.month-chip:hover{border-color:var(--accent);color:var(--accent);}
+.month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
 /* ===== 워드마크 SympoYooHoo =====
    나머지 글자는 아주 밝은 그레이(#e8ece8).
    라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
@@ -145,7 +198,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .wm i{font-style:normal;font-weight:900;}
 .wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
 .wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
+
+/* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
 :root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+
+/* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
 .wm.on-dark{background:transparent;padding:0;}
 </style>
 </head>
@@ -157,583 +214,1197 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
-    <p class="sub">관리자 전용 페이지</p>
-    <input type="password" id="pwInput" placeholder="관리자 비밀번호" class="mb12" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
+    <p class="logo-sub">MR 전용 페이지</p>
+    <div id="step1">
+      <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <div class="form-group"><label>사번</label><input id="lEmpId" placeholder="8자리 사번" onkeydown="if(event.key==='Enter')checkStep1()"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep1()">확인</button>
+    </div>
+    <div id="step2" style="display:none">
+      <div id="step2Msg" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px;background:var(--surface2);border-radius:8px;line-height:1.6"></div>
+      <div class="form-group"><label id="pwLabel">비밀번호</label><input type="password" id="lPw" onkeydown="if(event.key==='Enter')checkStep2()"></div>
+      <div class="form-group" id="pwConfirmWrap" style="display:none">
+        <label>비밀번호 확인</label><input type="password" id="lPwConfirm" onkeydown="if(event.key==='Enter')checkStep2()">
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkStep2()">로그인</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="backToStep1()">← 다시 입력</button>
+    </div>
   </div>
 </div>
 
 <!-- 앱 -->
 <div class="app" id="app">
-  <div class="sidebar">
-    <div class="brand">
-      <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
-      <small style="color:var(--muted);font-size:11px">관리자</small>
+  <div class="topbar">
+    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
+    <div class="topbar-right">
+      <span class="topbar-name" id="topName"></span>
+      <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="doLogout()">로그아웃</button>
     </div>
-    <div class="nav-item active" data-page="dashboard" onclick="showPage(this)">📊 대시보드</div>
-    <div class="nav-item" data-page="approval" onclick="showPage(this)">✅ 승인 현황</div>
-    <div class="nav-item" data-page="symposium" onclick="showPage(this)">🏨 심포지엄 관리</div>
-    <div class="nav-item" data-page="users" onclick="showPage(this)">👥 사용자 관리</div>
-    <div class="nav-item" data-page="visits" onclick="showPage(this)">📍 방문 인증</div>
-    <div class="nav-item" data-page="items" onclick="showPage(this)">💊 품목 관리</div>
-    <div class="nav-item" data-page="db" onclick="showPage(this)">📋 전체 DB</div>
-  <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
+  </div>
+
+  <div class="content">
+    <div class="tab-bar no-print">
+      <div class="tab active" onclick="switchTab(this,'tab-approve')">👥 승인</div>
+      <div class="tab" onclick="switchTab(this,'tab-invite')">📨 초대장</div>
+      <div class="tab" onclick="switchTab(this,'tab-attendance')">✅ 참석현황</div>
+      <div class="tab" onclick="switchTab(this,'tab-users')">👤 사용자·품목</div>
     </div>
 
-  <div class="main">
-
-    <!-- 대시보드 -->
-    <div class="page active" id="page-dashboard">
-      <div class="page-title">📊 대시보드</div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-num" id="s1">-</div><div class="stat-label">전체 사용자</div></div>
-        <div class="stat-card"><div class="stat-num" id="s2">-</div><div class="stat-label">승인 대기</div></div>
-        <div class="stat-card"><div class="stat-num" id="s3">-</div><div class="stat-label">방문 인증</div></div>
-        <div class="stat-card"><div class="stat-num" id="s4">-</div><div class="stat-label">등록 심포지엄</div></div>
-      </div>
+    <!-- 승인 탭 -->
+    <div class="tab-page active" id="tab-approve">
       <div class="card">
-        <div class="card-title">최근 방문 인증</div>
-        <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>인증일시</th><th>점수</th></tr></thead>
-          <tbody id="recentTb"></tbody></table>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">승인 대기 사용자</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadApproveList();toast('새로고침 완료')">🔄 새로고침</button>
         </div>
+        <div id="approveList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">승인된 사용자</div>
+        <div id="approvedList"></div>
       </div>
     </div>
 
-    <!-- 승인 현황 -->
-    <div class="page" id="page-approval">
-      <div class="page-title">✅ 승인 현황</div>
+    <!-- 초대장 탭 -->
+    <div class="tab-page" id="tab-invite">
+
+      <!-- 발송 이력 -->
       <div class="card">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-          <input id="searchMr" placeholder="🔍 MR 이름 또는 사번 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
-          <input id="searchUser" placeholder="🔍 사용자 이름 또는 병원 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
-          <select id="filterStatus" style="width:120px" onchange="filterApproval()">
-            <option value="">전체</option>
-            <option value="pending">대기중</option>
-            <option value="approved">승인됨</option>
-            <option value="rejected">거절됨</option>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin:0">📬 발송한 초대장</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSentInvites();toast('새로고침 완료')">🔄</button>
+        </div>
+        <div id="sentInviteList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">로딩 중...</div></div>
+      </div>
+
+      <div style="margin:16px 14px 8px;font-size:15px;font-weight:800;color:var(--accent)">✉️ 새 초대장 만들기</div>
+
+      <!-- STEP 1: 심포지엄 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="card-title" style="margin:0">STEP 1 · 심포지엄 선택</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSympoList();toast('새로고침 완료')">🔄</button>
+        </div>
+        <div class="month-filter" id="mrMonthFilter"></div>
+        <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
+      </div>
+
+      <!-- STEP 2: 추천 장소 -->
+      <div class="card" id="step2Place" style="display:none">
+        <div class="card-title">STEP 2 · 추천 장소 추가 (최대 6개)</div>
+        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--accent);color:var(--accent);font-size:13px">
+          📊 이 심포지엄 TOP 10 추천 장소 불러오기
+        </button>
+        <div id="top10List" style="display:none;margin-bottom:14px"></div>
+        <div class="search-row">
+          <input id="placeSearch" placeholder="정확한 상호 검색 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
+          <select id="placeType" style="width:110px">
+            <option value="restaurant">🍽️ 식당</option>
+            <option value="attraction">🏛️ 명소</option>
+            <option value="cafe">☕ 카페</option>
+            <option value="shopping">🛍️ 쇼핑</option>
           </select>
+          <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
         </div>
-        <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>담당 MR</th><th>MR 사번</th><th>상태</th><th>신청일</th><th>관리</th></tr></thead>
-          <tbody id="approvalTb"></tbody></table>
-        </div>
+        <div id="placeResults"></div>
+        <div class="place-grid" id="addedPlacesGrid"></div>
       </div>
-    </div>
 
-    <!-- 심포지엄 관리 -->
-    <div class="page" id="page-symposium">
-      <div class="page-title">🏨 심포지엄 관리</div>
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title" style="margin:0">심포지엄 목록</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="loadSympo()">🔄 새로고침</button>
-            <button class="btn btn-primary btn-sm" onclick="openSympoModal()">+ 심포지엄 추가</button>
+      <!-- STEP 3: 사용자 선택 -->
+      <div class="card" id="step3User" style="display:none">
+        <div class="card-title">STEP 3 · 발송할 사용자 선택</div>
+        <div id="userSelectList"><div style="color:var(--muted);font-size:13px">승인된 사용자 로딩 중...</div></div>
+      </div>
+
+      <!-- STEP 4: 컨셉 & 메시지 -->
+      <div class="card" id="step4Concept" style="display:none">
+        <div class="card-title">STEP 4 · 초대장 컨셉 & 메시지</div>
+        <div class="concept-grid">
+          <div class="concept-card selected" onclick="selectConcept(this,1)">
+            <div class="concept-icon">🌙</div>
+            <div class="concept-title">딥 그린</div>
+            <div class="concept-desc">격식있는 고급스러운 분위기</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,2)">
+            <div class="concept-icon">🌸</div>
+            <div class="concept-title">웜 올리브</div>
+            <div class="concept-desc">따뜻하고 환영하는 느낌</div>
+          </div>
+          <div class="concept-card" onclick="selectConcept(this,3)">
+            <div class="concept-icon">🌿</div>
+            <div class="concept-title">클린 그린</div>
+            <div class="concept-desc">깔끔하고 신뢰감 있는 느낌</div>
           </div>
         </div>
-        <div class="month-filter" id="sympoMonthFilter"></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>기간</th><th>호텔명</th><th>심포지엄명</th><th>아젠다</th><th>초대코드</th><th>관리</th></tr></thead>
-          <tbody id="sympTb"></tbody></table>
+        <div class="form-group">
+          <label>개인 메시지 (선택)</label>
+          <textarea id="customMsg" rows="3" placeholder="안녕하세요! 이번 심포지엄에 초대합니다 😊" oninput="updatePreview()"></textarea>
         </div>
+
+        <!-- 미리보기 -->
+        <div id="previewArea"></div>
+
+        <div style="display:flex;gap:8px;margin-top:14px" class="no-print">
+          <button class="btn btn-primary" id="sendInviteBtn" style="flex:1" onclick="sendInvite()">📨 초대장 발송</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="printInvite()">🖨️ 인쇄</button>
+          <button class="btn btn-ghost btn-sm" onclick="updatePreview()">👁️ 미리보기</button>
+        </div>
+        <div id="sendResult" style="margin-top:10px"></div>
       </div>
     </div>
 
-    <!-- 사용자 관리 -->
-    <div class="page" id="page-users">
-      <div class="page-title">👥 사용자 관리</div>
+    <!-- 참석현황 탭 -->
+    <div class="tab-page" id="tab-attendance">
       <div class="card">
-        <div class="card-header">
-          <div class="card-title" style="margin:0">사용자 목록</div>
-          <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ 사용자 추가</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px">
+          <div class="card-title" style="margin:0">참석 현황</div>
+          <select id="attFilter" style="width:auto;font-size:13px" onchange="loadAttendance()">
+            <option value="">전체</option>
+          </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadAttendance();toast('새로고침 완료')">🔄</button>
         </div>
-        <div class="month-filter" id="userMonthFilter"></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
-          <tbody id="userTb"></tbody></table>
-        </div>
+        <div id="attendanceList"></div>
       </div>
     </div>
 
-    <!-- 방문 인증 -->
-    <div class="page" id="page-visits">
-      <div class="page-title">📍 방문 인증 검수</div>
+    <!-- 품목승인 탭 -->
+    <div class="tab-page" id="tab-items">
       <div class="card">
-        <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS점수</th><th>사진</th><th>사진점수</th></tr></thead>
-          <tbody id="visitTb"></tbody></table>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">품목 승인 대기</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadItems();toast('새로고침 완료')">🔄 새로고침</button>
         </div>
+        <div id="itemList"></div>
       </div>
     </div>
 
-    <!-- 품목 관리 -->
-    <div class="page" id="page-items">
-      <div class="page-title">💊 품목 관리</div>
+    <!-- 사용자 관리 탭 -->
+    <div class="tab-page" id="tab-users">
       <div class="card">
-        <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>품목</th><th>제출일시</th><th>상태</th><th>점수</th></tr></thead>
-          <tbody id="itemTb"></tbody></table>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin:0">👤 내 담당 사용자</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadUserManage();toast('새로고침 완료')">🔄 새로고침</button>
         </div>
+        <div id="userManageList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div></div>
       </div>
     </div>
 
-    <!-- 전체 DB -->
-    <div class="page" id="page-db">
-      <div class="page-title">📋 전체 DB</div>
-      <div class="card">
-        <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>참석 여정</th><th>누적점수</th></tr></thead>
-          <tbody id="dbTb"></tbody></table>
-        </div>
+    <!-- 사용자 상세 모달 -->
+    <div class="modal-bg" id="userDetailModal">
+      <div class="modal" style="width:540px;max-width:95vw">
+        <button class="close-btn" onclick="closeModal('userDetailModal')">✕</button>
+        <div id="userDetailContent"></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- 심포지엄 모달 -->
-<div class="modal-bg" id="sympoModal">
+<!-- 팁 입력 모달 -->
+<div class="modal-bg" id="tipModal">
   <div class="modal">
-    <div class="modal-title" id="sympoModalTitle">심포지엄 추가</div>
-    <input type="hidden" id="sympoId">
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>시작일</label>
-        <input type="date" id="sDateStart">
-      </div>
-      <div class="form-group">
-        <label>종료일</label>
-        <input type="date" id="sDateEnd">
-      </div>
-    </div>
-
+    <div class="modal-title" id="tipPlaceName"></div>
     <div class="form-group">
-      <label>심포지엄명</label>
-      <input id="sName" placeholder="예) 2026 경주 순환기 심포지엄">
+      <label>전화번호 <span style="font-size:10px;color:var(--muted)">(선택)</span></label>
+      <input id="tipPhone" placeholder="예) 02-820-1231">
     </div>
-
     <div class="form-group">
-      <label>호텔 검색</label>
-      <div class="search-row">
-        <input id="hotelSearch" placeholder="정확한 상호 검색 또는 예) 경주 근처 호텔" onkeydown="if(event.key==='Enter')searchHotel()">
-        <button class="btn btn-ghost btn-sm" onclick="searchHotel()">🔍 검색</button>
-      </div>
-      <div id="hotelResults"></div>
-      <div class="selected-hotel" id="selectedHotelBox"></div>
+      <label>소개 팁</label>
+      <textarea id="tipText" rows="2" placeholder="예) 물회가 정말 맛있어요! 점심에 가세요 🐟"></textarea>
     </div>
-
     <div class="form-group">
-      <label>아젠다 이미지 업로드</label>
-      <div class="upload-zone" onclick="document.getElementById('agendaFile').click()" id="uploadZone">
-        📎 클릭하여 이미지 선택 (JPG, PNG, PDF)
-      </div>
-      <input type="file" id="agendaFile" accept="image/*,.pdf" style="display:none" onchange="uploadAgenda(this)">
-      <input type="hidden" id="agendaUrl">
-      <img id="agendaPreview" style="display:none;width:100%;border-radius:8px;margin-top:8px">
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-primary btn-sm" onclick="saveSympo()">저장</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('sympoModal')">취소</button>
-    </div>
-  </div>
-</div>
-
-<!-- 사용자 추가 모달 -->
-<div class="modal-bg" id="addUserModal">
-  <div class="modal">
-    <div class="modal-title">사용자 추가</div>
-    <div class="form-row">
-      <div class="form-group"><label>이름</label><input id="uName" placeholder="홍길동"></div>
-      <div class="form-group"><label>병원명</label><input id="uHosp" placeholder="서울대병원"></div>
+      <label>대표 이미지 URL <span style="font-size:10px;color:var(--muted)">(선택 · 네이버플레이스 사진 우클릭→이미지주소복사)</span></label>
+      <input id="imgUrl" placeholder="https://...">
+      <div id="imgPreview" style="margin-top:6px"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary btn-sm" onclick="addUser()">저장</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('addUserModal')">취소</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmAddPlace()">추가</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('tipModal')">취소</button>
     </div>
   </div>
-</div>
-
-<!-- 상세 패널 -->
-<div class="detail-panel" id="detailPanel">
-  <button class="close-btn" onclick="document.getElementById('detailPanel').classList.remove('open')">✕</button>
-  <div id="detailContent"></div>
 </div>
 
 <script>
 const SB_URL='https://sgmmeibexipozsywxpyk.supabase.co';
 const SB_KEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
-const ADMIN_PW='yuhan2026';
 const sb=supabase.createClient(SB_URL,SB_KEY);
-let selectedHotel=null;
+
+let currentIntroducer=null;
+let selectedSympo=null;
+let selectedConcept=1;
+let addedPlaces=[];
+let pendingPlace=null;
+let selectedUsers=[];
+let _introFound=null;
 
 function toast(msg,ok=true){
   const t=document.getElementById('toast');
   t.textContent=msg;t.style.borderColor=ok?'var(--green)':'var(--red)';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
 }
-
-function doLogin(){
-  if(document.getElementById('pwInput').value===ADMIN_PW){
-    document.getElementById('loginWrap').style.display='none';
-    document.getElementById('app').style.display='block';
-    loadDashboard();
-  } else { toast('비밀번호 오류',false); }
-}
-document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-
-function showPage(el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
-  const pid=el.dataset.page;
-  document.getElementById('page-'+pid).classList.add('active');
-  ({dashboard:loadDashboard,approval:loadApproval,symposium:loadSympo,users:loadUsers,visits:loadVisits,items:loadItems,db:loadDB})[pid]?.();
-}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// 월별 필터 빌더
-function buildMonthFilter(data, elId, callback, dateField='symposium_date'){
-  const el=document.getElementById(elId);
+// 로그인 STEP1
+async function checkStep1(){
+  const name=document.getElementById('lName').value.trim();
+  const emp=document.getElementById('lEmpId').value.trim();
+  if(!name||!emp){toast('이름과 사번을 입력해주세요',false);return;}
+  const {data}=await sb.from('introducers').select('*').eq('employee_id',emp).eq('name',name).single();
+  if(!data){toast('등록된 MR 정보가 없습니다',false);return;}
+  _introFound=data;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+  if(!data.password){
+    document.getElementById('pwLabel').textContent='새 비밀번호 설정';
+    document.getElementById('step2Msg').innerHTML=`👋 <strong>${data.name}</strong>님, 처음 로그인하시는군요!<br>비밀번호를 설정해주세요.`;
+    document.getElementById('pwConfirmWrap').style.display='block';
+  } else {
+    document.getElementById('pwLabel').textContent='비밀번호';
+    document.getElementById('step2Msg').innerHTML=`✅ <strong>${data.name}</strong>님 확인되었습니다.`;
+    document.getElementById('pwConfirmWrap').style.display='none';
+  }
+  setTimeout(()=>document.getElementById('lPw').focus(),100);
+}
+
+async function checkStep2(){
+  const pw=document.getElementById('lPw').value;
+  if(!pw||pw.length<4){toast('비밀번호 4자 이상',false);return;}
+  if(!_introFound.password){
+    if(pw!==document.getElementById('lPwConfirm').value){toast('비밀번호 불일치',false);return;}
+    await sb.from('introducers').update({password:pw}).eq('id',_introFound.id);
+    _introFound.password=pw;
+  } else {
+    if(pw!==_introFound.password){toast('비밀번호 오류',false);return;}
+  }
+  currentIntroducer=_introFound;
+  localStorage.setItem('mr_session',JSON.stringify(currentIntroducer));
+  enterApp();
+}
+
+function backToStep1(){
+  _introFound=null;
+  document.getElementById('step1').style.display='block';
+  document.getElementById('step2').style.display='none';
+}
+
+function doLogout(){
+  localStorage.removeItem('mr_session');
+  location.reload();
+}
+
+function enterApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('topName').textContent=currentIntroducer.name;
+  loadApproveList();
+  loadSympoList();
+  loadSentInvites();
+  loadAttendanceFilter();
+  loadItems();
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('mr_session');
+  if(saved){currentIntroducer=JSON.parse(saved);enterApp();}
+});
+
+// 탭
+function switchTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='tab-attendance')loadAttendance();
+  if(id==='tab-items')loadItems();
+  if(id==='tab-approve')loadApproveList();
+  if(id==='tab-users')loadUserManage();
+  if(id==='tab-invite')loadSentInvites();
+}
+
+// 승인
+async function loadApproveList(){
+  if(!currentIntroducer)return;
+  const {data:pending}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','pending');
+  const {data:approved}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','approved');
+  const el=document.getElementById('approveList');
+  el.innerHTML=pending&&pending.length?pending.map(u=>`
+    <div class="approve-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:800">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${u.hospital}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✅ 승인</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">❌ 거절</button>
+        </div>
+      </div>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';
+  const el2=document.getElementById('approvedList');
+  el2.innerHTML=approved&&approved.length?approved.map(u=>`
+    <div class="user-item">
+      <div><div class="user-name">${u.name}</div><div class="user-hosp">${u.hospital}</div></div>
+      <span class="badge badge-green">승인됨</span>
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">없음</div>';
+}
+
+async function approveUser(id){
+  await sb.from('users').update({mr_approval:'approved',is_approved:true}).eq('id',id);
+  toast('승인 완료!');loadApproveList();
+}
+async function rejectUser(id){
+  if(!confirm('거절하시겠습니까?'))return;
+  await sb.from('users').update({mr_approval:'rejected'}).eq('id',id);
+  toast('거절 처리됨');loadApproveList();
+}
+
+// 심포지엄
+let _mrActiveMonth='all';
+
+function buildMrMonthFilter(data){
+  const el=document.getElementById('mrMonthFilter');
   if(!el)return;
   const months=new Set();
-  (data||[]).forEach(d=>{
-    const date=d[dateField]||'';
-    if(date.length>=7) months.add(date.slice(0,7));
-  });
+  (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
   const sorted=[...months].sort().reverse();
   if(!sorted.length){el.innerHTML='';return;}
-  let html='<span class="month-chip active" data-month="all" onclick="'+callback.name+'(this.dataset.month)">전체</span>';
+  let html='<span class="month-chip active" data-month="all" onclick="filterMrSympo(this.dataset.month)">전체</span>';
   sorted.forEach(m=>{
     const parts=m.split('-');
-    html+='<span class="month-chip" data-month="'+m+'" onclick="'+callback.name+'(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
+    html+='<span class="month-chip" data-month="'+m+'" onclick="filterMrSympo(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
   });
   el.innerHTML=html;
 }
 
-
-// 대시보드
-async function loadDashboard(){
-  const [a,b,c,d]=await Promise.all([
-    sb.from('users').select('*',{count:'exact',head:true}),
-    sb.from('users').select('*',{count:'exact',head:true}).eq('is_approved',false),
-    sb.from('visits').select('*',{count:'exact',head:true}),
-    sb.from('journeys').select('*',{count:'exact',head:true}),
-  ]);
-  document.getElementById('s1').textContent=a.count||0;
-  document.getElementById('s2').textContent=b.count||0;
-  document.getElementById('s3').textContent=c.count||0;
-  document.getElementById('s4').textContent=d.count||0;
-  const {data}=await sb.from('visits').select('*,users(name,hospital),journeys(hotel_name)').order('visited_at',{ascending:false}).limit(8);
-  document.getElementById('recentTb').innerHTML=data?.length?data.map(v=>`
-    <tr><td>${v.users?.name||'-'}</td><td>${v.users?.hospital||'-'}</td><td>${v.journeys?.hotel_name||'-'}</td>
-    <td>${new Date(v.visited_at).toLocaleString('ko-KR')}</td>
-    <td><span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</span></td></tr>
-  `).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+function filterMrSympo(month){
+  _mrActiveMonth=month;
+  document.querySelectorAll('#mrMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
+  const filtered=month==='all'?window._sympoDB:window._sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
+  renderMrSympoList(filtered);
 }
 
-// 심포지엄
-let _sympoDB=[];
-let _activeSympoMonth='all';
+function renderMrSympoList(data){
+  const el=document.getElementById('sympoList');
+  el.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
+  el.innerHTML=data&&data.length?data.map(j=>`
+    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')" style="margin-bottom:0">
+      <div class="hotel" style="font-size:13px">🏨 ${j.hotel_name}</div>
+      <div class="date" style="font-size:11px;margin-top:4px">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</div>
+      ${j.symposium_name?`<div style="font-size:11px;color:var(--accent);margin-top:4px">🎓 ${j.symposium_name}</div>`:''}
+    </div>
+  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">해당 월 심포지엄 없음</div>';
+}
 
-async function loadSympo(){
+async function loadSympoList(){
   const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
-  _sympoDB=data||[];
-  buildMonthFilter(_sympoDB,'sympoMonthFilter',filterSympo);
-  renderSympoTable(_sympoDB);
+  window._sympoDB=data||[];
+  buildMrMonthFilter(data||[]);
+  const el=document.getElementById('sympoList');
+  renderMrSympoList(data||[]);
 }
 
-function filterSympo(month){
-  _activeSympoMonth=month;
-  document.querySelectorAll('#sympoMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
-  const filtered=month==='all'?_sympoDB:_sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
-  renderSympoTable(filtered);
+async function selectSympo(el,id){
+  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSympo=window._sympoDB.find(j=>j.id===id);
+  addedPlaces=[];
+  renderPlaceGrid();
+  document.getElementById('step2Place').style.display='block';
+  document.getElementById('step3User').style.display='block';
+  document.getElementById('step4Concept').style.display='block';
+  await loadUserSelectList();
+  updatePreview();
 }
 
-function renderSympoTable(data){
-  document.getElementById('sympTb').innerHTML=data?.length?data.map(j=>`
-    <tr>
-      <td>${j.symposium_date||'-'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</td>
-      <td>${j.hotel_name}</td>
-      <td>${j.symposium_name||'-'}</td>
-      <td>${j.agenda_image_url?`<a href="${j.agenda_image_url}" target="_blank" style="color:var(--accent)">📄 보기</a>`:'없음'}</td>
-      <td><code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:11px">${j.invite_code}</code></td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick='editSympo(${JSON.stringify(j).replace(/'/g,"&#39;")})'>수정</button>
-        <button class="btn btn-danger btn-sm" onclick="delSympo('${j.id}')">삭제</button>
-      </td>
-    </tr>
-  `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
+// 장소 검색
+// TOP 10 추천 장소 로드
+async function loadTop10(){
+  if(!selectedSympo){toast('심포지엄을 먼저 선택해주세요',false);return;}
+  const btn=document.getElementById('top10Btn');
+  btn.textContent='로딩 중...';btn.disabled=true;
 
-function openSympoModal(){
-  selectedHotel=null;
-  document.getElementById('sympoId').value='';
-  document.getElementById('sympoModalTitle').textContent='심포지엄 추가';
-  document.getElementById('sDateStart').value='';
-  document.getElementById('sDateEnd').value='';
-  document.getElementById('sName').value='';
-  document.getElementById('hotelSearch').value='';
-  document.getElementById('hotelResults').innerHTML='';
-  document.getElementById('selectedHotelBox').style.display='none';
-  document.getElementById('agendaUrl').value='';
-  document.getElementById('agendaPreview').style.display='none';
-  document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
-  document.getElementById('sympoModal').classList.add('open');
-}
+  const {data,error}=await sb.from('popular_locations')
+    .select('*')
+    .eq('journey_id',selectedSympo.id)
+    .order('recommend_count',{ascending:false})
+    .limit(10);
 
-function editSympo(j){
-  selectedHotel={name:j.hotel_name,lat:j.hotel_lat,lng:j.hotel_lng};
-  document.getElementById('sympoId').value=j.id;
-  document.getElementById('sympoModalTitle').textContent='심포지엄 수정';
-  document.getElementById('sDateStart').value=j.symposium_date||'';
-  document.getElementById('sDateEnd').value=j.symposium_date_end||'';
-  document.getElementById('sName').value=j.symposium_name||'';
-  document.getElementById('selectedHotelBox').textContent='✅ '+j.hotel_name;
-  document.getElementById('selectedHotelBox').style.display='block';
-  document.getElementById('agendaUrl').value=j.agenda_image_url||'';
-  if(j.agenda_image_url&&j.agenda_image_url.match(/\.(jpg|jpeg|png|gif|webp)$/i)){
-    document.getElementById('agendaPreview').src=j.agenda_image_url;
-    document.getElementById('agendaPreview').style.display='block';
+  btn.textContent='📊 이 심포지엄 TOP 10 추천 장소 불러오기';
+  btn.disabled=false;
+
+  const el=document.getElementById('top10List');
+  if(!data||!data.length){
+    el.style.display='block';
+    el.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px">아직 추천 데이터가 없습니다<br>첫 번째로 추천 장소를 등록해보세요!</div>';
+    return;
   }
-  document.getElementById('sympoModal').classList.add('open');
-}
 
-// 네이버 지역 검색 - Supabase Edge Function 프록시
-async function searchHotel(){
-  const q=document.getElementById('hotelSearch').value.trim();
-  if(!q){toast('검색어를 입력해주세요',false);return;}
-  const el=document.getElementById('hotelResults');
-  el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
-  try{
-    const res=await fetch(
-      `https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}`
-    );
-    const data=await res.json();
-    if(!data.items||!data.items.length){
-      el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">검색 결과 없음 — 다른 키워드로 검색해보세요</div>';
-      return;
-    }
-    el.innerHTML=data.items.map(p=>{
-      // 네이버 검색결과 HTML태그 제거
-      const name=p.title.replace(/<[^>]*>/g,'');
-      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
-      const cat=p.category||'';
-      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
-      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
-      const safeName=name.replace(/'/g,"\\'");
-      const safeAddr=addr.replace(/'/g,"\\'");
-      return `<div class="place-result" onclick="selectHotel(${lat},${lng},'${safeName}','${safeAddr}')">
-        <div class="pname">${name}</div>
-        <div class="paddr">${addr}</div>
-        ${cat?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${cat}</div>`:''}
+  el.style.display='block';
+  const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+  el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">TOP ${data.length} · 많이 추천된 장소</div>`+
+    data.map((p,i)=>{
+      const already=addedPlaces.some(a=>a.name===p.place_name);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:7px;${already?'opacity:.5':''}">
+        <div style="font-size:16px;font-weight:900;color:var(--accent);width:22px;text-align:center">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800">${typeIcon[p.place_type]||'📍'} ${p.place_name}</div>
+          ${p.address?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${p.address}</div>`:''}
+          ${p.latest_tip?`<div style="font-size:11px;color:var(--accent);margin-top:2px">💬 ${p.latest_tip}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;color:var(--muted)">추천 ${p.recommend_count}회</span>
+          ${already
+            ?'<span style="font-size:11px;color:var(--green);font-weight:700">✅ 추가됨</span>'
+            :`<button class="btn btn-primary btn-sm" onclick="addFromTop10(${i})">+ 추가</button>`
+          }
+        </div>
       </div>`;
     }).join('');
+  window._top10Data=data;
+}
+
+function addFromTop10(idx){
+  const p=window._top10Data[idx];
+  if(!p)return;
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  if(addedPlaces.some(a=>a.name===p.place_name)){toast('이미 추가된 장소입니다',false);return;}
+  addedPlaces.push({
+    name:p.place_name,
+    lat:p.place_lat,
+    lng:p.place_lng,
+    addr:p.address||'',
+    thumb:p.photo_url||'',
+    cat:'',
+    type:p.place_type||'restaurant',
+    tip:p.latest_tip||'',
+    link:''
+  });
+  renderPlaceGrid();
+  updatePreview();
+  toast(p.place_name+' 추가됨 ✅');
+  // 버튼 상태 업데이트
+  loadTop10();
+}
+
+let _searchPage=1;
+let _searchQuery='';
+let _allResults=[];
+
+async function searchPlace(loadMore){
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  const q=loadMore?_searchQuery:document.getElementById('placeSearch').value.trim();
+  if(!q){toast('검색어 입력',false);return;}
+  if(!loadMore){_searchPage=1;_searchQuery=q;_allResults=[];}
+  const el=document.getElementById('placeResults');
+  if(!loadMore) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">🔍 검색 중...</div>';
+  else {
+    // 더 검색 버튼 제거 후 로딩
+    const moreBtn=document.getElementById('moreSearchBtn');
+    if(moreBtn) moreBtn.innerHTML='<span style="color:var(--muted);font-size:13px">검색 중...</span>';
+  }
+  const startNum=(_searchPage-1)*5+1;
+  try{
+    const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${startNum}`);
+    const data=await res.json();
+    if(!data.items||!data.items.length){
+      const noMore=`<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px">더 이상 검색 결과가 없습니다</div>`;
+      if(loadMore){const btn=document.getElementById('moreSearchBtn');if(btn)btn.outerHTML=noMore;}
+      else el.innerHTML=noMore;
+      return;
+    }
+    const items=data.items.map(p=>{
+      const name=p.title.replace(/<[^>]*>/g,'');
+      const addr=(p.roadAddress||p.address||'').replace(/<[^>]*>/g,'');
+      const lat=p.mapy?parseFloat(p.mapy)/1e7:0;
+      const lng=p.mapx?parseFloat(p.mapx)/1e7:0;
+      const thumb=p.thumbnail||'';
+      const link=p.link||('https://search.naver.com/search.naver?query='+encodeURIComponent(name));
+      const safeName=name.replace(/'/g,"\'");
+      const safeAddr=addr.replace(/'/g,"\'");
+      const safeLink=link.replace(/'/g,"\'");
+      return `<div class="place-result" onclick="openTipModal('${safeName}','${lat}','${lng}','${safeAddr}','${thumb}','${p.category||''}','${safeLink}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${thumb?`<img src="${thumb}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:50px;height:50px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</div>`}
+          <div>
+            <div class="pname">${name}</div>
+            <div class="paddr">${addr}</div>
+            ${p.category?`<div style="font-size:11px;color:var(--accent);margin-top:2px">${p.category}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const moreBtn=`<div id="moreSearchBtn" style="text-align:center;margin-top:8px">
+      <button class="btn btn-ghost" style="width:100%;border:1.5px dashed var(--border);font-size:13px" onclick="_searchPage++;searchPlace(true)">
+        🔍 더 검색하기 (다음 5개)
+      </button>
+    </div>`;
+
+    if(loadMore){
+      const oldBtn=document.getElementById('moreSearchBtn');
+      if(oldBtn) oldBtn.insertAdjacentHTML('beforebegin', items);
+      if(oldBtn) oldBtn.outerHTML=moreBtn;
+      else el.insertAdjacentHTML('beforeend', items+moreBtn);
+    } else {
+      el.innerHTML=items+moreBtn;
+    }
   }catch(e){
-    console.error('검색 오류:',e);
     el.innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px">오류: ${e.message}</div>`;
   }
 }
 
-function selectHotel(lat,lng,name,addr){
-  selectedHotel={name,lat:parseFloat(lat),lng:parseFloat(lng)};
-  document.getElementById('selectedHotelBox').textContent='✅ '+name+' — '+addr;
-  document.getElementById('selectedHotelBox').style.display='block';
-  document.getElementById('hotelResults').innerHTML='';
-  document.getElementById('hotelSearch').value='';
+function openTipModal(name,lat,lng,addr,thumb,cat,link){
+  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',type:document.getElementById('placeType').value};
+  document.getElementById('tipPlaceName').textContent='📍 '+name;
+  document.getElementById('tipPhone').value='';
+  document.getElementById('tipText').value='';
+  document.getElementById('imgUrl').value=thumb||'';
+  document.getElementById('imgPreview').innerHTML=thumb?`<img src="${thumb}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
+  document.getElementById('imgUrl').oninput=function(){
+    document.getElementById('imgPreview').innerHTML=this.value?`<img src="${this.value}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
+  };
+  document.getElementById('tipModal').classList.add('open');
+  document.getElementById('placeResults').innerHTML='';
+  document.getElementById('placeSearch').value='';
 }
 
-async function uploadAgenda(input){
-  const file=input.files[0];if(!file)return;
-  document.getElementById('uploadZone').textContent='업로드 중... ⏳';
-  try{
-    const ext=file.name.split('.').pop().toLowerCase();
-    const path=`agenda_${Date.now()}.${ext}`;
-    const {data:upData,error}=await sb.storage.from('agenda-images').upload(path,file,{upsert:true,contentType:file.type});
-    if(error){
-      console.error('업로드 오류:',error);
-      toast('업로드 실패: '+error.message,false);
-      document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+function confirmAddPlace(){
+  if(!pendingPlace)return;
+  pendingPlace.tip=document.getElementById('tipText').value.trim();
+  pendingPlace.phone=document.getElementById('tipPhone').value.trim();
+  const manualImg=document.getElementById('imgUrl').value.trim();
+  if(manualImg) pendingPlace.thumb=manualImg;
+  addedPlaces.push({...pendingPlace});
+  renderPlaceGrid();
+  closeModal('tipModal');
+  updatePreview();
+  toast(pendingPlace.name+' 추가됨');
+}
+
+function removePlace(i){
+  addedPlaces.splice(i,1);
+  renderPlaceGrid();
+  updatePreview();
+}
+
+const typeIcon={restaurant:'🍽️',attraction:'🏛️',cafe:'☕',shopping:'🛍️'};
+
+function renderPlaceGrid(){
+  const el=document.getElementById('addedPlacesGrid');
+  el.innerHTML=addedPlaces.map((p,i)=>`
+    <div class="place-grid-item">
+      ${p.thumb
+        ?`<img src="${p.thumb}" class="place-img" style="object-fit:cover" onerror="this.parentNode.querySelector('.place-img-fallback').style.display='flex';this.style.display='none'"><div class="place-img place-img-fallback" style="display:none">${typeIcon[p.type]||'📍'}</div>`
+        :`<div class="place-img">${typeIcon[p.type]||'📍'}</div>`}
+      <button class="del-btn" onclick="removePlace(${i})">✕</button>
+      <div class="place-info">
+        <div class="place-name">${p.name}</div>
+        <div class="place-cat">${typeIcon[p.type]||''} ${p.cat||''}</div>
+        ${p.phone?`<div style="font-size:10px;color:var(--muted)">📞 ${p.phone}</div>`:''}
+        ${p.tip?`<div class="place-tip">💬 ${p.tip}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// 사용자 선택
+async function loadUserSelectList(){
+  const {data}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).eq('mr_approval','approved');
+  selectedUsers=[];
+  const el=document.getElementById('userSelectList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">승인된 사용자 없음</div>';return;}
+  el.innerHTML=data.map(u=>`
+    <div class="user-item">
+      <div><div class="user-name">${u.name}</div><div class="user-hosp">${u.hospital}</div></div>
+      <input type="checkbox" value="${u.id}" onchange="toggleUser(this,'${u.id}','${u.name}')" style="width:18px;height:18px;cursor:pointer">
+    </div>
+  `).join('');
+}
+
+function toggleUser(el,id,name){
+  if(el.checked){selectedUsers.push({id,name});}
+  else{selectedUsers=selectedUsers.filter(u=>u.id!==id);}
+}
+
+// 컨셉
+function selectConcept(el,c){
+  document.querySelectorAll('.concept-card').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedConcept=c;
+  updatePreview();
+}
+
+function updatePreview(){
+  if(!selectedSympo)return;
+  const msg=document.getElementById('customMsg').value;
+  const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
+  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
+  const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+
+  const placesHtml=addedPlaces.map(p=>`
+    <div style="border:3px solid ${typeColors[p.type]||'#333'};border-radius:14px;padding:14px 12px;">
+      <div style="font-size:14px;font-weight:900;color:#13191b;margin-bottom:4px">${typeIcon[p.type]||'📍'} ${p.name}</div>
+      ${p.addr?`<div style="font-size:11px;color:#666;margin-bottom:4px">${p.addr}</div>`:''}
+      ${p.tip?`<div style="font-size:11px;color:#444;margin-top:4px">💬 ${p.tip}</div>`:''}
+    </div>`).join('');
+
+  const agendaHtml=selectedSympo.agenda_image_url&&!selectedSympo.agenda_image_url.match(/\.pdf$/i)
+    ?`<img src="${selectedSympo.agenda_image_url}" style="width:70%;display:block;margin:8px auto;max-height:200px;object-fit:contain;border-radius:6px">`:'';
+
+  document.getElementById('previewArea').innerHTML=`
+    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:14px;background:#fff;color:#13191b">
+      <div style="background:#1a3a5e;color:#fff;text-align:center;padding:10px 16px;font-size:16px;font-weight:900">Symposium 가시는길</div>
+      <div style="padding:16px">
+        <div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #13191b;margin-bottom:12px">
+          <div style="font-size:20px;font-weight:900;margin-bottom:4px">🏨 ${selectedSympo.hotel_name}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:3px">📅 ${period}</div>
+          ${selectedSympo.symposium_name?`<div style="font-size:13px;font-weight:700;color:#1a3a5e">🎓 ${selectedSympo.symposium_name}</div>`:''}
+        </div>
+        ${msg?`<div style="background:#f5f7fa;border-left:4px solid #1a3a5e;padding:8px 12px;font-size:12px;color:#444;margin-bottom:12px;border-radius:4px;line-height:1.6">${msg}</div>`:''}
+        ${agendaHtml?`<div style="font-size:12px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:14px;background:#1a3a5e;border-radius:3px;display:inline-block"></span>🗒️ 아젠다</div>${agendaHtml}`:''}
+        ${addedPlaces.length?`
+          <div style="font-size:12px;font-weight:800;margin:12px 0 8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:14px;background:#1a3a5e;border-radius:3px;display:inline-block"></span>🗺️ 가시는길 추천장소</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${placesHtml}</div>
+        `:''}
+        <div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa">Powered by SympoYooHoo · Yuhan Corporation</div>
+      </div>
+    </div>`;
+}
+
+
+// ===== 장소 저장 공통 처리 =====
+// 409(Conflict) 방지: 중복 제거 → 기존 행 삭제 → 삭제 검증 → 삽입
+async function saveInviteLocations(invId,places){
+  // 1) 같은 장소가 두 번 담긴 경우 제거 (이름+좌표 기준)
+  const seen=new Set();
+  const uniq=[];
+  for(const p of (places||[])){
+    const key=(p.name||'')+'|'+(p.lat||'')+'|'+(p.lng||'');
+    if(seen.has(key))continue;
+    seen.add(key);
+    uniq.push(p);
+  }
+
+  // 2) 기존 장소 삭제
+  const {error:delErr}=await sb.from('invite_locations').delete().eq('invite_id',invId);
+  if(delErr){
+    console.error('[invite_locations DELETE]',delErr);
+    toast('기존 장소 삭제 실패: '+delErr.message,false);
+    return false;
+  }
+
+  // 3) 삭제 검증 — RLS로 DELETE가 막히면 에러 없이 0건만 지워지고 이후 INSERT가 409를 냄
+  const {data:left,error:chkErr}=await sb.from('invite_locations').select('id').eq('invite_id',invId);
+  if(chkErr){
+    console.error('[invite_locations SELECT]',chkErr);
+  }else if(left&&left.length){
+    console.error('[invite_locations] 삭제되지 않은 기존 행 '+left.length+'건',left);
+    toast('기존 장소가 삭제되지 않았습니다. Supabase RLS의 DELETE 정책을 확인하세요',false);
+    return false;
+  }
+
+  if(!uniq.length)return true;
+
+  // 4) 삽입
+  const rows=uniq.map(p=>({
+    invite_id:invId,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
+    address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
+    photo_url:p.thumb||null,place_link:p.link||null
+  }));
+  const {error:insErr}=await sb.from('invite_locations').insert(rows);
+  if(insErr){
+    console.error('[invite_locations INSERT]',insErr,rows);
+    toast('장소 저장 실패 ['+(insErr.code||'?')+'] '+insErr.message,false);
+    return false;
+  }
+  return true;
+}
+
+// 발송
+async function sendInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  const msg=document.getElementById('customMsg').value;
+
+  // 수정 모드
+  if(window._editInviteId){
+    const invId=window._editInviteId;
+    const {error:updErr}=await sb.from('invite_packages').update({concept:selectedConcept,custom_message:msg||null,is_sent:true}).eq('id',invId);
+    if(updErr){
+      console.error('[invite_packages UPDATE]',updErr);
+      toast('초대장 수정 실패: '+updErr.message,false);
       return;
     }
-    const {data:urlData}=sb.storage.from('agenda-images').getPublicUrl(path);
-    const publicUrl=urlData.publicUrl;
-    document.getElementById('agendaUrl').value=publicUrl;
-    if(file.type.startsWith('image/')){
-      document.getElementById('agendaPreview').src=publicUrl;
-      document.getElementById('agendaPreview').style.display='block';
-      document.getElementById('uploadZone').textContent='✅ 이미지 업로드 완료';
-    } else {
-      document.getElementById('uploadZone').textContent='✅ '+file.name+' 업로드 완료';
+    const ok=await saveInviteLocations(invId,addedPlaces);
+    if(!ok){
+      document.getElementById('sendResult').innerHTML=`<div style="background:rgba(255,90,90,.1);border:1px solid var(--red,#ff5a5a);border-radius:8px;padding:12px;font-size:13px;color:var(--red,#ff5a5a);font-weight:700">⚠️ 초대장 내용은 저장되었으나 추천 장소 저장에 실패했습니다. F12 콘솔을 확인해주세요.</div>`;
+      return; // 수정 모드 유지 — 다시 시도 가능
     }
-    toast('아젠다 업로드 완료 ✅');
-  }catch(e){
-    console.error('업로드 예외:',e);
-    toast('업로드 오류: '+e.message,false);
-    document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+    window._editInviteId=null;window._editUserId=null;
+    document.getElementById('sendInviteBtn').textContent='📨 초대장 발송';
+    document.getElementById('sendInviteBtn').style.background='';
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(20,107,69,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ 초대장이 수정되었습니다!</div>`;
+    toast('초대장 수정 완료!');
+    loadSentInvites();
+    return;
+  }
+
+  // 신규 발송
+  if(!selectedUsers.length){toast('발송할 사용자를 선택해주세요',false);return;}
+  let count=0;
+  const failed=[];
+  for(const u of selectedUsers){
+    const {data:pkg,error:pkgErr}=await sb.from('invite_packages').insert({
+      introducer_id:currentIntroducer.id,user_id:u.id,journey_id:selectedSympo.id,
+      concept:selectedConcept,custom_message:msg||null,is_sent:true
+    }).select().single();
+    if(pkgErr||!pkg){
+      console.error('[invite_packages INSERT]',u.name,pkgErr);
+      failed.push(u.name);
+      continue;
+    }
+    const ok=await saveInviteLocations(pkg.id,addedPlaces);
+    if(!ok){failed.push(u.name+'(장소)');continue;}
+    count++;
+  }
+  const names=selectedUsers.filter(u=>!failed.some(f=>f.indexOf(u.name)===0)).map(u=>u.name).join(', ');
+  if(failed.length){
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(255,90,90,.1);border:1px solid var(--red,#ff5a5a);border-radius:8px;padding:12px;font-size:13px;color:var(--red,#ff5a5a);font-weight:700">⚠️ 실패: ${failed.join(', ')}${count?`<br>✅ 성공: ${names}`:''}<br><span style="font-weight:500">F12 콘솔에서 상세 오류를 확인하세요.</span></div>`;
+  }else{
+    document.getElementById('sendResult').innerHTML=`<div style="background:rgba(20,107,69,.1);border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px;color:var(--green);font-weight:700">✅ ${names}님께 초대장이 발송되었습니다!</div>`;
+  }
+  toast(`${count}명에게 발송 완료!`);
+  loadSentInvites();
+}
+
+// 인쇄
+function printInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  const isPdf=selectedSympo.agenda_image_url&&selectedSympo.agenda_image_url.match(/\.pdf$/i);
+  if(isPdf){
+    window.open(selectedSympo.agenda_image_url,'_blank');
+    toast('PDF가 열렸습니다. Ctrl+P로 인쇄하세요');
+  }
+  printInviteCard();
+}
+
+function printInviteCard(){
+  if(!selectedSympo)return;
+  const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
+  const msg=document.getElementById('customMsg').value;
+
+  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
+  const typeLabel={restaurant:'식당',cafe:'카페',attraction:'명소',shopping:'쇼핑'};
+
+  const placesHtml=addedPlaces.map(p=>{
+    const color=typeColors[p.type]||'#333';
+    return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
+      +'<div style="font-size:22px;font-weight:900;color:#13191b;margin-bottom:6px">'+p.name+'</div>'
+      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
+      +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
+      +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
+      +'</div>';
+  }).join('');
+
+  const agendaHtml=selectedSympo.agenda_image_url&&!selectedSympo.agenda_image_url.match(/\.pdf$/i)
+    ?'<img src="'+selectedSympo.agenda_image_url+'" style="width:60%;display:block;margin:0 auto;max-height:250px;object-fit:contain;border-radius:8px">'
+    :'';
+
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SympoYooHoo 초대장</title>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box;}'
+    +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#13191b;}'
+    +'.page{width:190mm;margin:0 auto;padding:12mm 14mm;}'
+    +'.title-box{background:#1a3a5e;color:#fff;text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
+    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #13191b;}'
+    +'.hotel-name{font-size:28px;font-weight:900;margin-bottom:5px;}'
+    +'.hotel-date{font-size:13px;color:#555;margin-bottom:4px;}'
+    +'.hotel-sympo{font-size:15px;font-weight:700;color:#1a3a5e;}'
+    +'.msg-box{background:#f5f7fa;border-left:4px solid #1a3a5e;border-radius:4px;padding:10px 14px;font-size:12px;color:#444;margin:14px 0;line-height:1.6;}'
+    +'.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:16px 0 10px;}'
+    +'.sec-title-bar{width:5px;height:16px;background:#1a3a5e;border-radius:3px;}'
+    +'.agenda-wrap{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:6px;}'
+    +'.places-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}'
+    +'.footer{text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;}'
+    +'@media print{body{margin:0;}@page{size:A4;margin:10mm;}div{break-inside:avoid;}}'
+    +'</style></head><body><div class="page">'
+    +'<div class="title-box">Symposium 가시는길</div>'
+    +'<div class="hotel-header">'
+    +'<div class="hotel-name">🏨 '+selectedSympo.hotel_name+'</div>'
+    +'<div class="hotel-date">📅 '+period+'</div>'
+    +(selectedSympo.symposium_name?'<div class="hotel-sympo">🎓 '+selectedSympo.symposium_name+'</div>':'')
+    +'</div>'
+    +(msg?'<div class="msg-box">'+msg+'</div>':'')
+    +(agendaHtml?'<div class="sec-title"><div class="sec-title-bar"></div>🗒️ 아젠다</div><div class="agenda-wrap">'+agendaHtml+'</div>':'')
+    +(addedPlaces.length?'<div class="sec-title"><div class="sec-title-bar"></div>🗺️ 가시는길 추천장소</div><div class="places-grid">'+placesHtml+'</div>':'')
+    +'<div class="footer">Powered by SympoYooHoo · Yuhan Corporation</div>'
+    +'</div>'
+    +'<script>window.onload=function(){setTimeout(function(){window.print();},800);}<\/script>'
+    +'</body></html>';
+
+  const pw=window.open('','_blank');
+  pw.document.write(html);
+  pw.document.close();
+}
+
+
+// 참석현황
+async function loadAttendanceFilter(){
+  const {data}=await sb.from('journeys').select('id,hotel_name,symposium_date').order('symposium_date',{ascending:false});
+  const sel=document.getElementById('attFilter');
+  if(data)data.forEach(j=>{const o=document.createElement('option');o.value=j.id;o.textContent=`${j.symposium_date||''} ${j.hotel_name}`;sel.appendChild(o);});
+}
+
+async function loadAttendance(){
+  const jid=document.getElementById('attFilter').value;
+  let q=sb.from('visits').select('*,users(name,hospital),journeys(hotel_name,symposium_date)').order('visited_at',{ascending:false});
+  if(jid)q=q.eq('journey_id',jid);
+  const {data}=await q;
+  const el=document.getElementById('attendanceList');
+  el.innerHTML=data&&data.length?data.map(v=>`
+    <div class="user-item">
+      <div><div class="user-name">${v.users?.name||'-'}</div><div class="user-hosp">${v.users?.hospital||'-'} · ${v.journeys?.hotel_name||'-'}</div></div>
+      <div style="text-align:right"><div class="att-status-ok">✅ 도착완료</div><div style="font-size:11px;color:var(--muted)">${new Date(v.visited_at).toLocaleString('ko-KR')}</div></div>
+    </div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div>';
+}
+
+// 품목 승인 - 사용자별 그룹화
+async function loadItems(){
+  if(!currentIntroducer)return;
+  const {data:myUsers}=await sb.from('users').select('id,name,hospital').eq('introducer_id',currentIntroducer.id);
+  if(!myUsers||!myUsers.length){document.getElementById('itemList').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">없음</div>';return;}
+  const ids=myUsers.map(u=>u.id);
+  const uMap={};myUsers.forEach(u=>uMap[u.id]=u);
+  const {data}=await sb.from('items').select('*,journeys(hotel_name,symposium_date)').in('user_id',ids).eq('is_approved',false).order('submitted_at',{ascending:false});
+  const el=document.getElementById('itemList');
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">대기 없음</div>';return;}
+
+  // 사용자+심포지엄 별로 그룹화
+  const groups={};
+  data.forEach(i=>{
+    const key=`${i.user_id}_${i.journey_id||'none'}`;
+    if(!groups[key])groups[key]={user:uMap[i.user_id],journey:i.journeys,items:[]};
+    groups[key].items.push(i);
+  });
+
+  el.innerHTML=Object.values(groups).map(g=>`
+    <div class="approve-item" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:800">${g.user?.name||'-'}</div>
+          <div style="font-size:12px;color:var(--muted)">${g.user?.hospital||'-'}</div>
+          ${g.journey?`<div style="font-size:11px;color:var(--accent);margin-top:2px">🏨 ${g.journey.hotel_name} · ${g.journey.symposium_date||''}</div>`:''}
+        </div>
+        <span style="font-size:12px;color:var(--muted)">${g.items.length}개 품목</span>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px">
+        ${g.items.map(i=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:700;flex:1">💊 ${i.item_name}</div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
+              <button class="btn btn-sm" style="background:rgba(143,115,32,.14);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
+              <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function approveItem(id,score){
+  await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
+  toast(`${score}점 승인 완료`);loadItems();
+}
+
+// ===== 발송 초대장 이력 =====
+async function loadSentInvites(){
+  if(!currentIntroducer)return;
+  const el=document.getElementById('sentInviteList');
+
+  const {data:pkgs}=await sb.from('invite_packages')
+    .select('*,users(name,hospital),journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)')
+    .eq('introducer_id',currentIntroducer.id)
+    .order('created_at',{ascending:false});
+
+  if(!pkgs||!pkgs.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">발송한 초대장이 없습니다</div>';
+    return;
+  }
+
+  // 장소도 함께 로드
+  const pkgIds=pkgs.map(p=>p.id);
+  const {data:locs}=await sb.from('invite_locations').select('*').in('invite_id',pkgIds);
+  const locMap={};
+  (locs||[]).forEach(l=>{if(!locMap[l.invite_id])locMap[l.invite_id]=[];locMap[l.invite_id].push(l);});
+  const typeIcon={restaurant:'🍽️',cafe:'☕',attraction:'🏛️',shopping:'🛍️'};
+
+  el.innerHTML=pkgs.map((p,i)=>{
+    const j=p.journeys||{};
+    const u=p.users||{};
+    const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
+    const places=locMap[p.id]||[];
+    const cColors={1:'#146b45',2:'#c17f24',3:'#4fbf85'};
+    return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
+      <div style="background:${cColors[p.concept]||'#146b45'};padding:10px 14px;color:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:800">🏨 ${j.hotel_name||'-'}</div>
+            <div style="font-size:11px;opacity:.8">📅 ${period||'-'} · 수신: ${u.name||'-'}(${u.hospital||'-'})</div>
+          </div>
+          <span style="font-size:10px;opacity:.7">#${i+1}</span>
+        </div>
+      </div>
+      <div style="padding:10px 14px">
+        ${places.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">${places.map(l=>`<span style="background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px">${typeIcon[l.place_type]||'📍'} ${l.place_name}</span>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">추천 장소 없음</div>'}
+        ${p.custom_message?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">"${p.custom_message}"</div>`:''}
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm" onclick="editInvite('${p.id}')">✏️ 수정/재발송</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvite('${p.id}','${j.hotel_name||''}','${u.name||''}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteInvite(invId,hotel,userName){
+  if(!confirm(`"${userName}"님께 보낸 ${hotel} 초대장을 삭제하시겠습니까?
+사용자 페이지에서 더 이상 보이지 않습니다.`))return;
+  const {error:locErr}=await sb.from('invite_locations').delete().eq('invite_id',invId);
+  if(locErr){console.error('[invite_locations DELETE]',locErr);toast('장소 삭제 실패: '+locErr.message,false);return;}
+  const {error}=await sb.from('invite_packages').delete().eq('id',invId);
+  if(error){console.error('[invite_packages DELETE]',error);toast('삭제 실패: '+error.message,false);return;}
+  toast('초대장이 삭제되었습니다');
+  loadSentInvites();
+}
+
+async function editInvite(invId){
+  // 기존 초대장 데이터 로드
+  const {data:pkg}=await sb.from('invite_packages').select('*,journeys(*),users(name,hospital)').eq('id',invId).single();
+  const {data:locs}=await sb.from('invite_locations').select('*').eq('invite_id',invId);
+  if(!pkg){toast('불러오기 실패',false);return;}
+
+  // STEP1 심포지엄 선택 상태로 설정
+  selectedSympo=pkg.journeys;
+  addedPlaces=(locs||[]).map(l=>({name:l.place_name,lat:l.place_lat,lng:l.place_lng,addr:l.address||'',type:l.place_type||'restaurant',tip:l.tip||'',phone:l.phone||'',thumb:l.photo_url||'',link:l.place_link||'',cat:''}));
+
+  // 수정 모드 활성화
+  window._editInviteId=invId;
+  window._editUserId=pkg.user_id;
+
+  // UI 업데이트
+  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('step2Place').style.display='block';
+  document.getElementById('step3User').style.display='block';
+  document.getElementById('step4Concept').style.display='block';
+  document.getElementById('customMsg').value=pkg.custom_message||'';
+
+  // 컨셉 선택
+  document.querySelectorAll('.concept-card').forEach((cd,i)=>cd.classList.toggle('selected',i+1===pkg.concept));
+  selectedConcept=pkg.concept||1;
+
+  renderPlaceGrid();
+  updatePreview();
+
+  // 발송 버튼 텍스트 변경
+  document.getElementById('sendInviteBtn').textContent='✏️ 수정 완료 · 재발송';
+  document.getElementById('sendInviteBtn').style.background='var(--yellow)';
+
+  toast('초대장을 수정하세요. 완료 후 재발송 버튼을 누르세요!',3000);
+
+  // 스크롤 아래로
+  document.getElementById('step2Place').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== 사용자 관리 =====
+async function loadUserManage(){
+  if(!currentIntroducer)return;
+  const el=document.getElementById('userManageList');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">로딩 중...</div>';
+
+  const {data:users}=await sb.from('users').select('*').eq('introducer_id',currentIntroducer.id).order('created_at',{ascending:false});
+  if(!users||!users.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">담당 사용자 없음</div>';return;}
+
+  // 각 사용자의 초대장 및 방문 수 조회
+  const uIds=users.map(u=>u.id);
+  const {data:invites}=await sb.from('invite_packages').select('id,user_id,journey_id,created_at,journeys(hotel_name,symposium_date)').in('user_id',uIds);
+  const {data:visits}=await sb.from('visits').select('user_id,gps_score,photo_score,item_score').in('user_id',uIds);
+  const {data:items}=await sb.from('items').select('user_id,approved_score,is_approved').in('user_id',uIds);
+
+  const invMap={};
+  (invites||[]).forEach(i=>{if(!invMap[i.user_id])invMap[i.user_id]=[];invMap[i.user_id].push(i);});
+  const visMap={};
+  (visits||[]).forEach(v=>{if(!visMap[v.user_id])visMap[v.user_id]=[];visMap[v.user_id].push(v);});
+  const itmMap={};
+  (items||[]).forEach(i=>{if(!itmMap[i.user_id])itmMap[i.user_id]=[];itmMap[i.user_id].push(i);});
+
+  el.innerHTML=users.map(u=>{
+    const uInvs=invMap[u.user_id]||invMap[u.id]||[];
+    const uVis=visMap[u.id]||[];
+    const uItm=itmMap[u.id]||[];
+    const totalScore=uVis.reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0),0)
+      +uItm.filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+    return `<div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:800;margin-bottom:2px">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${u.hospital}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="badge badge-blue">초대장 ${uInvs.length}개</span>
+            <span class="badge badge-green">방문 ${uVis.length}회</span>
+            <span class="badge badge-blue">누적 ${totalScore}점</span>
+            <span class="badge ${u.mr_approval==='approved'?'badge-green':'badge-yellow'}">${u.mr_approval==='approved'?'승인':'대기'}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-left:10px;align-items:flex-start">
+          <button class="btn btn-primary btn-sm" onclick="showUserDetail('${u.id}')">📋 상세보기</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function showUserDetail(userId){
+  const {data:u}=await sb.from('users').select('*').eq('id',userId).single();
+  const {data:invites}=await sb.from('invite_packages')
+    .select('*,journeys(id,hotel_name,symposium_name,symposium_date,symposium_date_end)')
+    .eq('user_id',userId).order('created_at',{ascending:false});
+  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)').eq('user_id',userId);
+  const {data:items}=await sb.from('items').select('*').eq('user_id',userId);
+
+  // 점수 계산
+  const visScore=(visits||[]).reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0),0);
+  const itmScore=(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+  const totalScore=visScore+itmScore;
+
+  // 심포지엄별 품목 그룹화
+  const itmByJ={};
+  (items||[]).forEach(i=>{
+    const jid=i.journey_id||'none';
+    if(!itmByJ[jid])itmByJ[jid]=[];
+    itmByJ[jid].push(i);
+  });
+
+  // 방문 정보 맵
+  const visMap={};
+  (visits||[]).forEach(v=>{visMap[v.journey_id]=v;});
+
+  // 심포지엄별 통합 섹션 생성
+  const sympoHtml=(invites||[]).map((inv,idx)=>{
+    const j=inv.journeys||{};
+    const jid=j.id;
+    const period=(j.symposium_date||'')+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
+    const vis=visMap[jid];
+    const jItems=itmByJ[jid]||[];
+    const visScore2=vis?(v=>((v.gps_score||0)+(v.photo_score||0)))(vis):0;
+    const itmScore2=jItems.filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
+    const sympoTotal=visScore2+itmScore2;
+
+    const itemsHtml=jItems.length?jItems.map(i=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700">💊 ${i.item_name}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${i.is_approved
+            ?`<span class="badge badge-green">${i.approved_score||0}점 ✅</span>`
+            :`<div style="display:flex;gap:4px">
+                <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
+                <button class="btn btn-sm" style="background:rgba(143,115,32,.14);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
+                <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1점</button>
+              </div>`
+          }
+        </div>
+      </div>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:8px 0">등록된 품목 없음</div>';
+
+    return `<div style="border:1.5px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden">
+      <div style="background:var(--surface2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:800">🏨 ${j.hotel_name||'-'}</div>
+          <div style="font-size:11px;color:var(--muted)">📅 ${period||'-'}${j.symposium_name?' · 🎓 '+j.symposium_name:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:900;color:var(--accent)">${sympoTotal}점</div>
+          <div style="display:flex;gap:4px;margin-top:3px;justify-content:flex-end">
+            ${vis?`<span class="badge badge-green">방문 ${visScore2}점</span>`:'<span class="badge badge-yellow">미방문</span>'}
+            <span class="badge badge-blue">품목 ${itmScore2}점</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:6px 14px 12px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 4px">💊 강의 품목 (${jItems.length}개)</div>
+        ${itemsHtml}
+        ${jItems.filter(i=>!i.is_approved).length?`<div style="font-size:11px;color:var(--yellow);margin-top:6px">⏳ 미승인 ${jItems.filter(i=>!i.is_approved).length}개</div>`:''}
+      </div>
+      <div style="padding:0 14px 12px;display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" onclick="recallInvite('${inv.id}','${j.hotel_name||''}')">📥 초대장 회수</button>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">참석 이력 없음</div>';
+
+  document.getElementById('userDetailContent').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:18px;font-weight:900;margin-bottom:3px">${u.name}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${u.hospital}</div>
+      <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;padding:16px;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div><div style="font-size:28px;font-weight:900">${totalScore}</div><div style="font-size:11px;opacity:.8">총 점수</div></div>
+        <div><div style="font-size:28px;font-weight:900">${(invites||[]).length}</div><div style="font-size:11px;opacity:.8">심포지엄</div></div>
+        <div><div style="font-size:28px;font-weight:900">${(items||[]).length}</div><div style="font-size:11px;opacity:.8">품목</div></div>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:800;margin-bottom:10px">📋 심포지엄별 상세</div>
+    ${sympoHtml}
+    <button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="deleteUser('${u.id}','${u.name}')">🗑️ 사용자 삭제</button>`;
+
+  document.getElementById('userDetailModal').classList.add('open');
+}
+
+// 인라인 품목 승인 (상세 팝업 내)
+async function approveItemInline(id,score,btn){
+  await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
+  toast(`${score}점 승인 완료 ✅`);
+  // 해당 행 UI 즉시 업데이트
+  const row=btn.closest('div[style*="border-bottom"]');
+  if(row){
+    const nameEl=row.querySelector('div[style*="font-weight:700"]');
+    const name=nameEl?nameEl.textContent:'';
+    row.innerHTML=`<div style="font-size:13px;font-weight:700">${name}</div><span class="badge badge-green">${score}점 ✅</span>`;
+    row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';row.style.padding='8px 0';row.style.borderBottom='1px solid var(--border)';
   }
 }
 
-async function saveSympo(){
-  if(!selectedHotel){toast('호텔을 선택해주세요',false);return;}
-  const payload={
-    hotel_name:selectedHotel.name,hotel_lat:selectedHotel.lat,hotel_lng:selectedHotel.lng,
-    symposium_name:document.getElementById('sName').value.trim()||null,
-    symposium_date:document.getElementById('sDateStart').value||null,
-    symposium_date_end:document.getElementById('sDateEnd').value||null,
-    agenda_image_url:document.getElementById('agendaUrl').value||null
-  };
-  const id=document.getElementById('sympoId').value;
-  if(id){ await sb.from('journeys').update(payload).eq('id',id); toast('수정 완료'); }
-  else { await sb.from('journeys').insert(payload); toast('추가 완료'); }
-  closeModal('sympoModal'); loadSympo();
+async function recallInvite(invId,hotelName){
+  if(!confirm(`"${hotelName}" 초대장을 회수하시겠습니까?
+사용자 페이지에서 더 이상 보이지 않습니다.`))return;
+  const {error}=await sb.from('invite_packages').delete().eq('id',invId);
+  if(error){toast('회수 실패: '+error.message,false);return;}
+  toast('초대장이 회수되었습니다');
+  closeModal('userDetailModal');
+  loadUserManage();
 }
 
-async function delSympo(id){
-  if(!confirm('삭제하시겠습니까?'))return;
-  const {error}=await sb.from('journeys').delete().eq('id',id);
-  if(error){toast('삭제 실패: '+error.message,false);return;}
-  toast('삭제 완료');
-  // 즉시 해당 행 제거
-  document.querySelectorAll('#sympTb tr').forEach(row=>{
-    if(row.innerHTML.includes(id)) row.remove();
-  });
-  // 목록 새로 로드
-  await loadSympo();
-}
-
-// 사용자
-let _usersDB=[];
-let _activeUserMonth='all';
-
-async function loadUsers(){
-  const {data:users}=await sb.from('users').select('*,introducers(name,email)').order('created_at',{ascending:false});
-  _usersDB=users||[];
-  buildMonthFilter(_usersDB,'userMonthFilter',filterUsers,'created_at');
-  renderUsersTable(_usersDB);
-}
-
-function filterUsers(month){
-  _activeUserMonth=month;
-  document.querySelectorAll('#userMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
-  const filtered=month==='all'?_usersDB:_usersDB.filter(u=>(u.created_at||'').startsWith(month));
-  renderUsersTable(filtered);
-}
-
-async function renderUsersTable(users){
-  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_date)');
-  const {data:items}=await sb.from('items').select('*').eq('is_approved',true);
-
-  document.getElementById('userTb').innerHTML=users?.length?users.map(u=>{
-    const uVisits=(visits||[]).filter(v=>v.user_id===u.id);
-    const uItems=(items||[]).filter(i=>i.user_id===u.id);
-    const gpsScore=uVisits.reduce((s,v)=>s+(v.gps_score||0),0);
-    const photoScore=uVisits.reduce((s,v)=>s+(v.photo_score||0),0);
-    const itemScore=uItems.reduce((s,i)=>s+(i.approved_score||0),0);
-    const total=gpsScore+photoScore+itemScore;
-    const chips=uVisits.map(v=>{
-      const d=(v.journeys?.symposium_date||'').replace(/-/g,'').slice(2,8);
-      const h=(v.journeys?.hotel_name||'').slice(0,4);
-      return `<span class="j-chip done" onclick="showUserDetail('${u.id}')">${d}${h}</span>`;
-    }).join('') || '<span style="color:var(--muted);font-size:11px">없음</span>';
-    return `<tr>
-      <td>${u.name}</td>
-      <td>${u.hospital}</td>
-      <td>${u.introducers?.name||'-'}</td>
-      <td style="font-size:12px">${u.introducers?.email||'-'}</td>
-      <td>${chips}</td>
-      <td><span class="badge badge-blue">${total}점</span></td>
-      <td><span class="badge ${u.is_approved?'badge-green':'badge-yellow'}">${u.is_approved?'승인':'대기'}</span></td>
-      <td>
-        ${!u.is_approved?`<button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">승인</button> `:''}
-        <button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')">삭제</button>
-      </td>
-    </tr>`;
-  }).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
-
-// 사용자 상세 보기
-async function showUserDetail(userId){
-  const {data:u}=await sb.from('users').select('*,introducers(name,email)').eq('id',userId).single();
-  const {data:visits}=await sb.from('visits').select('*,journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('user_id',userId);
-  const {data:items}=await sb.from('items').select('*,journeys(hotel_name)').eq('user_id',userId);
-
-  const gpsTotal=(visits||[]).reduce((s,v)=>s+(v.gps_score||0),0);
-  const photoTotal=(visits||[]).reduce((s,v)=>s+(v.photo_score||0),0);
-  const itemTotal=(items||[]).filter(i=>i.is_approved).reduce((s,i)=>s+(i.approved_score||0),0);
-  const total=gpsTotal+photoTotal+itemTotal;
-
-  const visitRows=(visits||[]).map(v=>`
-    <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:15px;font-weight:800">🏨 ${v.journeys?.hotel_name||'-'}</div>
-          <div style="font-size:12px;color:var(--muted)">${v.journeys?.symposium_date||''} ${v.journeys?.symposium_date_end?'~ '+v.journeys.symposium_date_end:''}</div>
-        </div>
-        <span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="badge badge-green">방문인증 +${v.gps_score||0}점</span>
-        <span class="badge badge-blue">사진 +${v.photo_score||0}점</span>
-        ${v.photo_url?`<img src="${v.photo_url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:''}
-      </div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-size:13px">방문 기록 없음</div>';
-
-  const itemRows=(items||[]).map(i=>`
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <span>${i.item_name}</span>
-      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'+'+i.approved_score+'점':'검토중'}</span>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-size:13px">품목 없음</div>';
-
-  document.getElementById('detailContent').innerHTML=`
-    <button class="close-btn" onclick="document.getElementById('detailPanel').classList.remove('open')">✕</button>
-    <h3 style="font-size:17px;font-weight:800;margin-bottom:4px">${u.name}</h3>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${u.hospital}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">담당 MR: ${u.introducers?.name||'-'} (${u.introducers?.email||'-'})</div>
-
-    <!-- 점수 요약 -->
-    <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;padding:16px;color:#fff;text-align:center;margin:14px 0">
-      <div style="font-size:36px;font-weight:900">${total}점</div>
-      <div style="font-size:12px;opacity:.8;margin-top:4px">누적 점수</div>
-      <div style="display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12px">
-        <span>방문 ${gpsTotal}점</span>
-        <span>사진 ${photoTotal}점</span>
-        <span>품목 ${itemTotal}점</span>
-      </div>
-    </div>
-
-    <div style="font-size:14px;font-weight:800;margin-bottom:10px">🏨 심포지엄 도장깨기</div>
-    ${visitRows}
-
-    <div style="font-size:14px;font-weight:800;margin:14px 0 10px">💊 품목 내역</div>
-    ${itemRows}
-
-    <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="document.getElementById('detailPanel').classList.remove('open')">← 목록으로</button>
-  `;
-  document.getElementById('detailPanel').classList.add('open');
-}
-async function approveUser(id){await sb.from('users').update({is_approved:true}).eq('id',id);toast('승인 완료');loadUsers();}
-// users를 참조하는 자식 테이블 — 새 테이블이 생기면 여기에만 추가
+// users를 참조하는 자식 테이블 목록 — 새 테이블이 생기면 여기에만 추가하면 됨
 const USER_CHILD_TABLES=['symposium_history','items','visits','invite_packages'];
 
-async function delUser(id){
-  if(!confirm('이 사용자를 삭제하시겠습니까?\n방문 기록·초대장·품목이 모두 함께 삭제됩니다.'))return;
+async function deleteUser(userId,userName){
+  if(!confirm(`"${userName}" 사용자를 삭제하시겠습니까?
+모든 방문 기록과 초대장도 함께 삭제됩니다.`))return;
 
-  // 1) 초대장에 딸린 장소 먼저
-  const {data:pkgs}=await sb.from('invite_packages').select('id').eq('user_id',id);
+  // 1) 초대장에 딸린 장소부터 (invite_locations → invite_packages 순서)
+  const {data:pkgs}=await sb.from('invite_packages').select('id').eq('user_id',userId);
   const pkgIds=(pkgs||[]).map(p=>p.id);
   if(pkgIds.length){
     const {error:locErr}=await sb.from('invite_locations').delete().in('invite_id',pkgIds);
     if(locErr){console.error('[invite_locations]',locErr);toast('삭제 실패(장소): '+locErr.message,false);return;}
   }
 
-  // 2) users를 참조하는 자식 행 제거
+  // 2) users를 참조하는 자식 행 전부 제거
   for(const t of USER_CHILD_TABLES){
-    const {error}=await sb.from(t).delete().eq('user_id',id);
+    const {error}=await sb.from(t).delete().eq('user_id',userId);
+    // 테이블이 없는 경우(42P01)는 건너뜀
     if(error&&error.code!=='42P01'){
       console.error('['+t+']',error);
       toast('삭제 실패('+t+'): '+error.message,false);
@@ -741,180 +1412,24 @@ async function delUser(id){
     }
   }
 
-  // 3) 사용자 본인
-  const {error}=await sb.from('users').delete().eq('id',id);
+  // 3) 마지막으로 사용자 본인
+  const {error}=await sb.from('users').delete().eq('id',userId);
   if(error){
     console.error('[users]',error);
+    // 아직 남아 있는 참조가 있으면 어떤 테이블인지 알려줌
     const m=/on table "([^"]+)"\s*$/.exec(error.message||'');
-    const hint=m?'\n아직 "'+m[1]+'" 테이블에 이 사용자의 데이터가 남아 있습니다.':'';
+    const hint=m?`\n아직 "${m[1]}" 테이블에 이 사용자의 데이터가 남아 있습니다.`:'';
     toast('삭제 실패: '+error.message+hint,false);
     return;
   }
-  toast('삭제 완료');
-  loadUsers();
-}
-async function addUser(){
-  const n=document.getElementById('uName').value.trim();
-  const h=document.getElementById('uHosp').value.trim();
-  if(!n||!h){toast('모두 입력',false);return;}
-  const {error}=await sb.from('users').insert({name:n,hospital:h,is_approved:true});
-  if(error){
-    console.error('[users insert]',error);
-    if(error.code==='23502'){toast('추가 실패: DB의 license_number 컬럼을 NULL 허용으로 바꿔야 합니다',false);}
-    else{toast('추가 실패: '+error.message,false);}
-    return;
-  }
-  toast('추가 완료');closeModal('addUserModal');loadUsers();
-}
-function openAddUser(){
-  ['uName','uHosp'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('addUserModal').classList.add('open');
+  toast(userName+' 사용자가 삭제되었습니다');
+  if(document.getElementById('userDetailModal').classList.contains('open'))closeModal('userDetailModal');
+  loadUserManage();
 }
 
-// 방문 인증
-async function loadVisits(){
-  const {data}=await sb.from('visits').select('*,users(name,hospital),journeys(hotel_name)').order('visited_at',{ascending:false});
-  document.getElementById('visitTb').innerHTML=data?.length?data.map(v=>`
-    <tr>
-      <td>${v.users?.name||'-'}</td><td>${v.users?.hospital||'-'}</td>
-      <td>${v.journeys?.hotel_name||'-'}</td>
-      <td>${new Date(v.visited_at).toLocaleString('ko-KR')}</td>
-      <td><span class="badge badge-green">+${v.gps_score||10}점</span></td>
-      <td>${v.photo_url?`<img src="${v.photo_url}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:'<span style="color:var(--muted)">없음</span>'}</td>
-      <td>${v.photo_url&&!v.photo_score?`
-        <button class="score-btn s5" onclick="setPhoto('${v.id}',5)">+5</button>
-        <button class="score-btn s3" onclick="setPhoto('${v.id}',3)">+3</button>
-        <button class="score-btn s1" onclick="setPhoto('${v.id}',1)">+1</button>
-      `:`<span class="badge badge-blue">${v.photo_score||0}점</span>`}</td>
-    </tr>
-  `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
-async function setPhoto(id,score){await sb.from('visits').update({photo_score:score}).eq('id',id);toast(`+${score}점 부여`);loadVisits();}
-
-// 품목
-async function loadItems(){
-  const {data}=await sb.from('items').select('*,users(name,hospital)').order('submitted_at',{ascending:false});
-  document.getElementById('itemTb').innerHTML=data?.length?data.map(i=>`
-    <tr>
-      <td>${i.users?.name||'-'}</td><td>${i.users?.hospital||'-'}</td>
-      <td>${i.item_name}</td>
-      <td>${new Date(i.submitted_at).toLocaleString('ko-KR')}</td>
-      <td><span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'승인':'대기'}</span></td>
-      <td><span class="badge badge-blue">${i.approved_score||0}점</span></td>
-    </tr>
-  `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
-
-// 승인 현황
-let _allApproval=[];
-async function loadApproval(){
-  const {data:users}=await sb.from('users').select('*,introducers(name,employee_id)').order('created_at',{ascending:false});
-  _allApproval=users||[];
-  renderApproval(_allApproval);
-}
-
-function filterApproval(){
-  const mr=document.getElementById('searchMr').value.toLowerCase();
-  const user=document.getElementById('searchUser').value.toLowerCase();
-  const status=document.getElementById('filterStatus').value;
-  const filtered=_allApproval.filter(u=>{
-    const mrName=(u.introducers?.name||'').toLowerCase();
-    const mrEmp=(u.introducers?.employee_id||'').toLowerCase();
-    const uName=(u.name||'').toLowerCase();
-    const uHosp=(u.hospital||'').toLowerCase();
-    return (!mr||(mrName.includes(mr)||mrEmp.includes(mr)))
-      &&(!user||(uName.includes(user)||uHosp.includes(user)))
-      &&(!status||u.mr_approval===status);
-  });
-  renderApproval(filtered);
-}
-
-function renderApproval(data){
-  const statusMap={pending:'<span class="badge badge-yellow">대기중</span>',approved:'<span class="badge badge-green">승인됨</span>',rejected:'<span class="badge badge-red">거절됨</span>'};
-  document.getElementById('approvalTb').innerHTML=data.length?data.map(u=>`
-    <tr>
-      <td>${u.name}</td>
-      <td>${u.hospital}</td>
-      <td>${u.introducers?.name||'-'}</td>
-      <td>${u.introducers?.employee_id||'-'}</td>
-      <td>${statusMap[u.mr_approval]||'-'}</td>
-      <td>${new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
-      <td>
-        ${u.mr_approval!=='approved'?`<button class="btn btn-success btn-sm" onclick="adminApproveUser('${u.id}')">승인</button> `:''}
-        ${u.mr_approval!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="adminRejectUser('${u.id}')">거절</button>`:''}
-      </td>
-    </tr>
-  `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
-
-async function adminApproveUser(id){
-  await sb.from('users').update({mr_approval:'approved',is_approved:true}).eq('id',id);
-  toast('승인 완료');loadApproval();
-}
-async function adminRejectUser(id){
-  if(!confirm('거절하시겠습니까?'))return;
-  await sb.from('users').update({mr_approval:'rejected',is_approved:false}).eq('id',id);
-  toast('거절 처리됨');loadApproval();
-}
-
-// 전체 DB
-async function loadDB(){
-  const [{data:users},{data:visits}]=await Promise.all([
-    sb.from('users').select('*').eq('is_approved',true),
-    sb.from('visits').select('*,journeys(hotel_name,symposium_date)')
-  ]);
-  document.getElementById('dbTb').innerHTML=users?.length?users.map(u=>{
-    const uv=(visits||[]).filter(v=>v.user_id===u.id);
-    const total=uv.reduce((s,v)=>s+(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0),0);
-    const chips=uv.map(v=>{
-      const d=(v.journeys?.symposium_date||'').replace(/-/g,'').slice(2,8);
-      const h=(v.journeys?.hotel_name||'').slice(0,4);
-      return `<span class="j-chip done" onclick="showDetail('${v.id}')">${d}${h}</span>`;
-    }).join('');
-    return `<tr><td>${u.name}</td><td>${u.hospital}</td><td>${chips||'<span style="color:var(--muted)">없음</span>'}</td><td><span class="badge badge-blue">${total}점</span></td></tr>`;
-  }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
-}
-
-// 상세
-async function showDetail(vid){
-  const {data:v}=await sb.from('visits').select('*,users(name,hospital),journeys(hotel_name,symposium_name,symposium_date,symposium_date_end)').eq('id',vid).single();
-  const {data:items}=await sb.from('items').select('*').eq('user_id',v.user_id).eq('journey_id',v.journey_id);
-  const total=(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0);
-  const period=v.journeys?.symposium_date+(v.journeys?.symposium_date_end?' ~ '+v.journeys.symposium_date_end:'');
-  document.getElementById('detailContent').innerHTML=`
-    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">📋 방문 상세</h3>
-    <div class="d-row"><span class="d-label">사용자</span><span class="d-val">${v.users?.name}</span></div>
-    <div class="d-row"><span class="d-label">병원</span><span class="d-val">${v.users?.hospital}</span></div>
-    <div class="d-row"><span class="d-label">장소</span><span class="d-val">${v.journeys?.hotel_name}</span></div>
-    <div class="d-row"><span class="d-label">기간</span><span class="d-val">${period||'-'}</span></div>
-    <div class="d-row"><span class="d-label">방문인증</span><span class="d-val" style="color:var(--green)">+${v.gps_score||10}점</span></div>
-    <div class="d-row"><span class="d-label">사진점수</span><span class="d-val">+${v.photo_score||0}점</span></div>
-    <div class="d-row"><span class="d-label">품목점수</span><span class="d-val">+${v.item_score||0}점</span></div>
-    <div class="d-row"><span class="d-label">합계</span><span class="d-val" style="color:var(--accent);font-size:16px;font-weight:900">${total}점</span></div>
-    ${v.photo_url?`<img src="${v.photo_url}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin:14px 0">`:'<div style="background:var(--surface2);border-radius:8px;padding:30px;text-align:center;color:var(--muted);margin:14px 0;font-size:13px">사진 없음</div>'}
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">품목 내역</div>
-    ${items?.length?items.map(i=>`<div style="background:var(--surface2);border-radius:6px;padding:8px 12px;margin-bottom:5px;font-size:13px">${i.item_name}<span class="badge badge-blue" style="float:right">${i.approved_score||0}점</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px">없음</div>'}
-    <button class="btn btn-primary btn-full" style="margin-top:18px" onclick="document.getElementById('detailPanel').classList.remove('open')">← 목록으로</button>
-  `;
-  document.getElementById('detailPanel').classList.add('open');
-}
-
-function initTheme(){
-  const saved=localStorage.getItem('sympovoy_theme')||'light';
-  document.documentElement.setAttribute('data-theme',saved);
-  updateThemeBtn();
-}
-function toggleTheme(){
-  const cur=document.documentElement.getAttribute('data-theme');
-  const next=cur==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',next);
-  localStorage.setItem('sympovoy_theme',next);
-  updateThemeBtn();
-}
-function updateThemeBtn(){
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=isDark?'☀️ 라이트':'🌙 다크');
-}
+function initTheme(){const s=localStorage.getItem('sympovoy_theme')||'light';document.documentElement.setAttribute('data-theme',s);updateThemeBtn();}
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('sympovoy_theme',n);updateThemeBtn();}
+function updateThemeBtn(){const d=document.documentElement.getAttribute('data-theme')==='dark';document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=d?'☀️ 라이트':'🌙 다크');}
 initTheme();
 
 </script>
