@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-08-13-i">
+<meta name="app-build" content="2026-08-20-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -57,11 +57,35 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .section-title{font-size:16px;font-weight:800;margin-bottom:16px;}
 
 /* 심포지엄 선택 */
-.sympo-card{border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+/* ===== 심포지엄 선택 카드 ===== */
+.sympo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+@media (max-width:700px){.sympo-grid{grid-template-columns:1fr;}}
+
+.sympo-card{position:relative;border:2px solid var(--border);border-radius:var(--radius);
+  padding:13px 14px 12px;cursor:pointer;transition:border-color .18s,background .18s;
+  background:var(--surface);display:flex;flex-direction:column;gap:7px;min-width:0;}
 .sympo-card:hover{border-color:var(--accent);}
-.sympo-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
-.sympo-card .hotel{font-size:15px;font-weight:800;}
-.sympo-card .date{font-size:12px;color:var(--muted);margin-top:2px;}
+.sympo-card.selected{border-color:var(--accent);background:rgba(20,107,69,.06);}
+.sympo-card.selected::after{content:'✓';position:absolute;top:9px;right:11px;color:var(--accent);font-weight:900;font-size:14px;}
+
+.sympo-card .hotel{font-size:14px;font-weight:800;line-height:1.35;word-break:keep-all;
+  overflow-wrap:anywhere;padding-right:16px;}
+.sympo-card .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sympo-card .date{font-size:11.5px;color:var(--muted);white-space:nowrap;letter-spacing:-.2px;}
+.sympo-card .sname{font-size:11.5px;color:var(--accent);font-weight:700;line-height:1.4;
+  word-break:keep-all;overflow-wrap:anywhere;}
+
+/* D-day 배지 */
+.sympo-dday{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;white-space:nowrap;
+  background:rgba(20,107,69,.12);color:var(--accent);}
+.sympo-dday.soon{background:rgba(179,38,30,.12);color:var(--red);}
+.sympo-dday.done{background:var(--surface2);color:var(--muted);}
+.sympo-card.past{opacity:.6;}
+.sympo-card.past:hover{opacity:.85;}
+
+/* 그룹 헤더 */
+.sympo-group{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--muted);
+  padding:6px 2px 0;letter-spacing:.2px;}
 
 /* 장소 검색 */
 .search-row{display:flex;gap:8px;margin-bottom:10px;}
@@ -576,7 +600,10 @@ function buildMrMonthFilter(data){
   if(!el)return;
   const months=new Set();
   (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
-  const sorted=[...months].sort().reverse();
+  // 가까운 달부터: 이번 달 이후는 오름차순, 지난 달은 내림차순
+  const cur=todayStr().slice(0,7);
+  const all=[...months].sort();
+  const sorted=[...all.filter(m=>m>=cur),...all.filter(m=>m<cur).reverse()];
   if(!sorted.length){el.innerHTML='';return;}
   let html='<span class="month-chip active" data-month="all" onclick="filterMrSympo(this.dataset.month)">전체</span>';
   sorted.forEach(m=>{
@@ -593,20 +620,89 @@ function filterMrSympo(month){
   renderMrSympoList(filtered);
 }
 
+// 26.9.5 ~ 9.6 형태로 압축
+function fmtSympoRange(start,end){
+  if(!start)return '날짜 미정';
+  const sp=String(start).split('-');
+  if(sp.length<3)return String(start);
+  const sy=sp[0].slice(2),sm=parseInt(sp[1],10),sd=parseInt(sp[2].slice(0,2),10);
+  const head=sy+'.'+sm+'.'+sd;
+  if(!end||end===start)return head;
+  const ep=String(end).split('-');
+  if(ep.length<3)return head;
+  const ey=ep[0].slice(2),em=parseInt(ep[1],10),ed=parseInt(ep[2].slice(0,2),10);
+  if(ey===sy&&em===sm)return head+' ~ '+ed;
+  if(ey===sy)return head+' ~ '+em+'.'+ed;
+  return head+' ~ '+ey+'.'+em+'.'+ed;
+}
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// 종료일 기준으로 지났는지 판단 (시작했지만 아직 진행 중인 행사는 예정으로 취급)
+function sympoIsPast(j){
+  const end=j.symposium_date_end||j.symposium_date;
+  return !!end && end < todayStr();
+}
+
+function ddayInfo(j){
+  const start=j.symposium_date;
+  if(!start)return null;
+  if(sympoIsPast(j))return {cls:'done',text:'종료'};
+  const ms=new Date(start+'T00:00:00')-new Date(todayStr()+'T00:00:00');
+  const d=Math.round(ms/86400000);
+  if(d<=0)return {cls:'soon',text:'진행중'};
+  if(d<=7)return {cls:'soon',text:'D-'+d};
+  return {cls:'',text:'D-'+d};
+}
+
+// 가까운 날짜순: 예정은 오름차순(임박한 것부터), 지난 것은 내림차순(최근 것부터)
+function sortByProximity(list){
+  const up=[],past=[];
+  (list||[]).forEach(j=>(sympoIsPast(j)?past:up).push(j));
+  up.sort((a,b)=>(a.symposium_date||'9999').localeCompare(b.symposium_date||'9999'));
+  past.sort((a,b)=>(b.symposium_date||'').localeCompare(a.symposium_date||''));
+  return {up,past};
+}
+
+function sympoCardHtml(j){
+  const dd=ddayInfo(j);
+  const past=sympoIsPast(j);
+  return '<div class="sympo-card'+(past?' past':'')+'" onclick="selectSympo(this,\''+j.id+'\')">'
+    +'<div class="hotel">🏨 '+(j.hotel_name||'-')+'</div>'
+    +'<div class="meta">'
+      +'<span class="date">📅 '+fmtSympoRange(j.symposium_date,j.symposium_date_end)+'</span>'
+      +(dd?'<span class="sympo-dday '+dd.cls+'">'+dd.text+'</span>':'')
+    +'</div>'
+    +(j.symposium_name?'<div class="sname">🎓 '+j.symposium_name+'</div>':'')
+    +'</div>';
+}
+
 function renderMrSympoList(data){
   const el=document.getElementById('sympoList');
-  el.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
-  el.innerHTML=data&&data.length?data.map(j=>`
-    <div class="sympo-card" onclick="selectSympo(this,'${j.id}')" style="margin-bottom:0">
-      <div class="hotel" style="font-size:13px">🏨 ${j.hotel_name}</div>
-      <div class="date" style="font-size:11px;margin-top:4px">📅 ${j.symposium_date||'날짜 미정'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</div>
-      ${j.symposium_name?`<div style="font-size:11px;color:var(--accent);margin-top:4px">🎓 ${j.symposium_name}</div>`:''}
-    </div>
-  `).join(''):'<div style="color:var(--muted);font-size:13px;grid-column:1/-1">해당 월 심포지엄 없음</div>';
+  el.className='sympo-grid';
+  el.style.cssText='';
+  const {up,past}=sortByProximity(data);
+  if(!up.length&&!past.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:14px 2px">해당 월 심포지엄 없음</div>';
+    return;
+  }
+  let html='';
+  if(up.length){
+    html+='<div class="sympo-group">예정된 심포지엄 '+up.length+'건</div>';
+    html+=up.map(sympoCardHtml).join('');
+  }
+  if(past.length){
+    html+='<div class="sympo-group">지난 심포지엄 '+past.length+'건</div>';
+    html+=past.map(sympoCardHtml).join('');
+  }
+  el.innerHTML=html;
 }
 
 async function loadSympoList(){
-  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
+  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:true});
   window._sympoDB=data||[];
   buildMrMonthFilter(data||[]);
   const el=document.getElementById('sympoList');
@@ -1199,7 +1295,7 @@ async function loadSentInvites(){
     const u=p.users||{};
     const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
     const places=locMap[p.id]||[];
-    const cColors={1:'#146b45',2:'#c17f24',3:'#4fbf85'};
+    const cColors={1:'#1f4030',2:'#7d8447',3:'#2f8a5c'};
     return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
       <div style="background:${cColors[p.concept]||'#146b45'};padding:10px 14px;color:#fff">
         <div style="display:flex;justify-content:space-between;align-items:center">
