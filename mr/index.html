@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-08-20-a">
+<meta name="app-build" content="2026-09-21-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -58,34 +58,107 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* 심포지엄 선택 */
 /* ===== 심포지엄 선택 카드 ===== */
-.sympo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
-@media (max-width:700px){.sympo-grid{grid-template-columns:1fr;}}
-
-.sympo-card{position:relative;border:2px solid var(--border);border-radius:var(--radius);
-  padding:13px 14px 12px;cursor:pointer;transition:border-color .18s,background .18s;
-  background:var(--surface);display:flex;flex-direction:column;gap:7px;min-width:0;}
-.sympo-card:hover{border-color:var(--accent);}
-.sympo-card.selected{border-color:var(--accent);background:rgba(20,107,69,.06);}
-.sympo-card.selected::after{content:'✓';position:absolute;top:9px;right:11px;color:var(--accent);font-weight:900;font-size:14px;}
-
-.sympo-card .hotel{font-size:14px;font-weight:800;line-height:1.35;word-break:keep-all;
-  overflow-wrap:anywhere;padding-right:16px;}
-.sympo-card .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.sympo-card .date{font-size:11.5px;color:var(--muted);white-space:nowrap;letter-spacing:-.2px;}
-.sympo-card .sname{font-size:11.5px;color:var(--accent);font-weight:700;line-height:1.4;
-  word-break:keep-all;overflow-wrap:anywhere;}
-
-/* D-day 배지 */
-.sympo-dday{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;white-space:nowrap;
-  background:rgba(20,107,69,.12);color:var(--accent);}
-.sympo-dday.soon{background:rgba(179,38,30,.12);color:var(--red);}
-.sympo-dday.done{background:var(--surface2);color:var(--muted);}
-.sympo-card.past{opacity:.6;}
-.sympo-card.past:hover{opacity:.85;}
-
 /* 그룹 헤더 */
 .sympo-group{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--muted);
   padding:6px 2px 0;letter-spacing:.2px;}
+
+/* ===== 주변 인기 장소 (구글 평점순) ===== */
+.radius-chip{font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--muted);
+  user-select:none;transition:all .15s;white-space:nowrap;}
+.radius-chip:hover{border-color:var(--accent);}
+.radius-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+
+.nb-item{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:9px;margin-top:7px;transition:border-color .15s;}
+.nb-item:hover{border-color:var(--accent);}
+.nb-item.added{opacity:.5;}
+.nb-rank{font-size:15px;font-weight:900;color:var(--accent);width:20px;text-align:center;flex-shrink:0;padding-top:2px;}
+.nb-body{flex:1;min-width:0;}
+.nb-name{font-size:13px;font-weight:800;line-height:1.35;word-break:keep-all;}
+.nb-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px;font-size:11px;color:var(--muted);}
+.nb-star{color:#e8a13a;font-weight:800;}
+.nb-addr{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;word-break:keep-all;}
+.nb-badge{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;
+  background:rgba(200,30,60,.12);color:#c81e3c;white-space:nowrap;}
+.nb-dist{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;
+  background:var(--surface2);color:var(--muted);white-space:nowrap;}
+.nb-actions{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+
+/* ===================================================================
+   심포지엄 리스트 — 화이트톤 엔터프라이즈 스타일
+   =================================================================== */
+.list-head{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap;}
+.list-head b{font-size:14px;font-weight:800;color:var(--text);}
+.list-head .cnt{font-size:12px;color:var(--accent);font-weight:700;}
+
+.filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;margin-bottom:12px;}
+.filter-item{display:flex;align-items:center;gap:7px;}
+.filter-item label{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;}
+.filter-item select{width:auto;min-width:104px;font-size:13px;padding:6px 10px;border-radius:7px;}
+.view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.view-toggle span{font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;
+  background:var(--surface);color:var(--muted);white-space:nowrap;transition:all .15s;}
+.view-toggle span+span{border-left:1px solid var(--border);}
+.view-toggle span.active{background:rgba(20,107,69,.10);color:var(--accent);}
+
+.slist{display:flex;flex-direction:column;gap:8px;}
+.srow{display:flex;align-items:center;gap:14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;padding:12px 16px;
+  transition:border-color .15s,box-shadow .15s;min-width:0;}
+.srow:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.srow.selected{border-color:var(--accent);background:rgba(20,107,69,.05);
+  box-shadow:0 0 0 1px var(--accent) inset;}
+.srow.past{opacity:.58;}
+.srow.past:hover{opacity:.9;}
+
+.srow-date{font-size:12.5px;color:var(--muted);min-width:112px;white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.srow-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.bd-up{background:rgba(20,107,69,.10);color:var(--accent);}
+.bd-soon{background:rgba(179,38,30,.10);color:var(--red);}
+.bd-done{background:var(--surface2);color:var(--muted);}
+.srow-name{font-size:14px;font-weight:800;color:var(--text);flex:1;min-width:0;
+  line-height:1.35;word-break:keep-all;}
+.srow-meta{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+.srow-btn{flex-shrink:0;font-size:12px;font-weight:800;padding:7px 14px;border-radius:8px;
+  border:1.5px solid var(--accent);background:transparent;color:var(--accent);
+  cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.srow-btn:hover{background:var(--accent);color:#fff;}
+.srow.selected .srow-btn{background:var(--accent);color:#fff;}
+
+@media (max-width:760px){
+  .srow{flex-wrap:wrap;gap:8px 10px;padding:13px 14px;}
+  .srow-date{min-width:0;order:1;}
+  .srow-badge{order:2;}
+  .srow-meta{order:4;width:100%;}
+  .srow-name{order:3;flex:1 0 100%;font-size:14.5px;}
+  .srow-btn{order:5;margin-left:auto;}
+  .filter-bar{gap:9px;padding:10px 12px;}
+  .filter-item{flex:1 1 46%;}
+  .filter-item select{width:100%;min-width:0;}
+  .view-toggle{width:100%;}
+  .view-toggle span{flex:1;text-align:center;}
+}
+
+/* ===== 주변 추천 — 4개 카테고리 탭 ===== */
+.rec-panel{border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  overflow:hidden;margin-bottom:14px;}
+.rec-top{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:11px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.rec-title{font-size:13px;font-weight:800;color:var(--text);}
+.rec-hotel{font-size:11.5px;color:var(--muted);}
+.rec-tabs{display:flex;border-bottom:1px solid var(--border);}
+.rec-tab{flex:1;text-align:center;font-size:12.5px;font-weight:700;padding:11px 4px;
+  cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;
+  transition:all .15s;white-space:nowrap;user-select:none;}
+.rec-tab:hover{color:var(--accent);}
+.rec-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(20,107,69,.05);}
+.rec-body{padding:12px 14px 14px;}
+.rec-radius{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.rec-radius .lbl{font-size:11.5px;color:var(--muted);font-weight:700;margin-right:2px;}
 
 /* 장소 검색 */
 .search-row{display:flex;gap:8px;margin-bottom:10px;}
@@ -314,15 +387,60 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
           <div class="card-title" style="margin:0">STEP 1 · 심포지엄 선택</div>
           <button class="btn btn-ghost btn-sm" onclick="loadSympoList();toast('새로고침 완료')">🔄</button>
         </div>
-        <div class="month-filter" id="mrMonthFilter"></div>
+        <div class="list-head">
+          <b>숙박심포지엄 목록</b>
+          <span class="cnt" id="sympoCount"></span>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label>월</label>
+            <select id="fMonth" onchange="applySympoFilter()"><option value="all">전체</option></select>
+          </div>
+          <div class="filter-item">
+            <label>행사장</label>
+            <select id="fHotel" onchange="applySympoFilter()"><option value="all">전체</option></select>
+          </div>
+          <div class="filter-item">
+            <label>보기</label>
+            <div class="view-toggle" id="fView">
+              <span class="active" data-v="up" onclick="setSympoView('up')">다가오는 행사</span>
+              <span data-v="all" onclick="setSympoView('all')">지난 행사 포함</span>
+            </div>
+          </div>
+        </div>
         <div id="sympoList"><div style="color:var(--muted);font-size:13px">로딩 중...</div></div>
       </div>
 
       <!-- STEP 2: 추천 장소 -->
       <div class="card" id="step2Place" style="display:none">
         <div class="card-title">STEP 2 · 추천 장소 추가 (최대 6개)</div>
-        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--accent);color:var(--accent);font-size:13px">
-          📊 이 심포지엄 TOP 10 추천 장소 불러오기
+        <!-- 행사장 주변 추천 (구글 평점순) -->
+        <div class="rec-panel">
+          <div class="rec-top">
+            <span class="rec-title">📍 행사장 주변 추천</span>
+            <span class="rec-hotel" id="nearbyHotel"></span>
+          </div>
+          <div class="rec-tabs">
+            <div class="rec-tab active" data-t="restaurant" onclick="setNearbyType('restaurant')">🍽️ 맛집</div>
+            <div class="rec-tab" data-t="cafe" onclick="setNearbyType('cafe')">🍰 디저트</div>
+            <div class="rec-tab" data-t="attraction" onclick="setNearbyType('attraction')">🏛️ 명소</div>
+            <div class="rec-tab" data-t="shopping" onclick="setNearbyType('shopping')">🛍️ 쇼핑</div>
+          </div>
+          <div class="rec-body">
+            <div class="rec-radius">
+              <span class="lbl">반경</span>
+              <span class="radius-chip" data-r="1000" onclick="setRadius(1000)">1km</span>
+              <span class="radius-chip" data-r="3000" onclick="setRadius(3000)">3km</span>
+              <span class="radius-chip active" data-r="5000" onclick="setRadius(5000)">5km</span>
+              <span class="radius-chip" data-r="10000" onclick="setRadius(10000)">10km</span>
+              <button class="btn btn-ghost btn-sm" onclick="loadNearby(true)" style="margin-left:auto">🔄</button>
+            </div>
+            <div id="nearbyList"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--border);color:var(--muted);font-size:12px">
+          📊 우리 MR들이 많이 추천한 장소 보기
         </button>
         <div id="top10List" style="display:none;margin-bottom:14px"></div>
         <div class="search-row">
@@ -457,8 +575,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 </div>
 
 <script>
-const SB_URL='https://sgmmeibexipozsywxpyk.supabase.co';
-const SB_KEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
+const SB_URL='https://wrjpvzjdhmntitxmoywa.supabase.co';
+const SB_KEY='sb_publishable_c0QHq67tURENWky-xtZN8g_908ti9K1';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 
 let currentIntroducer=null;
@@ -593,32 +711,54 @@ async function rejectUser(id){
 }
 
 // 심포지엄
-let _mrActiveMonth='all';
+
+let _fView='up';   // 'up' = 다가오는 행사만, 'all' = 지난 행사 포함
 
 function buildMrMonthFilter(data){
-  const el=document.getElementById('mrMonthFilter');
-  if(!el)return;
-  const months=new Set();
-  (data||[]).forEach(j=>{const d=j.symposium_date||'';if(d.length>=7)months.add(d.slice(0,7));});
-  // 가까운 달부터: 이번 달 이후는 오름차순, 지난 달은 내림차순
+  const mSel=document.getElementById('fMonth');
+  const hSel=document.getElementById('fHotel');
+  if(!mSel||!hSel)return;
+
+  const months=new Set(), hotels=new Set();
+  (data||[]).forEach(j=>{
+    const d=j.symposium_date||'';
+    if(d.length>=7) months.add(d.slice(0,7));
+    if(j.hotel_name) hotels.add(j.hotel_name);
+  });
+
+  // 가까운 달부터
   const cur=todayStr().slice(0,7);
   const all=[...months].sort();
-  const sorted=[...all.filter(m=>m>=cur),...all.filter(m=>m<cur).reverse()];
-  if(!sorted.length){el.innerHTML='';return;}
-  let html='<span class="month-chip active" data-month="all" onclick="filterMrSympo(this.dataset.month)">전체</span>';
-  sorted.forEach(m=>{
-    const parts=m.split('-');
-    html+='<span class="month-chip" data-month="'+m+'" onclick="filterMrSympo(this.dataset.month)">'+parts[0]+'년 '+parseInt(parts[1])+'월</span>';
-  });
-  el.innerHTML=html;
+  const sortedM=[...all.filter(m=>m>=cur),...all.filter(m=>m<cur).reverse()];
+
+  const keepM=mSel.value||'all', keepH=hSel.value||'all';
+  mSel.innerHTML='<option value="all">전체</option>'
+    +sortedM.map(m=>{const p=m.split('-');
+      return '<option value="'+m+'">'+p[0]+'년 '+parseInt(p[1],10)+'월</option>';}).join('');
+  hSel.innerHTML='<option value="all">전체</option>'
+    +[...hotels].sort().map(h=>'<option value="'+h.replace(/"/g,'&quot;')+'">'+h+'</option>').join('');
+  mSel.value=[...mSel.options].some(o=>o.value===keepM)?keepM:'all';
+  hSel.value=[...hSel.options].some(o=>o.value===keepH)?keepH:'all';
 }
 
-function filterMrSympo(month){
-  _mrActiveMonth=month;
-  document.querySelectorAll('#mrMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
-  const filtered=month==='all'?window._sympoDB:window._sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
-  renderMrSympoList(filtered);
+function setSympoView(v){
+  _fView=v;
+  document.querySelectorAll('#fView span').forEach(x=>x.classList.toggle('active',x.dataset.v===v));
+  applySympoFilter();
 }
+
+function applySympoFilter(){
+  const m=document.getElementById('fMonth').value;
+  const h=document.getElementById('fHotel').value;
+  let list=window._sympoDB||[];
+  if(m!=='all') list=list.filter(j=>(j.symposium_date||'').startsWith(m));
+  if(h!=='all') list=list.filter(j=>j.hotel_name===h);
+  if(_fView==='up') list=list.filter(j=>!sympoIsPast(j));
+  renderMrSympoList(list);
+}
+
+// 이전 이름 호환
+function filterMrSympo(){ applySympoFilter(); }
 
 // 26.9.5 ~ 9.6 형태로 압축
 function fmtSympoRange(start,end){
@@ -667,62 +807,227 @@ function sortByProximity(list){
   return {up,past};
 }
 
-function sympoCardHtml(j){
+function sympoRowHtml(j){
   const dd=ddayInfo(j);
   const past=sympoIsPast(j);
-  return '<div class="sympo-card'+(past?' past':'')+'" onclick="selectSympo(this,\''+j.id+'\')">'
-    +'<div class="hotel">🏨 '+(j.hotel_name||'-')+'</div>'
-    +'<div class="meta">'
-      +'<span class="date">📅 '+fmtSympoRange(j.symposium_date,j.symposium_date_end)+'</span>'
-      +(dd?'<span class="sympo-dday '+dd.cls+'">'+dd.text+'</span>':'')
-    +'</div>'
-    +(j.symposium_name?'<div class="sname">🎓 '+j.symposium_name+'</div>':'')
+  const cls=dd? (dd.cls==='done'?'bd-done':dd.cls==='soon'?'bd-soon':'bd-up') : 'bd-up';
+  const sel=(selectedSympo&&selectedSympo.id===j.id)?' selected':'';
+  const hasGeo=!!(j.hotel_lat&&j.hotel_lng);
+  return '<div class="srow'+(past?' past':'')+sel+'" id="srow_'+j.id+'">'
+    +'<span class="srow-date">'+fmtSympoRange(j.symposium_date,j.symposium_date_end)+'</span>'
+    +(dd?'<span class="srow-badge '+cls+'">'+dd.text+'</span>':'')
+    +'<span class="srow-name">'+(j.hotel_name||'-')+'</span>'
+    +'<span class="srow-meta">'+(j.symposium_name||'')
+      +(hasGeo?'':' · <span style="color:var(--red)">좌표없음</span>')+'</span>'
+    +'<button class="srow-btn" onclick="openInviteFor(\''+j.id+'\')">초대장 작성 →</button>'
     +'</div>';
 }
 
 function renderMrSympoList(data){
   const el=document.getElementById('sympoList');
-  el.className='sympo-grid';
+  el.className='slist';
   el.style.cssText='';
+  const cnt=document.getElementById('sympoCount');
+
   const {up,past}=sortByProximity(data);
-  if(!up.length&&!past.length){
-    el.innerHTML='<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:14px 2px">해당 월 심포지엄 없음</div>';
+  const rows=[...up,...past];
+  if(cnt) cnt.textContent='전체 '+rows.length+'건';
+
+  if(!rows.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:22px;text-align:center;'
+      +'border:1px dashed var(--border);border-radius:10px">조건에 맞는 심포지엄이 없습니다</div>';
     return;
   }
-  let html='';
-  if(up.length){
-    html+='<div class="sympo-group">예정된 심포지엄 '+up.length+'건</div>';
-    html+=up.map(sympoCardHtml).join('');
-  }
-  if(past.length){
-    html+='<div class="sympo-group">지난 심포지엄 '+past.length+'건</div>';
-    html+=past.map(sympoCardHtml).join('');
-  }
-  el.innerHTML=html;
+  el.innerHTML=rows.map(sympoRowHtml).join('');
 }
 
 async function loadSympoList(){
   const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:true});
   window._sympoDB=data||[];
   buildMrMonthFilter(data||[]);
-  const el=document.getElementById('sympoList');
-  renderMrSympoList(data||[]);
+  applySympoFilter();
 }
 
-async function selectSympo(el,id){
-  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedSympo=window._sympoDB.find(j=>j.id===id);
+// 리스트에서 "초대장 작성" 을 누르면 선택 + STEP2 열기 + 맛집 자동 조회
+async function openInviteFor(id){
+  const j=(window._sympoDB||[]).find(x=>x.id===id);
+  if(!j){toast('심포지엄을 찾을 수 없습니다',false);return;}
+
+  selectedSympo=j;
   addedPlaces=[];
+  _nbCache={};
+  _nbData=[];
+  _nbType='restaurant';
+
+  document.querySelectorAll('.srow').forEach(r=>r.classList.remove('selected'));
+  const row=document.getElementById('srow_'+id);
+  if(row) row.classList.add('selected');
+
+  document.querySelectorAll('.rec-tab').forEach(t=>t.classList.toggle('active',t.dataset.t==='restaurant'));
+  const sel=document.getElementById('placeType');
+  if(sel) sel.value='restaurant';
+
+  const nbHotel=document.getElementById('nearbyHotel');
+  if(nbHotel) nbHotel.textContent='기준: '+j.hotel_name;
+
   renderPlaceGrid();
   document.getElementById('step2Place').style.display='block';
   document.getElementById('step3User').style.display='block';
   document.getElementById('step4Concept').style.display='block';
+
+  // STEP 2 로 부드럽게 이동
+  setTimeout(()=>{
+    const t=document.getElementById('step2Place');
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+
   await loadUserSelectList();
   updatePreview();
+  loadNearby();          // 맛집부터 자동으로
 }
 
+// 이전 이름 호환 (다른 곳에서 호출될 수 있음)
+async function selectSympo(el,id){ return openInviteFor(id); }
+
 // 장소 검색
+// ===================================================================
+//  행사장 주변 인기 장소 — 구글 Places 평점순
+// ===================================================================
+const GPLACES_FN='https://wrjpvzjdhmntitxmoywa.supabase.co/functions/v1/google-places';
+let _nbRadius=5000;
+let _nbType='restaurant';
+let _nbData=[];
+let _nbCache={};          // '유형_반경' → 결과 (같은 세션에서 탭을 오가도 재호출 없음)
+
+const NB_ICON={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
+const NB_LABEL={restaurant:'맛집',cafe:'디저트',attraction:'명소',shopping:'쇼핑'};
+
+function setRadius(r){
+  _nbRadius=r;
+  document.querySelectorAll('.radius-chip').forEach(c=>c.classList.toggle('active',+c.dataset.r===r));
+  loadNearby();
+}
+
+function setNearbyType(t){
+  _nbType=t;
+  document.querySelectorAll('.rec-tab').forEach(c=>c.classList.toggle('active',c.dataset.t===t));
+  const sel=document.getElementById('placeType');
+  if(sel) sel.value=t;
+  loadNearby();
+}
+
+function fmtDist(m){
+  if(m<1000) return m+'m';
+  return (m/1000).toFixed(m<10000?1:0)+'km';
+}
+
+async function loadNearby(force){
+  const el=document.getElementById('nearbyList');
+  if(!el)return;
+  if(!selectedSympo){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:14px 2px">심포지엄을 먼저 선택하세요</div>';
+    return;
+  }
+  const lat=selectedSympo.hotel_lat, lng=selectedSympo.hotel_lng;
+  if(!lat||!lng){
+    el.innerHTML='<div style="font-size:12px;color:var(--red);padding:14px 2px;line-height:1.7">'
+      +'이 행사장에 좌표가 없습니다.<br>관리자 페이지에서 행사장을 다시 지정해주세요.<br>'
+      +'<span style="color:var(--muted)">아래 검색창으로 직접 추가하는 것은 가능합니다.</span></div>';
+    return;
+  }
+
+  const key=_nbType+'_'+_nbRadius;
+  if(!force && _nbCache[key]){
+    _nbData=_nbCache[key];
+    renderNearby(true);
+    return;
+  }
+
+  el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:14px 2px">'
+    +'⭐ 주변 '+NB_LABEL[_nbType]+'을(를) 평점순으로 찾는 중...</div>';
+
+  try{
+    const res=await fetch(GPLACES_FN+'?action=nearby'
+      +'&lat='+lat+'&lng='+lng+'&radius='+_nbRadius+'&type='+_nbType
+      +(force?'&fresh=1':''));
+    const data=await res.json();
+    if(data.error){
+      console.error('[nearby]',data);
+      el.innerHTML='<div style="font-size:12px;color:var(--red);padding:14px 2px">오류: '+data.error+'</div>';
+      return;
+    }
+    _nbData=data.items||[];
+    _nbCache[key]=_nbData;
+    renderNearby(data.cached);
+  }catch(e){
+    console.error(e);
+    el.innerHTML='<div style="font-size:12px;color:var(--red);padding:14px 2px">오류: '+e.message+'</div>';
+  }
+}
+
+function renderNearby(fromCache){
+  const el=document.getElementById('nearbyList');
+  if(!el)return;
+  if(!_nbData.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:16px 2px;line-height:1.7">'
+      +'조건에 맞는 곳이 없습니다.<br>반경을 넓혀보세요.</div>';
+    return;
+  }
+  const icon=NB_ICON[_nbType]||'📍';
+  el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:0 2px 4px">'
+      +'반경 '+fmtDist(_nbRadius)+' 이내 '+_nbData.length+'곳 · 평점순'
+      +(fromCache?' · 저장된 결과':'')+'</div>'
+    +_nbData.map((p,i)=>{
+      const already=addedPlaces.some(a=>a.name===p.name);
+      return '<div class="nb-item'+(already?' added':'')+'">'
+        +'<div class="nb-rank">'+(i+1)+'</div>'
+        +'<div class="nb-body">'
+          +'<div class="nb-name">'+icon+' '+p.name+'</div>'
+          +'<div class="nb-meta">'
+            +(p.rating?'<span class="nb-star">★ '+p.rating.toFixed(1)+'</span>':'')
+            +(p.reviews?'<span>리뷰 '+p.reviews.toLocaleString()+'</span>':'')
+            +'<span class="nb-dist">'+fmtDist(p.dist)+'</span>'
+            +(p.badge?'<span class="nb-badge">🌟 '+(p.badgeNote||'추천')+'</span>':'')
+          +'</div>'
+          +(p.addr?'<div class="nb-addr">'+p.addr+'</div>':'')
+        +'</div>'
+        +'<div class="nb-actions">'
+          +(already
+            ?'<span style="font-size:11px;color:var(--green);font-weight:700">✅ 추가됨</span>'
+            :'<button class="btn btn-primary btn-sm" onclick="addFromNearby('+i+')">+ 추가</button>')
+          +(p.link?'<a href="'+p.link+'" target="_blank" style="font-size:10px;color:var(--muted)">지도</a>':'')
+        +'</div>'
+      +'</div>';
+    }).join('');
+}
+
+async function addFromNearby(idx){
+  const p=_nbData[idx];
+  if(!p)return;
+  if(addedPlaces.length>=6){toast('최대 6개까지 추가 가능합니다',false);return;}
+  if(addedPlaces.some(a=>a.name===p.name)){toast('이미 추가된 장소입니다',false);return;}
+
+  // 구글 사진 URL 은 만료되므로, 추가하는 시점에 한 번만 Storage 로 복사
+  let thumb='';
+  if(p.photoName){
+    try{
+      const r=await fetch(GPLACES_FN+'?action=photo',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({photoName:p.photoName})
+      });
+      const d=await r.json();
+      if(d.url) thumb=d.url;
+      else console.warn('[photo]',d);
+    }catch(e){console.warn('[photo]',e);}
+  }
+
+  openTipModal(p.name,p.lat,p.lng,p.addr,thumb,p.cat,p.link);
+  // 유형은 현재 선택된 주변검색 유형을 따름
+  if(pendingPlace) pendingPlace.type=_nbType;
+  if(p.phone) document.getElementById('tipPhone').value=p.phone;
+}
+
 // TOP 10 추천 장소 로드
 async function loadTop10(){
   if(!selectedSympo){toast('심포지엄을 먼저 선택해주세요',false);return;}
@@ -810,7 +1115,7 @@ async function searchPlace(loadMore){
   }
   const startNum=(_searchPage-1)*5+1;
   try{
-    const res=await fetch(`https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${startNum}`);
+    const res=await fetch(`https://wrjpvzjdhmntitxmoywa.supabase.co/functions/v1/kakao-search?query=${encodeURIComponent(q)}&start=${startNum}`);
     const data=await res.json();
     if(!data.items||!data.items.length){
       const noMore=`<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px">더 이상 검색 결과가 없습니다</div>`;
@@ -1344,7 +1649,12 @@ async function editInvite(invId){
   window._editUserId=pkg.user_id;
 
   // UI 업데이트
-  document.querySelectorAll('.sympo-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.srow').forEach(c=>c.classList.remove('selected'));
+  const _row=document.getElementById('srow_'+(pkg.journey_id||''));
+  if(_row) _row.classList.add('selected');
+  const _nh=document.getElementById('nearbyHotel');
+  if(_nh&&selectedSympo) _nh.textContent='기준: '+selectedSympo.hotel_name;
+  _nbCache={}; _nbData=[];
   document.getElementById('step2Place').style.display='block';
   document.getElementById('step3User').style.display='block';
   document.getElementById('step4Concept').style.display='block';
