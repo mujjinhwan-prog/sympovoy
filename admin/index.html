@@ -4,16 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-08-20-a">
+<meta name="app-build" content="2026-09-21-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
-  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
-  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
-}
+:root{--bg:#f4f6f7;--surface:#ffffff;--surface2:#eef1f2;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#18211d;--muted:#6d7a75;--border:#e3e8e9;--radius:10px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;}
@@ -44,27 +40,31 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;z-index:100;overflow-y:auto;}
 .sidebar .brand{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:var(--muted);font-size:14px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover,.nav-item.active{color:var(--text);background:var(--surface2);border-left-color:var(--accent);}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);background:rgba(20,107,69,.09);border-left-color:var(--accent);font-weight:700;}
 .main{margin-left:220px;padding:28px;min-height:100vh;}
 .page{display:none;}
 .page.active{display:block;}
 .page-title{font-size:20px;font-weight:800;margin-bottom:20px;}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
-.card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;}
+.card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:13px;}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-.stat-num{font-size:30px;font-weight:800;color:var(--accent);}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:17px 18px;}
+.stat-num{font-size:28px;font-weight:900;color:var(--accent);letter-spacing:-1px;}
 .stat-label{font-size:12px;color:var(--muted);margin-top:3px;}
 
 .table-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:9px 12px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+th{text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;font-weight:700;
+  background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th:first-child{border-radius:8px 0 0 0;}
+thead th:last-child{border-radius:0 8px 0 0;}
 td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(255,255,255,.02);}
+tbody tr:hover td{background:var(--surface2);}
 
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
 .badge-green{background:rgba(20,107,69,.16);color:var(--green);}
@@ -124,17 +124,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 }
 
 /* ===== 라이트 모드 ===== */
-:root[data-theme="light"] {
-  --bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;
-  --accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;
-  --text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:12px;
-}
+:root[data-theme="light"]{--bg:#f4f6f7;--surface:#ffffff;--surface2:#eef1f2;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#18211d;--muted:#6d7a75;--border:#e3e8e9;--radius:10px;}
 /* ===== 다크 모드 ===== */
-:root[data-theme="dark"] {
-  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
-  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
-  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
-}
+:root[data-theme="dark"]{--bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;--text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:10px;}
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
 
@@ -149,6 +141,49 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
 :root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
 .wm.on-dark{background:transparent;padding:0;}
+
+/* ===================================================================
+   화이트톤 엔터프라이즈 공통 컴포넌트
+   =================================================================== */
+.list-head{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap;}
+.list-head b{font-size:14px;font-weight:800;color:var(--text);}
+.list-head .cnt{font-size:12px;color:var(--accent);font-weight:700;}
+
+.filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;margin-bottom:12px;}
+.filter-item{display:flex;align-items:center;gap:7px;}
+.filter-item label{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;}
+.filter-item select{width:auto;min-width:104px;font-size:13px;padding:6px 10px;border-radius:7px;}
+.view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.view-toggle span{font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;
+  background:var(--surface);color:var(--muted);white-space:nowrap;transition:all .15s;}
+.view-toggle span+span{border-left:1px solid var(--border);}
+.view-toggle span.active{background:rgba(20,107,69,.10);color:var(--accent);}
+
+.slist{display:flex;flex-direction:column;gap:8px;}
+.srow{display:flex;align-items:center;gap:14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;padding:12px 16px;
+  transition:border-color .15s,box-shadow .15s;min-width:0;}
+.srow:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.srow.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
+.srow.past{opacity:.58;}
+.srow-date{font-size:12.5px;color:var(--muted);min-width:112px;white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+.srow-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.bd-up{background:rgba(20,107,69,.10);color:var(--accent);}
+.bd-soon{background:rgba(179,38,30,.10);color:var(--red);}
+.bd-done{background:var(--surface2);color:var(--muted);}
+.srow-name{font-size:14px;font-weight:800;color:var(--text);flex:1;min-width:0;
+  line-height:1.35;word-break:keep-all;}
+.srow-meta{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+@media (max-width:760px){
+  .srow{flex-wrap:wrap;gap:8px 10px;padding:13px 14px;}
+  .srow-date{min-width:0;order:1;} .srow-badge{order:2;}
+  .srow-meta{order:4;width:100%;} .srow-name{order:3;flex:1 0 100%;}
+  .filter-item{flex:1 1 46%;} .filter-item select{width:100%;min-width:0;}
+  .view-toggle{width:100%;} .view-toggle span{flex:1;text-align:center;}
+}
 </style>
 </head>
 <body>
@@ -228,17 +263,34 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="page-title">🏨 심포지엄 관리</div>
       <div class="card">
         <div class="card-header">
-          <div class="card-title" style="margin:0">심포지엄 목록</div>
+          <div class="card-title" style="margin:0">🏨 심포지엄 관리</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm" onclick="loadSympo()">🔄 새로고침</button>
             <button class="btn btn-primary btn-sm" onclick="openSympoModal()">+ 심포지엄 추가</button>
           </div>
         </div>
-        <div class="month-filter" id="sympoMonthFilter"></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>기간</th><th>호텔명</th><th>심포지엄명</th><th>아젠다</th><th>초대코드</th><th>관리</th></tr></thead>
-          <tbody id="sympTb"></tbody></table>
+        <div class="list-head">
+          <b>심포지엄 목록</b>
+          <span class="cnt" id="sympoCount"></span>
         </div>
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label>월</label>
+            <select id="aMonth" onchange="applyAdminSympoFilter()"><option value="all">전체</option></select>
+          </div>
+          <div class="filter-item">
+            <label>행사장</label>
+            <select id="aHotel" onchange="applyAdminSympoFilter()"><option value="all">전체</option></select>
+          </div>
+          <div class="filter-item">
+            <label>보기</label>
+            <div class="view-toggle" id="aView">
+              <span class="active" data-v="up" onclick="setAdminView('up')">다가오는 행사</span>
+              <span data-v="all" onclick="setAdminView('all')">지난 행사 포함</span>
+            </div>
+          </div>
+        </div>
+        <div class="slist" id="sympTb"></div>
       </div>
     </div>
 
@@ -365,8 +417,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </div>
 
 <script>
-const SB_URL='https://sgmmeibexipozsywxpyk.supabase.co';
-const SB_KEY='sb_publishable_rWGxXiyqq493Vu6cqNyfCA_8DfSMqqQ';
+const SB_URL='https://wrjpvzjdhmntitxmoywa.supabase.co';
+const SB_KEY='sb_publishable_c0QHq67tURENWky-xtZN8g_908ti9K1';
 const ADMIN_PW='yuhan2026';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 let selectedHotel=null;
@@ -440,34 +492,124 @@ async function loadDashboard(){
 let _sympoDB=[];
 let _activeSympoMonth='all';
 
-async function loadSympo(){
-  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:false});
-  _sympoDB=data||[];
-  buildMonthFilter(_sympoDB,'sympoMonthFilter',filterSympo);
-  renderSympoTable(_sympoDB);
+function admTodayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// 종료일 기준 — 진행 중인 행사는 '예정'으로 취급
+function admIsPast(j){
+  const e=j.symposium_date_end||j.symposium_date;
+  return !!e && e < admTodayStr();
+}
+function admDday(j){
+  if(!j.symposium_date) return null;
+  if(admIsPast(j)) return {cls:'bd-done',text:'종료'};
+  const ms=new Date(j.symposium_date+'T00:00:00')-new Date(admTodayStr()+'T00:00:00');
+  const d=Math.round(ms/86400000);
+  if(d<=0) return {cls:'bd-soon',text:'진행중'};
+  if(d<=7) return {cls:'bd-soon',text:'D-'+d};
+  return {cls:'bd-up',text:'D-'+d};
+}
+// 2026 9.5~9.6 형태
+function admRange(a,b){
+  if(!a) return '날짜 미정';
+  const sp=String(a).split('-'); if(sp.length<3) return String(a);
+  const y=sp[0], m=parseInt(sp[1],10), d=parseInt(sp[2].slice(0,2),10);
+  const head=y+' '+m+'.'+d;
+  if(!b||b===a) return head;
+  const ep=String(b).split('-'); if(ep.length<3) return head;
+  const em=parseInt(ep[1],10), ed=parseInt(ep[2].slice(0,2),10);
+  return head+'~'+(em===m?ed:em+'.'+ed);
 }
 
-function filterSympo(month){
-  _activeSympoMonth=month;
-  document.querySelectorAll('#sympoMonthFilter .month-chip').forEach(c=>c.classList.toggle('active',c.dataset.month===month));
-  const filtered=month==='all'?_sympoDB:_sympoDB.filter(j=>(j.symposium_date||'').startsWith(month));
-  renderSympoTable(filtered);
+let _aView='up';
+
+async function loadSympo(){
+  const {data}=await sb.from('journeys').select('*').order('symposium_date',{ascending:true});
+  _sympoDB=data||[];
+  buildAdminSympoFilters(_sympoDB);
+  applyAdminSympoFilter();
 }
+
+function buildAdminSympoFilters(data){
+  const mSel=document.getElementById('aMonth'), hSel=document.getElementById('aHotel');
+  if(!mSel||!hSel)return;
+  const months=new Set(), hotels=new Set();
+  (data||[]).forEach(j=>{
+    const d=j.symposium_date||'';
+    if(d.length>=7) months.add(d.slice(0,7));
+    if(j.hotel_name) hotels.add(j.hotel_name);
+  });
+  const cur=admTodayStr().slice(0,7);
+  const all=[...months].sort();
+  const sortedM=[...all.filter(m=>m>=cur),...all.filter(m=>m<cur).reverse()];
+  const keepM=mSel.value||'all', keepH=hSel.value||'all';
+  mSel.innerHTML='<option value="all">전체</option>'
+    +sortedM.map(m=>{const p=m.split('-');
+      return '<option value="'+m+'">'+p[0]+'년 '+parseInt(p[1],10)+'월</option>';}).join('');
+  hSel.innerHTML='<option value="all">전체</option>'
+    +[...hotels].sort().map(h=>'<option value="'+h.replace(/"/g,'&quot;')+'">'+h+'</option>').join('');
+  mSel.value=[...mSel.options].some(o=>o.value===keepM)?keepM:'all';
+  hSel.value=[...hSel.options].some(o=>o.value===keepH)?keepH:'all';
+}
+
+function setAdminView(v){
+  _aView=v;
+  document.querySelectorAll('#aView span').forEach(x=>x.classList.toggle('active',x.dataset.v===v));
+  applyAdminSympoFilter();
+}
+
+function applyAdminSympoFilter(){
+  const m=document.getElementById('aMonth').value;
+  const h=document.getElementById('aHotel').value;
+  let list=_sympoDB||[];
+  if(m!=='all') list=list.filter(j=>(j.symposium_date||'').startsWith(m));
+  if(h!=='all') list=list.filter(j=>j.hotel_name===h);
+  if(_aView==='up') list=list.filter(j=>!admIsPast(j));
+  renderSympoTable(list);
+}
+
+// 이전 이름 호환
+function filterSympo(){ applyAdminSympoFilter(); }
 
 function renderSympoTable(data){
-  document.getElementById('sympTb').innerHTML=data?.length?data.map(j=>`
-    <tr>
-      <td>${j.symposium_date||'-'}${j.symposium_date_end?' ~ '+j.symposium_date_end:''}</td>
-      <td>${j.hotel_name}</td>
-      <td>${j.symposium_name||'-'}</td>
-      <td>${j.agenda_image_url?`<a href="${j.agenda_image_url}" target="_blank" style="color:var(--accent)">📄 보기</a>`:'없음'}</td>
-      <td><code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:11px">${j.invite_code}</code></td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick='editSympo(${JSON.stringify(j).replace(/'/g,"&#39;")})'>수정</button>
-        <button class="btn btn-danger btn-sm" onclick="delSympo('${j.id}')">삭제</button>
-      </td>
-    </tr>
-  `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  const el=document.getElementById('sympTb');
+  const cnt=document.getElementById('sympoCount');
+
+  // 가까운 날짜순: 예정 오름차순 → 지난 것 내림차순
+  const up=[],past=[];
+  (data||[]).forEach(j=>(admIsPast(j)?past:up).push(j));
+  up.sort((a,b)=>(a.symposium_date||'9999').localeCompare(b.symposium_date||'9999'));
+  past.sort((a,b)=>(b.symposium_date||'').localeCompare(a.symposium_date||''));
+  const rows=[...up,...past];
+
+  if(cnt) cnt.textContent='전체 '+rows.length+'건';
+  if(!rows.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:22px;text-align:center;'
+      +'border:1px dashed var(--border);border-radius:10px">조건에 맞는 심포지엄이 없습니다</div>';
+    return;
+  }
+
+  el.innerHTML=rows.map(j=>{
+    const dd=admDday(j);
+    const geo=(j.hotel_lat&&j.hotel_lng);
+    const safe=JSON.stringify(j).replace(/'/g,'&#39;');
+    return '<div class="srow'+(admIsPast(j)?' past':'')+'">'
+      +'<span class="srow-date">'+admRange(j.symposium_date,j.symposium_date_end)+'</span>'
+      +(dd?'<span class="srow-badge '+dd.cls+'">'+dd.text+'</span>':'')
+      +'<span class="srow-name">'+(j.hotel_name||'-')+'</span>'
+      +'<span class="srow-meta">'+(j.symposium_name||'')
+        +(geo?'':' · <span style="color:var(--red)">좌표없음</span>')
+        +' · <code style="background:var(--surface2);padding:2px 7px;border-radius:4px;font-size:11px">'
+        +(j.invite_code||'-')+'</code></span>'
+      +'<span style="display:flex;gap:6px;flex-shrink:0">'
+        +(j.agenda_image_url
+          ?'<a class="btn btn-ghost btn-sm" href="'+j.agenda_image_url+'" target="_blank">📄</a>':'')
+        +'<button class="btn btn-ghost btn-sm" onclick=\'editSympo('+safe+')\'>수정</button>'
+        +'<button class="btn btn-danger btn-sm" onclick="delSympo(\''+j.id+'\')">삭제</button>'
+      +'</span>'
+    +'</div>';
+  }).join('');
 }
 
 function openSympoModal(){
@@ -516,7 +658,7 @@ let lastHotelResults=[];
 
 async function fetchNaver(q){
   try{
-    const res=await fetch('https://sgmmeibexipozsywxpyk.supabase.co/functions/v1/kakao-search?query='+encodeURIComponent(q));
+    const res=await fetch('https://wrjpvzjdhmntitxmoywa.supabase.co/functions/v1/kakao-search?query='+encodeURIComponent(q));
     const data=await res.json();
     return (data.items||[]);
   }catch(e){
@@ -685,11 +827,6 @@ async function delSympo(id){
   const {error}=await sb.from('journeys').delete().eq('id',id);
   if(error){toast('삭제 실패: '+error.message,false);return;}
   toast('삭제 완료');
-  // 즉시 해당 행 제거
-  document.querySelectorAll('#sympTb tr').forEach(row=>{
-    if(row.innerHTML.includes(id)) row.remove();
-  });
-  // 목록 새로 로드
   await loadSympo();
 }
 
