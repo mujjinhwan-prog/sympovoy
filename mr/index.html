@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-09-22-b">
+<meta name="app-build" content="2026-09-22-c">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -84,6 +84,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .nb-dist{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;
   background:var(--surface2);color:var(--muted);white-space:nowrap;}
 .nb-actions{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.nb-cat{font-size:11px;color:var(--muted);white-space:nowrap;}
+.nb-cat::before{content:'·';margin-right:5px;}
+.nb-hl{font-size:12px;font-weight:700;color:var(--accent);margin-top:4px;line-height:1.4;word-break:keep-all;}
 
 /* ===================================================================
    심포지엄 리스트 — 화이트톤 엔터프라이즈 스타일
@@ -551,6 +554,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <input id="tipPhone" placeholder="예) 02-820-1231">
     </div>
     <div class="form-group">
+      <label id="hlLabel">대표 메뉴 <span style="font-size:10px;color:var(--muted)">(1~2가지 · 다른 MR 에게도 공유됩니다)</span></label>
+      <input id="tipHighlight" maxlength="40" placeholder="예) 짬뽕, 탕수육">
+      <div id="hlShared" style="font-size:11px;color:var(--accent);margin-top:5px;display:none"></div>
+    </div>
+    <div class="form-group">
       <label>소개 팁</label>
       <textarea id="tipText" rows="2" placeholder="예) 물회가 정말 맛있어요! 점심에 가세요 🐟"></textarea>
     </div>
@@ -893,6 +901,20 @@ let _nbCache={};          // '유형_반경' → 결과 (같은 세션에서 탭
 
 const NB_ICON={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 const NB_LABEL={restaurant:'맛집',cafe:'디저트',attraction:'명소',shopping:'쇼핑'};
+// 대표 정보 입력칸 — 유형별 문구
+const HL_META={
+  restaurant:{icon:'🍴',label:'대표 메뉴',ph:'예) 짬뽕, 탕수육'},
+  cafe:      {icon:'🍰',label:'대표 메뉴',ph:'예) 소금빵, 크루아상'},
+  attraction:{icon:'ℹ️',label:'한 줄 소개',ph:'예) 한강 야경이 좋은 산책로'},
+  shopping:  {icon:'🏷️',label:'대표 브랜드',ph:'예) 나이키, 무신사'}
+};
+const hlMeta=t=>HL_META[t]||HL_META.restaurant;
+// 장소 식별키 — 구글 ID 우선, 없으면 이름|주소
+function placeKey(p){
+  if(p.gid) return p.gid;
+  return 'n:'+String(p.name||'').replace(/\s/g,'')+'|'+String(p.addr||'').replace(/\s/g,'');
+}
+let _placeNotes={};   // place_key → note
 
 function setRadius(r){
   _nbRadius=r;
@@ -931,6 +953,7 @@ async function loadNearby(force){
   const key=_nbType+'_'+_nbRadius;
   if(!force && _nbCache[key]){
     _nbData=_nbCache[key];
+    await loadPlaceNotes(_nbData.map(x=>x.id).filter(Boolean));
     renderNearby(true);
     return;
   }
@@ -950,11 +973,21 @@ async function loadNearby(force){
     }
     _nbData=data.items||[];
     _nbCache[key]=_nbData;
+    await loadPlaceNotes(_nbData.map(x=>x.id).filter(Boolean));
     renderNearby(data.cached);
   }catch(e){
     console.error(e);
     el.innerHTML='<div style="font-size:12px;color:var(--red);padding:14px 2px">오류: '+e.message+'</div>';
   }
+}
+
+async function loadPlaceNotes(keys){
+  if(!keys||!keys.length) return;
+  try{
+    const {data,error}=await sb.from('place_notes').select('place_key,note').in('place_key',keys);
+    if(error){console.warn('[place_notes]',error);return;}
+    (data||[]).forEach(r=>{_placeNotes[r.place_key]=r.note;});
+  }catch(e){console.warn('[place_notes]',e);}
 }
 
 function renderNearby(fromCache){
@@ -980,7 +1013,9 @@ function renderNearby(fromCache){
             +(p.reviews?'<span>리뷰 '+p.reviews.toLocaleString()+'</span>':'')
             +'<span class="nb-dist" title="직선거리 — 실제 이동 거리는 더 길 수 있습니다">직선 '+fmtDist(p.dist)+'</span>'
             +(p.badge?'<span class="nb-badge">🌟 '+(p.badgeNote||'추천')+'</span>':'')
+            +(p.cat?'<span class="nb-cat">'+p.cat+'</span>':'')
           +'</div>'
+          +(_placeNotes[p.id]?'<div class="nb-hl">'+hlMeta(_nbType).icon+' '+_placeNotes[p.id]+'</div>':'')
           +(p.addr?'<div class="nb-addr">'+p.addr+'</div>':'')
         +'</div>'
         +'<div class="nb-actions">'
@@ -1016,8 +1051,10 @@ async function addFromNearby(idx){
     }catch(e){console.warn('[photo]',e);}
   }
 
+  const sel=document.getElementById('placeType');
+  if(sel) sel.value=_nbType;          // 모달 문구가 유형을 따르도록 먼저 맞춤
+  window._pendingGid=p.id||'';
   openTipModal(p.name,p.lat,p.lng,p.addr,thumb,p.cat,p.link);
-  // 유형은 현재 선택된 주변검색 유형을 따름
   if(pendingPlace) pendingPlace.type=_nbType;
   if(p.phone) document.getElementById('tipPhone').value=p.phone;
 }
@@ -1159,10 +1196,22 @@ async function searchPlace(loadMore){
 }
 
 function openTipModal(name,lat,lng,addr,thumb,cat,link){
-  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',type:document.getElementById('placeType').value};
+  pendingPlace={name,lat:parseFloat(lat),lng:parseFloat(lng),addr,thumb,cat,link:link||'',
+    type:document.getElementById('placeType').value,gid:window._pendingGid||''};
+  window._pendingGid='';
   document.getElementById('tipPlaceName').textContent='📍 '+name;
   document.getElementById('tipPhone').value='';
   document.getElementById('tipText').value='';
+  // 대표 메뉴·특징 — 유형별 문구와 기존 공유값
+  const m=hlMeta(pendingPlace.type);
+  document.getElementById('hlLabel').innerHTML=m.label+' <span style="font-size:10px;color:var(--muted)">(1~2가지 · 다른 MR 에게도 공유됩니다)</span>';
+  const hl=document.getElementById('tipHighlight');
+  hl.placeholder=m.ph;
+  const shared=_placeNotes[placeKey(pendingPlace)]||'';
+  hl.value=shared;
+  const sh=document.getElementById('hlShared');
+  sh.style.display=shared?'block':'none';
+  sh.textContent=shared?'✓ 다른 MR 이 입력해둔 정보입니다. 필요하면 고쳐주세요.':'';
   document.getElementById('imgUrl').value=thumb||'';
   document.getElementById('imgPreview').innerHTML=thumb?`<img src="${thumb}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`:'';
   document.getElementById('imgUrl').oninput=function(){
@@ -1173,8 +1222,26 @@ function openTipModal(name,lat,lng,addr,thumb,cat,link){
   document.getElementById('placeSearch').value='';
 }
 
+async function savePlaceNote(p){
+  const note=(p.highlight||'').trim();
+  if(!note) return;
+  const key=placeKey(p);
+  if(_placeNotes[key]===note) return;          // 바뀐 게 없으면 저장 생략
+  _placeNotes[key]=note;
+  try{
+    const {error}=await sb.from('place_notes').upsert({
+      place_key:key, place_name:p.name, place_type:p.type, note,
+      updated_by:currentIntroducer?currentIntroducer.id:null,
+      updated_at:new Date().toISOString()
+    },{onConflict:'place_key'});
+    if(error) console.warn('[place_notes save]',error);
+  }catch(e){console.warn('[place_notes save]',e);}
+}
+
 function confirmAddPlace(){
   if(!pendingPlace)return;
+  pendingPlace.highlight=document.getElementById('tipHighlight').value.trim();
+  savePlaceNote(pendingPlace);   // 공유 — 기다리지 않음
   pendingPlace.tip=document.getElementById('tipText').value.trim();
   pendingPlace.phone=document.getElementById('tipPhone').value.trim();
   const manualImg=document.getElementById('imgUrl').value.trim();
@@ -1289,6 +1356,7 @@ function updatePreview(){
       +'<div style="padding:8px 10px 10px">'
       +'<div style="font-size:13px;font-weight:'+t.titleFont+';color:'+t.text+';margin-bottom:3px">'+(typeIcon[p.type]||'📍')+' '+p.name+'</div>'
       +(p.addr?'<div style="font-size:10px;color:'+t.sub+';line-height:1.45">'+p.addr+'</div>':'')
+      +(p.highlight?'<div style="font-size:11px;font-weight:700;color:'+col+';margin-top:4px">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
       +(p.tip?'<div style="font-size:10px;color:'+t.sub+';margin-top:4px">💬 '+p.tip+'</div>':'')
       +'</div></div>';
   }).join('');
@@ -1353,7 +1421,7 @@ async function saveInviteLocations(invId,places){
   const rows=uniq.map(p=>({
     invite_id:invId,place_name:p.name,place_lat:p.lat,place_lng:p.lng,
     address:p.addr,place_type:p.type,tip:p.tip||null,phone:p.phone||null,
-    photo_url:p.thumb||null,place_link:p.link||null
+    photo_url:p.thumb||null,place_link:p.link||null,highlight:p.highlight||null
   }));
   const {error:insErr}=await sb.from('invite_locations').insert(rows);
   if(insErr){
@@ -1453,6 +1521,7 @@ function printInviteCard(){
       +'<div style="font-size:22px;font-weight:900;color:#1d2226;margin-bottom:6px">'+p.name+'</div>'
       +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
       +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
+      +(p.highlight?'<div style="font-size:13px;font-weight:700;color:#146b45;margin-top:6px">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
       +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
       +'</div>';
   }).join('');
@@ -1636,7 +1705,7 @@ async function editInvite(invId){
 
   // STEP1 심포지엄 선택 상태로 설정
   selectedSympo=pkg.journeys;
-  addedPlaces=(locs||[]).map(l=>({name:l.place_name,lat:l.place_lat,lng:l.place_lng,addr:l.address||'',type:l.place_type||'restaurant',tip:l.tip||'',phone:l.phone||'',thumb:l.photo_url||'',link:l.place_link||'',cat:''}));
+  addedPlaces=(locs||[]).map(l=>({name:l.place_name,lat:l.place_lat,lng:l.place_lng,addr:l.address||'',type:l.place_type||'restaurant',tip:l.tip||'',phone:l.phone||'',thumb:l.photo_url||'',link:l.place_link||'',cat:'',highlight:l.highlight||''}));
 
   // 수정 모드 활성화
   window._editInviteId=invId;
