@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SymForYou Admin</title>
-<meta name="app-build" content="2026-09-23-b">
+<meta name="app-build" content="2026-09-23-c">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -141,7 +141,7 @@ tbody tr:hover td{background:var(--surface2);}
 .wm-p{position:relative;display:inline-block;padding:0 .03em;}
 .wm-p i{position:relative;z-index:1;font-style:normal;font-weight:900;}
 .wm-p::before{content:'';position:absolute;z-index:0;
-    left:.24em;top:-.30em;width:.92em;height:1.14em;}
+    left:.62em;top:-.26em;width:1.02em;height:1.10em;}
 .wm-p1::before{background:#008000;}   /* 녹색 */
 .wm-p2::before{background:#808080;}   /* 진회색 */
 .wm-p3::before{background:#c0c0c0;}   /* 연회색 */
@@ -214,9 +214,34 @@ tbody tr:hover td{background:var(--surface2);}
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="logo"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
-    <p class="sub">관리자 전용 페이지</p>
-    <input type="password" id="pwInput" placeholder="관리자 비밀번호" class="mb12" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
+    <p class="sub" id="loginSub">관리자 전용 페이지</p>
+
+    <div id="loginNormal">
+      <input type="password" id="pwInput" placeholder="관리자 비밀번호" class="mb12" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
+    </div>
+
+    <div id="loginSetup" style="display:none">
+      <input type="password" id="pwNew1" placeholder="새 비밀번호 (8자 이상)" class="mb12">
+      <input type="password" id="pwNew2" placeholder="비밀번호 확인" class="mb12" onkeydown="if(event.key==='Enter')setupPw()">
+      <button class="btn btn-primary btn-full" onclick="setupPw()">비밀번호 설정</button>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6">
+        이 기기뿐 아니라 모든 관리자에게 적용됩니다.<br>잊어버리면 Supabase 에서 초기화해야 합니다.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 -->
+<div class="modal-bg" id="pwModal">
+  <div class="modal">
+    <div class="modal-head">🔒 관리자 비밀번호 변경</div>
+    <div class="form-group"><label>현재 비밀번호</label><input type="password" id="pwCur"></div>
+    <div class="form-group"><label>새 비밀번호 (8자 이상)</label><input type="password" id="pwCh1"></div>
+    <div class="form-group"><label>새 비밀번호 확인</label><input type="password" id="pwCh2"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('pwModal')">취소</button>
+      <button class="btn btn-primary btn-sm" onclick="changePw()">변경</button>
+    </div>
   </div>
 </div>
 
@@ -234,6 +259,7 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="nav-item" data-page="visits" onclick="showPage(this)">📍 방문 인증</div>
     <div class="nav-item" data-page="items" onclick="showPage(this)">💊 품목 관리</div>
     <div class="nav-item" data-page="db" onclick="showPage(this)">📋 전체 DB</div>
+    <div class="nav-item" onclick="openModal('pwModal')" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">🔒 비밀번호 변경</div>
     </div>
 
   <div class="main">
@@ -438,7 +464,6 @@ tbody tr:hover td{background:var(--surface2);}
 <script>
 const SB_URL='https://wrjpvzjdhmntitxmoywa.supabase.co';
 const SB_KEY='sb_publishable_c0QHq67tURENWky-xtZN8g_908ti9K1';
-const ADMIN_PW='yuhan2026';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 let selectedHotel=null;
 
@@ -448,14 +473,74 @@ function toast(msg,ok=true){
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-function doLogin(){
-  if(document.getElementById('pwInput').value===ADMIN_PW){
-    document.getElementById('loginWrap').style.display='none';
-    document.getElementById('app').style.display='block';
-    loadDashboard();
-  } else { toast('비밀번호 오류',false); }
+// ===== 관리자 비밀번호 =====
+// 비밀번호 자체는 저장하지 않고 SHA-256 해시만 app_settings 에 둡니다.
+async function sha256(txt){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(txt));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+async function getAdminHash(){
+  const {data,error}=await sb.from('app_settings').select('value').eq('key','admin_pw').limit(1);
+  if(error){console.error('[app_settings]',error);return undefined;}
+  return (data&&data[0])?data[0].value:null;   // null = 아직 미설정
+}
+function enterAdmin(){
+  sessionStorage.setItem('admin_ok','1');
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadDashboard();
+}
+
+// 첫 화면 — 비밀번호가 없으면 설정 모드로
+async function initLogin(){
+  const h=await getAdminHash();
+  if(h===undefined){toast('DB 연결 오류 — app_settings 테이블을 확인하세요',false);return;}
+  const setup=(h===null);
+  document.getElementById('loginNormal').style.display=setup?'none':'block';
+  document.getElementById('loginSetup').style.display=setup?'block':'none';
+  document.getElementById('loginSub').textContent=setup?'최초 접속 — 관리자 비밀번호를 설정하세요':'관리자 전용 페이지';
+  if(!setup&&sessionStorage.getItem('admin_ok')==='1') enterAdmin();
+}
+
+async function setupPw(){
+  const a=document.getElementById('pwNew1').value, b=document.getElementById('pwNew2').value;
+  if(a.length<8){toast('8자 이상으로 정해주세요',false);return;}
+  if(a!==b){toast('두 비밀번호가 다릅니다',false);return;}
+  const {error}=await sb.from('app_settings').upsert(
+    {key:'admin_pw',value:await sha256(a),updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error){console.error(error);toast('저장 실패: '+error.message,false);return;}
+  toast('비밀번호가 설정되었습니다');
+  enterAdmin();
+}
+
+async function doLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(!pw){toast('비밀번호를 입력하세요',false);return;}
+  const h=await getAdminHash();
+  if(h===undefined){toast('DB 연결 오류',false);return;}
+  if(h===null){initLogin();return;}
+  if(await sha256(pw)===h) enterAdmin();
+  else toast('비밀번호 오류',false);
+}
+
+async function changePw(){
+  const cur=document.getElementById('pwCur').value;
+  const a=document.getElementById('pwCh1').value, b=document.getElementById('pwCh2').value;
+  const h=await getAdminHash();
+  if(h===undefined){toast('DB 연결 오류',false);return;}
+  if(await sha256(cur)!==h){toast('현재 비밀번호가 맞지 않습니다',false);return;}
+  if(a.length<8){toast('새 비밀번호는 8자 이상',false);return;}
+  if(a!==b){toast('새 비밀번호가 서로 다릅니다',false);return;}
+  const {error}=await sb.from('app_settings').upsert(
+    {key:'admin_pw',value:await sha256(a),updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error){console.error(error);toast('변경 실패: '+error.message,false);return;}
+  ['pwCur','pwCh1','pwCh2'].forEach(i=>document.getElementById(i).value='');
+  closeModal('pwModal');
+  toast('비밀번호가 변경되었습니다');
+}
+
 document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+initLogin();
 
 function showPage(el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
