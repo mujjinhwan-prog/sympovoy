@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-09-22-b">
+<meta name="app-build" content="2026-09-22-a">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--bg:#f4f5f6;--surface:#ffffff;--surface2:#eef0f2;--accent:#146b45;--accent2:#0b4b30;--green:#15804f;--red:#b3261e;--yellow:#5f6b72;--text:#1d2226;--muted:#6b737a;--border:#e1e4e7;--radius:14px;}
+:root{--bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:14px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
 /* 로그인 */
@@ -77,10 +77,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .nb-body{flex:1;min-width:0;}
 .nb-name{font-size:13px;font-weight:800;line-height:1.35;word-break:keep-all;}
 .nb-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px;font-size:11px;color:var(--muted);}
-.nb-star{color:var(--accent);font-weight:800;}
+.nb-star{color:#e8a13a;font-weight:800;}
 .nb-addr{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;word-break:keep-all;}
 .nb-badge{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;
-  background:var(--text);color:var(--surface);white-space:nowrap;}
+  background:rgba(200,30,60,.12);color:#c81e3c;white-space:nowrap;}
 .nb-dist{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;
   background:var(--surface2);color:var(--muted);white-space:nowrap;}
 .nb-actions{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
@@ -118,7 +118,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   font-variant-numeric:tabular-nums;}
 .srow-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;}
 .bd-up{background:rgba(20,107,69,.10);color:var(--accent);}
-.bd-soon{background:var(--accent);color:#fff;}
+.bd-soon{background:rgba(179,38,30,.10);color:var(--red);}
 .bd-done{background:var(--surface2);color:var(--muted);}
 .srow-name{font-size:14px;font-weight:800;color:var(--text);flex:1;min-width:0;
   line-height:1.35;word-break:keep-all;}
@@ -187,8 +187,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 초대장 미리보기 */
 .preview-wrap{border-radius:var(--radius);overflow:hidden;margin:16px 0;}
 .preview-c1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#fff;padding:28px;}
-.preview-c2{background:linear-gradient(135deg,#f7f8f9,#eceef0);color:#1d2226;padding:28px;border:2px solid #5f6b72;}
-.preview-c3{background:linear-gradient(135deg,#f2f7f3,#e6efe8);color:#1d2226;padding:28px;border-left:5px solid #146b45;}
+.preview-c2{background:linear-gradient(135deg,#f8f6ee,#efeada);color:#13191b;padding:28px;border:2px solid #8f7320;}
+.preview-c3{background:linear-gradient(135deg,#f2f7f3,#e6efe8);color:#13191b;padding:28px;border-left:5px solid #146b45;}
 .preview-hotel{font-size:22px;font-weight:900;margin-bottom:4px;}
 .preview-date{font-size:13px;opacity:.7;margin-bottom:12px;}
 .preview-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
@@ -205,7 +205,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .concept-icon{font-size:28px;margin-bottom:6px;}
 .concept-swatch{height:38px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:-.2px;}
 .sw1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#4fd18c;}
-.sw2{background:linear-gradient(135deg,#2a2f33,#6b737a);color:#eceef0;}
+.sw2{background:linear-gradient(135deg,#2c3020,#7d8447);color:#f0ecd8;}
 .sw3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#ffffff;}
 .concept-title{font-size:13px;font-weight:800;}
 .concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -218,7 +218,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 /* 배지 */
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
 .badge-green{background:rgba(20,107,69,.16);color:var(--green);}
-.badge-yellow{background:rgba(95,107,114,.12);color:var(--yellow);}
+.badge-yellow{background:rgba(143,115,32,.12);color:var(--yellow);}
 .badge-blue{background:rgba(20,107,69,.10);color:var(--accent);}
 .badge-red{background:rgba(179,38,30,.10);color:var(--red);}
 
@@ -244,23 +244,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 
 /* 인쇄용 초대장 스타일 */
 .print-page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm;background:#fff;font-family:'Apple SD Gothic Neo',sans-serif;}
-.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1d2226;}
-.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#1d2226;}
+.print-header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #13191b;}
+.print-logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:#13191b;}
 .print-logo span{color:#146b45;}
-.print-hotel{font-size:28px;font-weight:900;color:#1d2226;margin:16px 0 6px;}
+.print-hotel{font-size:28px;font-weight:900;color:#13191b;margin:16px 0 6px;}
 .print-date{font-size:14px;color:#666;margin-bottom:4px;}
 .print-sympo{font-size:16px;font-weight:700;color:#146b45;margin-bottom:16px;}
 .print-section{margin-bottom:20px;}
-.print-section-title{font-size:14px;font-weight:800;color:#1d2226;border-left:4px solid #146b45;padding-left:10px;margin-bottom:12px;}
+.print-section-title{font-size:14px;font-weight:800;color:#13191b;border-left:4px solid #146b45;padding-left:10px;margin-bottom:12px;}
 .print-agenda-img{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #eee;}
 .print-places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.print-place-item{border:1px solid #e1e4e7;border-radius:8px;overflow:hidden;}
-.print-place-icon{width:100%;height:60px;background:#f4f5f6;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.print-place-item{border:1px solid #e2e5f0;border-radius:8px;overflow:hidden;}
+.print-place-icon{width:100%;height:60px;background:#f5f6fa;display:flex;align-items:center;justify-content:center;font-size:28px;}
 .print-place-info{padding:8px 10px;}
-.print-place-name{font-size:12px;font-weight:800;color:#1d2226;}
+.print-place-name{font-size:12px;font-weight:800;color:#13191b;}
 .print-place-addr{font-size:10px;color:#999;margin-top:2px;}
 .print-place-tip{font-size:10px;color:#146b45;margin-top:3px;}
-.print-msg{background:#f4f5f6;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #146b45;}
+.print-msg{background:#f5f6fa;border-radius:8px;padding:14px;font-size:13px;color:#555;margin-bottom:16px;border-left:3px solid #146b45;}
 .print-footer{text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;}
 
 @media(max-width:600px){
@@ -270,9 +270,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 }
 
 /* ===== 라이트 모드 ===== */
-:root[data-theme="light"]{--bg:#f4f5f6;--surface:#ffffff;--surface2:#eef0f2;--accent:#146b45;--accent2:#0b4b30;--green:#15804f;--red:#b3261e;--yellow:#5f6b72;--text:#1d2226;--muted:#6b737a;--border:#e1e4e7;--radius:12px;}
+:root[data-theme="light"] {
+  --bg:#f2f4f2;--surface:#ffffff;--surface2:#e8ece8;
+  --accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;
+  --text:#13191b;--muted:#6a746f;--border:#dae0da;--radius:12px;
+}
 /* ===== 다크 모드 ===== */
-:root[data-theme="dark"]{--bg:#111315;--surface:#191c1f;--surface2:#22262a;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#9aa1a7;--text:#e8eaec;--muted:#98a0a6;--border:#2d3237;--radius:12px;}
+:root[data-theme="dark"] {
+  --bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;
+  --accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;
+  --text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:12px;
+}
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
 
@@ -283,17 +291,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
 /* ===== 워드마크 SympoYooHoo =====
-   나머지 글자는 아주 밝은 그레이(#eceef0).
+   나머지 글자는 아주 밝은 그레이(#e8ece8).
    라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
 .wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
-    color:#eceef0;background:#1d2226;border-radius:9px;padding:3px 10px 4px;
+    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
     line-height:1.15;white-space:nowrap;}
 .wm i{font-style:normal;font-weight:900;}
 .wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
 .wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
 
 /* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
-:root[data-theme="dark"] .wm{background:#22262a;color:#eceef0;}
+:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
 
 /* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
 .wm.on-dark{background:transparent;padding:0;}
@@ -465,8 +473,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
             <div class="concept-desc">격식있는 고급스러운 분위기</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,2)">
-            <div class="concept-swatch sw2">Aa 모노 그레이</div>
-            <div class="concept-title">모노 그레이</div>
+            <div class="concept-swatch sw2">Aa 웜 올리브</div>
+            <div class="concept-title">웜 올리브</div>
             <div class="concept-desc">따뜻하고 환영하는 느낌</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,3)">
@@ -1244,21 +1252,21 @@ function selectConcept(el,c){
 const CONCEPTS={
   1:{name:'딥 그린',
      header:'linear-gradient(135deg,#0e1512,#1f4030)', headerText:'#ffffff',
-     page:'#131618', text:'#e8eaec', sub:'#98a0a6',
-     accent:'#4fd18c', line:'#2d3237',
+     page:'#0f1512', text:'#e7ece8', sub:'#9aa8a0',
+     accent:'#4fd18c', line:'#2a352e',
      msgBg:'rgba(79,209,140,.10)', cardBg:'rgba(255,255,255,.04)',
      radius:'16px', titleFont:'900'},
-  2:{name:'모노 그레이',
-     header:'linear-gradient(135deg,#2a2f33,#6b737a)', headerText:'#ffffff',
-     page:'#f7f8f9', text:'#1d2226', sub:'#6b737a',
-     accent:'#3a4247', line:'#e1e4e7',
-     msgBg:'rgba(58,66,71,.07)', cardBg:'#ffffff',
+  2:{name:'웜 올리브',
+     header:'linear-gradient(135deg,#2c3020,#7d8447)', headerText:'#ffffff',
+     page:'#f8f6ee', text:'#20241a', sub:'#6b6a55',
+     accent:'#6b7f3a', line:'#ddd7c2',
+     msgBg:'rgba(125,132,71,.10)', cardBg:'#fffdf6',
      radius:'4px', titleFont:'800'},
   3:{name:'클린 그린',
      header:'linear-gradient(135deg,#10402b,#2f8a5c)', headerText:'#ffffff',
-     page:'#ffffff', text:'#1d2226', sub:'#6b737a',
-     accent:'#146b45', line:'#e1e4e7',
-     msgBg:'rgba(20,107,69,.07)', cardBg:'#f7f9f8',
+     page:'#ffffff', text:'#13191b', sub:'#5f6b64',
+     accent:'#146b45', line:'#e2e9e3',
+     msgBg:'rgba(20,107,69,.07)', cardBg:'#f5f9f6',
      radius:'12px', titleFont:'900'}
 };
 function currentTheme(){return CONCEPTS[selectedConcept]||CONCEPTS[1];}
@@ -1272,11 +1280,11 @@ function updatePreview(){
   const t=currentTheme();
   const msg=document.getElementById('customMsg').value;
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
-  const typeColors={restaurant:'#146b45',cafe:'#3f8f63',attraction:'#5f6b72',shopping:'#2b3033'};
+  const typeColors={restaurant:'#146b45',cafe:'#5f7434',attraction:'#38574f',shopping:'#2b3133'};
   const typeIcon={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 
   // 컨셉 1은 어두운 배경이라 타입 색을 밝은 톤으로 교체
-  const darkTypeColors={restaurant:'#5cc994',cafe:'#7fcf9f',attraction:'#a3adb3',shopping:'#c3c9cd'};
+  const darkTypeColors={restaurant:'#5cc994',cafe:'#a6c069',attraction:'#7fa8a0',shopping:'#aab3b0'};
   const tc=(selectedConcept===1)?darkTypeColors:typeColors;
 
   const placesHtml=addedPlaces.map(p=>{
@@ -1439,18 +1447,18 @@ function printInviteCard(){
   // 인쇄는 흰 종이 기준이므로 헤더 그라데이션만 컨셉을 따르고 본문은 밝은 톤 유지
   const PRINT_THEME={
     1:{header:'linear-gradient(135deg,#0e1512,#1f4030)',headerText:'#ffffff',printAccent:'#1f4030',msgBg:'#eef3f0'},
-    2:{header:'linear-gradient(135deg,#2a2f33,#6b737a)',headerText:'#ffffff',printAccent:'#3a4247',msgBg:'#f1f3f4'},
+    2:{header:'linear-gradient(135deg,#2c3020,#7d8447)',headerText:'#ffffff',printAccent:'#5f7434',msgBg:'#f6f4e9'},
     3:{header:'linear-gradient(135deg,#10402b,#2f8a5c)',headerText:'#ffffff',printAccent:'#146b45',msgBg:'#eef5f0'}
   };
   const PT=PRINT_THEME[selectedConcept]||PRINT_THEME[1];
 
-  const typeColors={restaurant:'#14663f',cafe:'#3f8f63',attraction:'#5f6b72',shopping:'#2b3033'};
+  const typeColors={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
   const typeLabel={restaurant:'맛집',cafe:'디저트',attraction:'명소',shopping:'쇼핑'};
 
   const placesHtml=addedPlaces.map(p=>{
     const color=typeColors[p.type]||'#333';
     return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
-      +'<div style="font-size:22px;font-weight:900;color:#1d2226;margin-bottom:6px">'+p.name+'</div>'
+      +'<div style="font-size:22px;font-weight:900;color:#13191b;margin-bottom:6px">'+p.name+'</div>'
       +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
       +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
       +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
@@ -1464,10 +1472,10 @@ function printInviteCard(){
   const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SympoYooHoo 초대장</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
-    +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#1d2226;}'
+    +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#13191b;}'
     +'.page{width:190mm;margin:0 auto;padding:12mm 14mm;}'
     +'.title-box{background:'+PT.header+';color:'+PT.headerText+';text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
-    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #1d2226;}'
+    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #13191b;}'
     +'.hotel-name{font-size:28px;font-weight:900;margin-bottom:5px;}'
     +'.hotel-date{font-size:13px;color:#555;margin-bottom:4px;}'
     +'.hotel-sympo{font-size:15px;font-weight:700;color:'+PT.printAccent+';}'
@@ -1554,7 +1562,7 @@ async function loadItems(){
             <div style="font-size:14px;font-weight:700;flex:1">💊 ${i.item_name}</div>
             <div style="display:flex;gap:4px;flex-shrink:0">
               <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
-              <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
+              <button class="btn btn-sm" style="background:rgba(143,115,32,.14);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
               <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
             </div>
           </div>`).join('')}
@@ -1594,7 +1602,7 @@ async function loadSentInvites(){
     const u=p.users||{};
     const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
     const places=locMap[p.id]||[];
-    const cColors={1:'#1f4030',2:'#6b737a',3:'#2f8a5c'};
+    const cColors={1:'#1f4030',2:'#7d8447',3:'#2f8a5c'};
     return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
       <div style="background:${cColors[p.concept]||'#146b45'};padding:10px 14px;color:#fff">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1764,7 +1772,7 @@ async function showUserDetail(userId){
             ?`<span class="badge badge-green">${i.approved_score||0}점 ✅</span>`
             :`<div style="display:flex;gap:4px">
                 <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
-                <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
+                <button class="btn btn-sm" style="background:rgba(143,115,32,.14);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
                 <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1점</button>
               </div>`
           }
