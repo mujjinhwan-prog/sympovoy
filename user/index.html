@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SympoYooHoo user</title>
-<meta name="app-build" content="2026-09-21-a">
+<meta name="app-build" content="2026-09-22-b">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-:root{--bg:#f4f6f7;--surface:#ffffff;--surface2:#eef1f2;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#18211d;--muted:#6d7a75;--border:#e3e8e9;--radius:14px;}
-:root[data-theme="dark"]{--bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;--text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:14px;}
+:root{--bg:#f4f5f6;--surface:#ffffff;--surface2:#eef0f2;--accent:#146b45;--accent2:#0b4b30;--green:#15804f;--red:#b3261e;--yellow:#5f6b72;--text:#1d2226;--muted:#6b737a;--border:#e1e4e7;--radius:14px;}
+:root[data-theme="dark"]{--bg:#111315;--surface:#191c1f;--surface2:#22262a;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#9aa1a7;--text:#e8eaec;--muted:#98a0a6;--border:#2d3237;--radius:14px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d0b,#17251d);}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#16191c,#173826);}
 .login-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px 24px;width:100%;max-width:380px;}
 .login-logo{text-align:center;margin-bottom:10px;}
 .login-logo img{width:70px;height:70px;border-radius:50%;border:3px solid rgba(255,255,255,.2);}
@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .login-btn{width:100%;background:#4fbf85;border:none;border-radius:12px;padding:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;}
 .login-hint{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:12px;line-height:1.6;}
 
-.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0a0d0b,#17251d);flex-direction:column;text-align:center;}
+.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#16191c,#173826);flex-direction:column;text-align:center;}
 .pend-icon{font-size:60px;margin-bottom:14px;animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .pend-info{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 18px;margin-bottom:18px;width:100%;max-width:320px;text-align:left;}
@@ -67,25 +67,25 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .back-btn{display:flex;align-items:center;gap:7px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px solid var(--border);background:var(--surface);}
 .hotel-hero{border-radius:var(--radius);padding:22px 18px;margin:12px 14px;position:relative;overflow:hidden;}
 .hotel-hero.c1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#fff;}
-.hotel-hero.c2{background:linear-gradient(135deg,#2c3020,#7d8447);color:#fff;}
+.hotel-hero.c2{background:linear-gradient(135deg,#2a2f33,#6b737a);color:#fff;}
 .hotel-hero.c3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#fff;}
-.hotel-hero.past{background:linear-gradient(135deg,#383e3a,#616964);color:#fff;}
+.hotel-hero.past{background:linear-gradient(135deg,#3a3f44,#646b71);color:#fff;}
 
 /* ===== 초대장 컨셉 테마 — 히어로 아래 카드까지 전체에 적용 ===== */
 .invite-theme{--ic:var(--accent);--ic-soft:rgba(20,107,69,.08);}
 .invite-theme.ic1{--ic:#2f8a5c;--ic-soft:rgba(47,138,92,.10);}
-.invite-theme.ic2{--ic:#7d8447;--ic-soft:rgba(125,132,71,.12);}
+.invite-theme.ic2{--ic:#3a4247;--ic-soft:rgba(58,66,71,.08);}
 .invite-theme.ic3{--ic:#146b45;--ic-soft:rgba(20,107,69,.09);}
 :root[data-theme="dark"] .invite-theme.ic1{--ic:#4fd18c;}
-:root[data-theme="dark"] .invite-theme.ic2{--ic:#a6c069;}
+:root[data-theme="dark"] .invite-theme.ic2{--ic:#b8c0c6;}
 :root[data-theme="dark"] .invite-theme.ic3{--ic:#4fbf85;}
-.invite-theme.icpast{--ic:#7c847f;--ic-soft:rgba(124,132,127,.10);}
+.invite-theme.icpast{--ic:#7c848a;--ic-soft:rgba(107,115,122,.10);}
 
 /* 섹션 제목 앞에 컨셉 색 바 */
 .invite-theme .sec-title::before{content:'';width:5px;height:15px;background:var(--ic);border-radius:3px;flex-shrink:0;}
 /* 카드 상단에 컨셉 색 라인 */
 .invite-theme .card{border-top:3px solid var(--ic);}
-/* 컨셉 2(웜 올리브)는 각진 모서리, 1은 크게 둥글게 — 형태로도 구분 */
+/* 컨셉 2(모노 그레이)는 각진 모서리, 1은 크게 둥글게 — 형태로도 구분 */
 .invite-theme.ic1 .card,.invite-theme.ic1 .place-card{border-radius:18px;}
 .invite-theme.ic2 .card,.invite-theme.ic2 .place-card{border-radius:5px;}
 .invite-theme.ic2 .place-photo-wrap{border-radius:3px;}
@@ -106,15 +106,15 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 /* 추천 장소 */
 /* 타입별 색 — 라이트/다크에서 각각 대비가 확보되도록 CSS 변수로 분리 */
 .pt-restaurant{--pc:#146b45;}
-.pt-cafe{--pc:#5f7434;}
-.pt-attraction{--pc:#38574f;}
-.pt-shopping{--pc:#2b3133;}
-.pt-default{--pc:#5c6663;}
+.pt-cafe{--pc:#3f8f63;}
+.pt-attraction{--pc:#5f6b72;}
+.pt-shopping{--pc:#2b3033;}
+.pt-default{--pc:#6b737a;}
 :root[data-theme="dark"] .pt-restaurant{--pc:#5cc994;}
-:root[data-theme="dark"] .pt-cafe{--pc:#a6c069;}
-:root[data-theme="dark"] .pt-attraction{--pc:#7fa8a0;}
-:root[data-theme="dark"] .pt-shopping{--pc:#aab3b0;}
-:root[data-theme="dark"] .pt-default{--pc:#909a96;}
+:root[data-theme="dark"] .pt-cafe{--pc:#7fcf9f;}
+:root[data-theme="dark"] .pt-attraction{--pc:#a3adb3;}
+:root[data-theme="dark"] .pt-shopping{--pc:#c3c9cd;}
+:root[data-theme="dark"] .pt-default{--pc:#9aa1a7;}
 
 .place-card{border-radius:14px;padding:16px;margin-bottom:12px;border:3px solid var(--pc);}
 .place-card .place-type-label{color:var(--pc);}
@@ -131,7 +131,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .place-tip{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:8px;}
 .place-btns{display:flex;gap:6px;flex-wrap:wrap;}
 .pbtn{padding:7px 12px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
-.pbtn-naver{background:#03c75a;color:#fff;}
+.pbtn-naver{background:var(--accent);color:#fff;}
 .pbtn-nav{background:var(--accent);color:#fff;}
 .pbtn-copy{background:var(--surface2);color:var(--text);border:1.5px solid var(--border);}
 
@@ -171,15 +171,15 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .gps-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;flex-direction:column;align-items:center;justify-content:center;}
 .gps-overlay.show{display:flex;}
 .gps-card{background:#fff;border-radius:28px;padding:32px 24px;text-align:center;width:88%;max-width:320px;}
-.gps-hotel{font-size:15px;font-weight:800;color:#13191b;margin-bottom:3px;}
-.gps-sub{font-size:12px;color:#7b82a0;margin-bottom:22px;line-height:1.5;}
+.gps-hotel{font-size:15px;font-weight:800;color:#1d2226;margin-bottom:3px;}
+.gps-sub{font-size:12px;color:#6b737a;margin-bottom:22px;line-height:1.5;}
 .spin-wrap{position:relative;width:180px;height:180px;margin:0 auto 18px;}
-.spin-ring{position:absolute;inset:0;border-radius:50%;border:3px dashed #e2e5f0;animation:spinRing 3s linear infinite;}
+.spin-ring{position:absolute;inset:0;border-radius:50%;border:3px dashed #e1e4e7;animation:spinRing 3s linear infinite;}
 @keyframes spinRing{to{transform:rotate(360deg);}}
-.spin-logo{position:absolute;top:50%;left:50%;width:130px;height:130px;border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,.2);transform:translate(-50%,-50%);background:#f5f6fa;touch-action:none;}
+.spin-logo{position:absolute;top:50%;left:50%;width:130px;height:130px;border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,.2);transform:translate(-50%,-50%);background:#f4f5f6;touch-action:none;}
 .spin-logo img{width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;}
-.spin-hint{font-size:12px;color:#7b82a0;margin-bottom:12px;}
-.spin-progress{width:100%;height:8px;background:#f0f2f8;border-radius:4px;overflow:hidden;}
+.spin-hint{font-size:12px;color:#6b737a;margin-bottom:12px;}
+.spin-progress{width:100%;height:8px;background:#eef0f2;border-radius:4px;overflow:hidden;}
 .spin-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;width:0%;transition:width .05s;}
 
 /* ===== 도장 꽝 애니메이션 ===== */
@@ -204,7 +204,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .gps-card.stamped .spin-progress,
 .gps-card.stamped .gps-cancel,
 .gps-card.stamped .spin-ring{opacity:0;transition:opacity .3s;}
-.gps-cancel{margin-top:14px;background:none;border:none;color:#7b82a0;font-size:13px;cursor:pointer;font-family:inherit;}
+.gps-cancel{margin-top:14px;background:none;border:none;color:#6b737a;font-size:13px;cursor:pointer;font-family:inherit;}
 
 /* 완료 오버레이 */
 .done-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:600;flex-direction:column;align-items:center;justify-content:center;}
@@ -212,13 +212,13 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .done-card{text-align:center;color:#fff;padding:36px 24px;}
 .done-anim{font-size:80px;margin-bottom:14px;animation:popIn .5s cubic-bezier(.68,-.55,.27,1.55);}
 @keyframes popIn{0%{transform:scale(0);}100%{transform:scale(1);}}
-.done-btn{background:#fff;color:#13191b;border:none;border-radius:14px;padding:13px 36px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:block;width:100%;}
+.done-btn{background:#fff;color:#1d2226;border:none;border-radius:14px;padding:13px 36px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:block;width:100%;}
 .done-skip{background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px;}
 
 /* 폭죽 */
 @keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
 
-.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#13191b;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(40px);background:#1d2226;color:#fff;padding:11px 20px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
 /* ===================================================================
@@ -226,8 +226,8 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
    =================================================================== */
 @media (min-width:600px){
   /* html에 배경을 주어야 body 배경이 캔버스 전체로 번지지 않음 */
-  html{background:#0b0e18;}
-  html[data-theme="dark"]{background:#05070d;}
+  html{background:#1d2226;}
+  html[data-theme="dark"]{background:#111315;}
 
   body{
     width:430px;
@@ -270,22 +270,22 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 /* 넓은 화면에서 프레임 좌우 여백을 살짝 더 어둡게 */
 @media (min-width:1000px){
-  html{background:radial-gradient(circle at 50% 0%,#161b2e 0%,#0b0e18 60%);background-attachment:fixed;}
-  html[data-theme="dark"]{background:radial-gradient(circle at 50% 0%,#0d1120 0%,#05070d 60%);background-attachment:fixed;}
+  html{background:radial-gradient(circle at 50% 0%,#2a2f33 0%,#1d2226 60%);background-attachment:fixed;}
+  html[data-theme="dark"]{background:radial-gradient(circle at 50% 0%,#1a1d20 0%,#111315 60%);background-attachment:fixed;}
 }
 
 /* ===== 워드마크 SympoYooHoo =====
-   나머지 글자는 아주 밝은 그레이(#e8ece8).
+   나머지 글자는 아주 밝은 그레이(#eceef0).
    라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
 .wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
-    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
+    color:#eceef0;background:#1d2226;border-radius:9px;padding:3px 10px 4px;
     line-height:1.15;white-space:nowrap;}
 .wm i{font-style:normal;font-weight:900;}
 .wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
 .wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
 
 /* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
-:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+:root[data-theme="dark"] .wm{background:#22262a;color:#eceef0;}
 
 /* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
 .wm.on-dark{background:transparent;padding:0;}
@@ -320,7 +320,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
   font-variant-numeric:tabular-nums;}
 .srow-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;}
 .bd-up{background:rgba(20,107,69,.10);color:var(--accent);}
-.bd-soon{background:rgba(179,38,30,.10);color:var(--red);}
+.bd-soon{background:var(--accent);color:#fff;}
 .bd-done{background:var(--surface2);color:var(--muted);}
 .srow-name{font-size:14px;font-weight:800;color:var(--text);flex:1;min-width:0;
   line-height:1.35;word-break:keep-all;}
@@ -456,16 +456,16 @@ const SBURL='https://wrjpvzjdhmntitxmoywa.supabase.co';
 const SBKEY='sb_publishable_c0QHq67tURENWky-xtZN8g_908ti9K1';
 const sb=supabase.createClient(SBURL,SBKEY);
 const NAMU='https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png';
-const TCOL={restaurant:'#14663f',cafe:'#6b7f3a',attraction:'#3f5a56',shopping:'#2e3436'};
+const TCOL={restaurant:'#14663f',cafe:'#3f8f63',attraction:'#5f6b72',shopping:'#2b3033'};
 const TLAB={restaurant:'🍽️ 맛집',cafe:'🍰 디저트',attraction:'🏛️ 명소',shopping:'🛍️ 쇼핑'};
 const TICON={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 const TGRAD={
   restaurant:'linear-gradient(135deg,#0d4a30 0%,#2f8a5c 100%)',
-  cafe:'linear-gradient(135deg,#4c5c28 0%,#8ba354 100%)',
-  attraction:'linear-gradient(135deg,#2e4340 0%,#63847f 100%)',
-  shopping:'linear-gradient(135deg,#232829 0%,#5a6462 100%)'
+  cafe:'linear-gradient(135deg,#1f5c3d 0%,#3f8f63 100%)',
+  attraction:'linear-gradient(135deg,#3a4247 0%,#7c868c 100%)',
+  shopping:'linear-gradient(135deg,#2b3033 0%,#5f6b72 100%)'
 };
-const TGRAD_DEF='linear-gradient(135deg,#39413c 0%,#6b7570 100%)';
+const TGRAD_DEF='linear-gradient(135deg,#3a4247 0%,#6b737a 100%)';
 
 let CU=null, CJ=null, allInvites=[], visitId=null;
 let spinActive=false, spinRot=0, spinTotal=0, lastX=0, isDragging=false;
@@ -576,7 +576,7 @@ async function loadAllInvites(){
   const {data:journeys}=await sb.from('journeys').select('*').in('id',jIds);
   const jMap={};(journeys||[]).forEach(j=>jMap[j.id]=j);
   const today=new Date().toISOString().slice(0,10);
-  const bColors=['#146b45','#c17f24','#4fbf85'];
+  const bColors=['#146b45','#6b737a','#4fbf85'];
 
   grid.innerHTML=pkgs.map((p,i)=>{
     const j=jMap[p.journey_id]||{};
@@ -921,7 +921,7 @@ async function completeSpin(){
 }
 
 function launchConfetti(){
-  const cols=['#146b45','#2f8a5c','#5f7434','#8ba354','#1b1f1d','#c9d2cc','#4fbf85'];
+  const cols=['#146b45','#2f8a5c','#3f8f63','#3f8f63','#1d2226','#d5d9dc','#4fbf85'];
   // PC에서는 body가 430px 프레임이므로 폭죽도 프레임 안에서만 떨어지게 함
   const r=document.body.getBoundingClientRect();
   const fLeft=r.left+window.scrollX;
