@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-09-22-b">
+<title>SymForYou Admin</title>
+<meta name="app-build" content="2026-09-23-b">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -130,17 +130,27 @@ tbody tr:hover td{background:var(--surface2);}
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
 
-/* ===== 워드마크 SympoYooHoo =====
-   나머지 글자는 아주 밝은 그레이(#eceef0).
-   라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
-.wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
-    color:#eceef0;background:#1d2226;border-radius:9px;padding:3px 10px 4px;
-    line-height:1.15;white-space:nowrap;}
-.wm i{font-style:normal;font-weight:900;}
-.wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
-.wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
-:root[data-theme="dark"] .wm{background:#22262a;color:#eceef0;}
-.wm.on-dark{background:transparent;padding:0;}
+/* ===== 워드마크 SymForYou =====
+   Sym / For / You 각각 뒤에 색 블록(녹색·진회색·연회색)을 깔고
+   검은 굵은 글씨를 얹은 형태. 크기는 부모의 font-size 를 따라갑니다. */
+.wm{display:inline-flex;flex-direction:column;align-items:center;line-height:1;
+    white-space:nowrap;color:#111418;}
+.wm-row{display:inline-flex;align-items:baseline;
+    font-family:'Arial Black','Arial Rounded MT Bold',Arial,'Apple SD Gothic Neo',sans-serif;
+    font-weight:900;letter-spacing:-.02em;}
+.wm-p{position:relative;display:inline-block;padding:0 .03em;}
+.wm-p i{position:relative;z-index:1;font-style:normal;font-weight:900;}
+.wm-p::before{content:'';position:absolute;z-index:0;
+    left:.24em;top:-.30em;width:.92em;height:1.14em;}
+.wm-p1::before{background:#008000;}   /* 녹색 */
+.wm-p2::before{background:#808080;}   /* 진회색 */
+.wm-p3::before{background:#c0c0c0;}   /* 연회색 */
+.wm-sub{font-weight:800;font-size:.27em;letter-spacing:.02em;margin-top:.22em;
+    font-family:'Arial Black',Arial,'Apple SD Gothic Neo',sans-serif;}
+
+/* 어두운 배경에서는 글자만 흰색으로 — 블록 색은 그대로 */
+:root[data-theme="dark"] .wm{color:#ffffff;}
+.wm.on-dark{color:#ffffff;}
 
 /* ===================================================================
    화이트톤 엔터프라이즈 공통 컴포넌트
@@ -184,6 +194,16 @@ tbody tr:hover td{background:var(--surface2);}
   .filter-item{flex:1 1 46%;} .filter-item select{width:100%;min-width:0;}
   .view-toggle{width:100%;} .view-toggle span{flex:1;text-align:center;}
 }
+
+/* ===== 다크모드 토글 — 화면 구석의 작은 버튼 ===== */
+.theme-fab{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:900;
+  width:34px;height:34px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  font-size:15px;line-height:1;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.10);opacity:.7;transition:opacity .15s,transform .15s;}
+.theme-fab:hover{opacity:1;transform:scale(1.08);border-color:var(--accent);}
+@media print{.theme-fab{display:none;}}
 </style>
 </head>
 <body>
@@ -193,7 +213,7 @@ tbody tr:hover td{background:var(--surface2);}
 <!-- 로그인 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
+    <div class="logo"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
     <p class="sub">관리자 전용 페이지</p>
     <input type="password" id="pwInput" placeholder="관리자 비밀번호" class="mb12" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
@@ -204,7 +224,7 @@ tbody tr:hover td{background:var(--surface2);}
 <div class="app" id="app">
   <div class="sidebar">
     <div class="brand">
-      <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
+      <div class="logo"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
       <small style="color:var(--muted);font-size:11px">관리자</small>
     </div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage(this)">📊 대시보드</div>
@@ -214,7 +234,6 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="nav-item" data-page="visits" onclick="showPage(this)">📍 방문 인증</div>
     <div class="nav-item" data-page="items" onclick="showPage(this)">💊 품목 관리</div>
     <div class="nav-item" data-page="db" onclick="showPage(this)">📋 전체 DB</div>
-  <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
     </div>
 
   <div class="main">
@@ -1139,10 +1158,12 @@ function toggleTheme(){
 }
 function updateThemeBtn(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=isDark?'☀️ 라이트':'🌙 다크');
+  const f=document.getElementById('themeFab');
+  if(f){f.textContent=isDark?'☀️':'🌙';f.title=isDark?'라이트 모드로':'다크 모드로';}
 }
 initTheme();
 
 </script>
+<button class="theme-fab no-print" id="themeFab" onclick="toggleTheme()" title="다크 모드 전환" aria-label="다크 모드 전환">🌙</button>
 </body>
 </html>
