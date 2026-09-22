@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SympoYooHoo MR</title>
-<meta name="app-build" content="2026-09-22-c">
+<title>SymForYou MR</title>
+<meta name="app-build" content="2026-09-23-b">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -285,21 +285,37 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .month-chip:hover{border-color:var(--accent);color:var(--accent);}
 .month-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-/* ===== 워드마크 SympoYooHoo =====
-   나머지 글자는 아주 밝은 그레이(#eceef0).
-   라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
-.wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
-    color:#eceef0;background:#1d2226;border-radius:9px;padding:3px 10px 4px;
-    line-height:1.15;white-space:nowrap;}
-.wm i{font-style:normal;font-weight:900;}
-.wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
-.wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
+/* ===== 워드마크 SymForYou =====
+   Sym / For / You 각각 뒤에 색 블록(녹색·진회색·연회색)을 깔고
+   검은 굵은 글씨를 얹은 형태. 크기는 부모의 font-size 를 따라갑니다. */
+.wm{display:inline-flex;flex-direction:column;align-items:center;line-height:1;
+    white-space:nowrap;color:#111418;}
+.wm-row{display:inline-flex;align-items:baseline;
+    font-family:'Arial Black','Arial Rounded MT Bold',Arial,'Apple SD Gothic Neo',sans-serif;
+    font-weight:900;letter-spacing:-.02em;}
+.wm-p{position:relative;display:inline-block;padding:0 .03em;}
+.wm-p i{position:relative;z-index:1;font-style:normal;font-weight:900;}
+.wm-p::before{content:'';position:absolute;z-index:0;
+    left:.24em;top:-.30em;width:.92em;height:1.14em;}
+.wm-p1::before{background:#008000;}   /* 녹색 */
+.wm-p2::before{background:#808080;}   /* 진회색 */
+.wm-p3::before{background:#c0c0c0;}   /* 연회색 */
+.wm-sub{font-weight:800;font-size:.27em;letter-spacing:.02em;margin-top:.22em;
+    font-family:'Arial Black',Arial,'Apple SD Gothic Neo',sans-serif;}
 
-/* 다크 모드 — 칩을 배경보다 살짝만 띄움 */
-:root[data-theme="dark"] .wm{background:#22262a;color:#eceef0;}
+/* 어두운 배경에서는 글자만 흰색으로 — 블록 색은 그대로 */
+:root[data-theme="dark"] .wm{color:#ffffff;}
+.wm.on-dark{color:#ffffff;}
 
-/* 이미 어두운 배경 위(로그인·승인대기 화면)에서는 칩 없이 글자만 */
-.wm.on-dark{background:transparent;padding:0;}
+/* ===== 다크모드 토글 — 화면 구석의 작은 버튼 ===== */
+.theme-fab{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:900;
+  width:34px;height:34px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  font-size:15px;line-height:1;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.10);opacity:.7;transition:opacity .15s,transform .15s;}
+.theme-fab:hover{opacity:1;transform:scale(1.08);border-color:var(--accent);}
+@media print{.theme-fab{display:none;}}
 </style>
 </head>
 <body>
@@ -309,7 +325,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 <!-- 로그인 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
+    <div class="logo"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
     <p class="logo-sub">MR 전용 페이지</p>
     <div id="step1">
       <div class="form-group"><label>이름</label><input id="lName" placeholder="홍길동" onkeydown="if(event.key==='Enter')checkStep1()"></div>
@@ -331,10 +347,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 <!-- 앱 -->
 <div class="app" id="app">
   <div class="topbar">
-    <div class="logo"><span class="wm"><i class="wm-s">S</i>ympo<i class="wm-y">Y</i>oo<i class="wm-h">H</i>oo</span></div>
+    <div class="logo"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
     <div class="topbar-right">
       <span class="topbar-name" id="topName"></span>
-      <button class="theme-btn no-print" onclick="toggleTheme()">🌙 다크</button>
       <button class="btn btn-ghost btn-sm no-print" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -1016,7 +1031,7 @@ function renderNearby(fromCache){
             +(p.cat?'<span class="nb-cat">'+p.cat+'</span>':'')
           +'</div>'
           +(_placeNotes[p.id]?'<div class="nb-hl">'+hlMeta(_nbType).icon+' '+_placeNotes[p.id]+'</div>':'')
-          +(p.addr?'<div class="nb-addr">'+p.addr+'</div>':'')
+          +(p.addr?'<div class="nb-addr">'+(displayAddress(p.addr)||p.addr)+'</div>':'')
         +'</div>'
         +'<div class="nb-actions">'
           +(already
@@ -1306,6 +1321,64 @@ function selectConcept(el,c){
   updatePreview();
 }
 
+// 주소를 [내비용 도로명 주소] 와 [상세: 건물명·층·호수] 로 나눔
+function splitAddress(raw){
+  if(!raw) return {nav:'',detail:''};
+  let a=String(raw)
+    .replace(/대한민국|South\s*Korea|Republic of Korea/gi,' ')
+    .replace(/^\s*\d{5}\s+/,' ')
+    .replace(/\s+/g,' ').trim();
+
+  const ROAD='[가-힣A-Za-z0-9]+(?:대로|로|길)(?:\\s*\\d+(?:번)?길)?';
+  const FLOOR=/^(?:B?\d+F|B\d+|지하\s*\d+층?|\d+층|\d+호|\d+-\d+호)$/i;
+  const tidy=t=>t.replace(/\s*,\s*/g,', ').replace(/^[,\s]+|[,\s]+$/g,'').replace(/\s+/g,' ').trim();
+
+  // ① 한국식: …도로명 + 번호 | 나머지 = 상세
+  let m=a.match(new RegExp('^(.*?'+ROAD+')\\s*(\\d+(?:-\\d+)?)(?![\\d-])'));
+  if(m){
+    let head=m[1];
+    let pre='';
+    if(head.includes(',')){               // "TP Tower, 서울 …" 처럼 앞에 붙은 건물명
+      const parts=head.split(',');
+      head=parts.pop();
+      pre=parts.join(' ');
+    }
+    head=head.replace(/(^|\s)(?:B?\d+F|지하\s*\d+층|\d+층)(?=\s|$)/gi,' ');
+    const nav=(head.trim()+' '+m[2]).replace(/\s+/g,' ').trim();
+    let rest=a.slice(m[0].length);
+    // 뒤에 딸려온 지번 주소 중복 제거: "서울시 영등포구 여의도동 60"
+    rest=rest.replace(/(?:[가-힣]+(?:특별시|광역시|시|도)\s+)?[가-힣]+구\s+[가-힣0-9]+(?:동|가)\s*\d+(?:-\d+)?(?![\d-]*\s*(?:층|호|F))/g,' ');
+    const detail=tidy([pre,rest].filter(Boolean).join(' '));
+    return {nav,detail};
+  }
+
+  // ② 구글 영어식 역순: "2F, TP Tower, 96 의사당대로 영등포구"
+  const r=a.match(new RegExp('(\\d+(?:-\\d+)?)\\s+('+ROAD+')'));
+  if(r){
+    const city=(a.match(/[가-힣]+(?:특별시|광역시|특별자치시|특별자치도)/)||[''])[0];
+    const gu=(a.match(/[가-힣]+(?:구|군)(?=[\s,]|$)/)||[''])[0];
+    const si=!gu?(a.match(/[가-힣]+시(?=[\s,]|$)/)||[''])[0]:'';
+    const nav=[city,si,gu,r[2],r[1]].filter(Boolean).join(' ');
+    // 도로명이 든 조각을 뺀 나머지 = 상세. 건물명 먼저, 층·호수는 뒤로
+    const segs=a.split(',').map(x=>x.trim()).filter(x=>x && !x.includes(r[2]));
+    const bld=segs.filter(x=>!FLOOR.test(x)), flr=segs.filter(x=>FLOOR.test(x));
+    return {nav,detail:tidy([...bld,...flr].join(' '))};
+  }
+
+  // ③ 지번: …동/가/리 + 번지
+  const j=a.match(/^(.*?[가-힣0-9]+(?:동|가|리|읍|면))\s*(\d+(?:-\d+)?)(?![\d-])/);
+  if(j) return {nav:(j[1]+' '+j[2]).replace(/\s+/g,' ').trim(), detail:tidy(a.slice(j[0].length))};
+
+  return {nav:a,detail:''};
+}
+// 내비 붙여넣기용 — 층·호수·건물명 제외
+function navAddress(raw){ return splitAddress(raw).nav; }
+// 화면 표시용 — 도로명 주소, 건물명 층
+function displayAddress(raw){
+  const {nav,detail}=splitAddress(raw);
+  return detail?nav+', '+detail:nav;
+}
+
 // ===== 초대장 컨셉 테마 =====
 // user 페이지의 .hotel-hero.c1/c2/c3 와 색을 맞춤
 const CONCEPTS={
@@ -1355,7 +1428,7 @@ function updatePreview(){
       +img
       +'<div style="padding:8px 10px 10px">'
       +'<div style="font-size:13px;font-weight:'+t.titleFont+';color:'+t.text+';margin-bottom:3px">'+(typeIcon[p.type]||'📍')+' '+p.name+'</div>'
-      +(p.addr?'<div style="font-size:10px;color:'+t.sub+';line-height:1.45">'+p.addr+'</div>':'')
+      +(p.addr?'<div style="font-size:10px;color:'+t.sub+';line-height:1.45">'+(displayAddress(p.addr)||p.addr)+'</div>':'')
       +(p.highlight?'<div style="font-size:11px;font-weight:700;color:'+col+';margin-top:4px">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
       +(p.tip?'<div style="font-size:10px;color:'+t.sub+';margin-top:4px">💬 '+p.tip+'</div>':'')
       +'</div></div>';
@@ -1380,7 +1453,7 @@ function updatePreview(){
     +(msg?'<div style="background:'+t.msgBg+';border-left:4px solid '+t.accent+';padding:9px 12px;font-size:12px;color:'+t.text+';margin-bottom:12px;border-radius:'+t.radius+';line-height:1.6">'+msg+'</div>':'')
     +(agendaHtml?secTitle('🗒️','아젠다')+agendaHtml:'')
     +(addedPlaces.length?secTitle('🗺️','가시는길 추천장소')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+placesHtml+'</div>':'')
-    +'<div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid '+t.line+';font-size:10px;color:'+t.sub+'">Powered by SympoYooHoo · Yuhan Corporation</div>'
+    +'<div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid '+t.line+';font-size:10px;color:'+t.sub+'">Powered by SymForYou · Yuhan Corporation</div>'
     +'</div></div>';
 }
 
@@ -1519,7 +1592,7 @@ function printInviteCard(){
     const color=typeColors[p.type]||'#333';
     return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
       +'<div style="font-size:22px;font-weight:900;color:#1d2226;margin-bottom:6px">'+p.name+'</div>'
-      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+p.addr+'</div>':'')
+      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+(displayAddress(p.addr)||p.addr)+'</div>':'')
       +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
       +(p.highlight?'<div style="font-size:13px;font-weight:700;color:#146b45;margin-top:6px">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
       +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
@@ -1530,7 +1603,7 @@ function printInviteCard(){
     ?'<img src="'+selectedSympo.agenda_image_url+'" style="width:60%;display:block;margin:0 auto;max-height:250px;object-fit:contain;border-radius:8px">'
     :'';
 
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SympoYooHoo 초대장</title>'
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SymForYou 초대장</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
     +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#1d2226;}'
@@ -1557,7 +1630,7 @@ function printInviteCard(){
     +(msg?'<div class="msg-box">'+msg+'</div>':'')
     +(agendaHtml?'<div class="sec-title"><div class="sec-title-bar"></div>🗒️ 아젠다</div><div class="agenda-wrap">'+agendaHtml+'</div>':'')
     +(addedPlaces.length?'<div class="sec-title"><div class="sec-title-bar"></div>🗺️ 가시는길 추천장소</div><div class="places-grid">'+placesHtml+'</div>':'')
-    +'<div class="footer">Powered by SympoYooHoo · Yuhan Corporation</div>'
+    +'<div class="footer">Powered by SymForYou · Yuhan Corporation</div>'
     +'</div>'
     +'<script>window.onload=function(){setTimeout(function(){window.print();},800);}<\/script>'
     +'</body></html>';
@@ -1950,9 +2023,12 @@ async function deleteUser(userId,userName){
 
 function initTheme(){const s=localStorage.getItem('sympovoy_theme')||'light';document.documentElement.setAttribute('data-theme',s);updateThemeBtn();}
 function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('sympovoy_theme',n);updateThemeBtn();}
-function updateThemeBtn(){const d=document.documentElement.getAttribute('data-theme')==='dark';document.querySelectorAll('.theme-btn').forEach(b=>b.textContent=d?'☀️ 라이트':'🌙 다크');}
+function updateThemeBtn(){const d=document.documentElement.getAttribute('data-theme')==='dark';
+  const f=document.getElementById('themeFab');
+  if(f){f.textContent=d?'☀️':'🌙';f.title=d?'라이트 모드로':'다크 모드로';}}
 initTheme();
 
 </script>
+<button class="theme-fab no-print" id="themeFab" onclick="toggleTheme()" title="다크 모드 전환" aria-label="다크 모드 전환">🌙</button>
 </body>
 </html>
