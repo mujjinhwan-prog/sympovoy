@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SympoYooHoo admin</title>
-<meta name="app-build" content="2026-09-21-a">
+<meta name="app-build" content="2026-09-22-b">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--bg:#f4f6f7;--surface:#ffffff;--surface2:#eef1f2;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#18211d;--muted:#6d7a75;--border:#e3e8e9;--radius:10px;}
+:root{--bg:#f4f5f6;--surface:#ffffff;--surface2:#eef0f2;--accent:#146b45;--accent2:#0b4b30;--green:#15804f;--red:#b3261e;--yellow:#5f6b72;--text:#1d2226;--muted:#6b737a;--border:#e1e4e7;--radius:10px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;}
@@ -68,13 +68,13 @@ tbody tr:hover td{background:var(--surface2);}
 
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
 .badge-green{background:rgba(20,107,69,.16);color:var(--green);}
-.badge-yellow{background:rgba(143,115,32,.14);color:var(--yellow);}
+.badge-yellow{background:rgba(95,107,114,.14);color:var(--yellow);}
 .badge-red{background:rgba(179,38,30,.14);color:var(--red);}
 .badge-blue{background:rgba(20,107,69,.10);color:var(--accent);}
 
 .score-btn{padding:4px 10px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;margin-right:3px;}
 .s5{background:rgba(20,107,69,.20);color:var(--green);}
-.s3{background:rgba(143,115,32,.20);color:var(--yellow);}
+.s3{background:rgba(95,107,114,.20);color:var(--yellow);}
 .s1{background:rgba(179,38,30,.20);color:var(--red);}
 
 .j-chip{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 9px;font-size:11px;margin:2px;cursor:pointer;transition:all .15s;}
@@ -124,22 +124,22 @@ tbody tr:hover td{background:var(--surface2);}
 }
 
 /* ===== 라이트 모드 ===== */
-:root[data-theme="light"]{--bg:#f4f6f7;--surface:#ffffff;--surface2:#eef1f2;--accent:#146b45;--accent2:#0b4b30;--green:#157f4d;--red:#b3261e;--yellow:#8f7320;--text:#18211d;--muted:#6d7a75;--border:#e3e8e9;--radius:10px;}
+:root[data-theme="light"]{--bg:#f4f5f6;--surface:#ffffff;--surface2:#eef0f2;--accent:#146b45;--accent2:#0b4b30;--green:#15804f;--red:#b3261e;--yellow:#5f6b72;--text:#1d2226;--muted:#6b737a;--border:#e1e4e7;--radius:10px;}
 /* ===== 다크 모드 ===== */
-:root[data-theme="dark"]{--bg:#0c0f0d;--surface:#151916;--surface2:#1e241f;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#cfae5c;--text:#e7ece8;--muted:#8b958f;--border:#28302a;--radius:10px;}
+:root[data-theme="dark"]{--bg:#111315;--surface:#191c1f;--surface2:#22262a;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#9aa1a7;--text:#e8eaec;--muted:#98a0a6;--border:#2d3237;--radius:10px;}
 .theme-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:all .2s;}
 .theme-btn:hover{border-color:var(--accent);}
 
 /* ===== 워드마크 SympoYooHoo =====
-   나머지 글자는 아주 밝은 그레이(#e8ece8).
+   나머지 글자는 아주 밝은 그레이(#eceef0).
    라이트 모드에서도 읽히도록 어두운 칩 위에 얹음. */
 .wm{display:inline-flex;align-items:center;font-weight:900;letter-spacing:-.5px;
-    color:#e8ece8;background:#141a17;border-radius:9px;padding:3px 10px 4px;
+    color:#eceef0;background:#1d2226;border-radius:9px;padding:3px 10px 4px;
     line-height:1.15;white-space:nowrap;}
 .wm i{font-style:normal;font-weight:900;}
 .wm .wm-s{color:#ff3d99;}            /* 핫핑크 */
 .wm .wm-y,.wm .wm-h{color:#4fd18c;}  /* 녹색 */
-:root[data-theme="dark"] .wm{background:#1e241f;color:#e8ece8;}
+:root[data-theme="dark"] .wm{background:#22262a;color:#eceef0;}
 .wm.on-dark{background:transparent;padding:0;}
 
 /* ===================================================================
@@ -172,7 +172,7 @@ tbody tr:hover td{background:var(--surface2);}
   font-variant-numeric:tabular-nums;}
 .srow-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;}
 .bd-up{background:rgba(20,107,69,.10);color:var(--accent);}
-.bd-soon{background:rgba(179,38,30,.10);color:var(--red);}
+.bd-soon{background:var(--accent);color:#fff;}
 .bd-done{background:var(--surface2);color:var(--muted);}
 .srow-name{font-size:14px;font-weight:800;color:var(--text);flex:1;min-width:0;
   line-height:1.35;word-break:keep-all;}
