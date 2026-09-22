@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SymForYou User</title>
-<meta name="app-build" content="2026-09-23-c">
+<meta name="app-build" content="2026-09-23-e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -12,24 +12,26 @@
 :root[data-theme="dark"]{--bg:#111315;--surface:#191c1f;--surface2:#22262a;--accent:#4fbf85;--accent2:#2f8a5c;--green:#4fbf85;--red:#e07a70;--yellow:#9aa1a7;--text:#e8eaec;--muted:#98a0a6;--border:#2d3237;--radius:14px;}
 body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sans-serif;min-height:100vh;}
 
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#16191c,#173826);}
-.login-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px 24px;width:100%;max-width:380px;}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg);}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:36px 24px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.06);}
 .login-logo{text-align:center;margin-bottom:10px;}
-.login-logo img{width:70px;height:70px;border-radius:50%;border:3px solid rgba(255,255,255,.2);}
-.login-title{font-size:22px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px;}
-.login-title span{color:#4fbf85;}
-.login-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center;}
-.login-input{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;padding:12px 15px;color:#fff;font-size:15px;outline:none;margin-bottom:10px;font-family:inherit;}
-.login-input::placeholder{color:rgba(255,255,255,.35);}
-.login-input:focus{border-color:#4fbf85;}
-.login-btn{width:100%;background:#4fbf85;border:none;border-radius:12px;padding:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;}
-.login-hint{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:12px;line-height:1.6;}
+.login-logo img{width:70px;height:70px;border-radius:50%;border:3px solid var(--border);}
+.login-title{font-size:22px;font-weight:900;color:var(--text);text-align:center;margin-bottom:4px;}
+.login-title span{color:var(--accent);}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px;text-align:center;}
+.login-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px 15px;color:var(--text);font-size:15px;outline:none;margin-bottom:10px;font-family:inherit;}
+.login-input::placeholder{color:var(--muted);}
+.login-input:focus{border-color:var(--accent);}
+.login-btn{width:100%;background:var(--accent);border:none;border-radius:12px;padding:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px;}
+.login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6;}
 
-.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#16191c,#173826);flex-direction:column;text-align:center;}
+.pending-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg);flex-direction:column;text-align:center;}
 .pend-icon{font-size:60px;margin-bottom:14px;animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
-.pend-info{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 18px;margin-bottom:18px;width:100%;max-width:320px;text-align:left;}
-.pend-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;}
+.pend-info{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:18px;width:100%;max-width:320px;text-align:left;}
+.pend-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.pend-label{color:var(--muted);}
+.pend-val{color:var(--text);font-weight:700;}
 .pend-row:last-child{border-bottom:none;}
 
 .app{display:none;}
@@ -231,7 +233,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
    =================================================================== */
 @media (min-width:600px){
   /* html에 배경을 주어야 body 배경이 캔버스 전체로 번지지 않음 */
-  html{background:#1d2226;}
+  html{background:#e7eaec;}
   html[data-theme="dark"]{background:#111315;}
 
   body{
@@ -240,7 +242,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
     margin:0 auto;
     min-height:100vh;
     background:var(--bg);
-    box-shadow:0 0 0 1px rgba(255,255,255,.06),0 24px 70px rgba(0,0,0,.55);
+    box-shadow:0 0 0 1px var(--border),0 18px 50px rgba(0,0,0,.14);
     position:relative;
   }
 
@@ -275,7 +277,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 /* 넓은 화면에서 프레임 좌우 여백을 살짝 더 어둡게 */
 @media (min-width:1000px){
-  html{background:radial-gradient(circle at 50% 0%,#2a2f33 0%,#1d2226 60%);background-attachment:fixed;}
+  html{background:radial-gradient(circle at 50% 0%,#f2f4f5 0%,#e3e7ea 60%);background-attachment:fixed;}
   html[data-theme="dark"]{background:radial-gradient(circle at 50% 0%,#1a1d20 0%,#111315 60%);background-attachment:fixed;}
 }
 
@@ -365,7 +367,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo"><img src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png"></div>
-    <div class="login-title"><span class="wm on-dark"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
+    <div class="login-title"><span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span></div>
     <p class="login-sub">심포지엄 도장깨기</p>
     <input class="login-input" id="lName" placeholder="이름">
     <input class="login-input" id="lHospital" placeholder="병원명">
@@ -378,10 +380,10 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <!-- 대기 -->
 <div class="pending-wrap" id="pendingWrap">
   <div class="pend-icon">⏳</div>
-  <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:8px">승인 대기 중</div>
-  <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:18px;line-height:1.7">담당 MR의 승인을 기다리고 있습니다</div>
+  <div style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px">승인 대기 중</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7">담당 MR의 승인을 기다리고 있습니다</div>
   <div class="pend-info" id="pendInfo"></div>
-  <button onclick="doLogout()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 22px;color:rgba(255,255,255,.7);font-size:13px;cursor:pointer;font-family:inherit">다시 입력하기</button>
+  <button onclick="doLogout()" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 22px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">다시 입력하기</button>
 </div>
 
 <!-- 앱 -->
@@ -548,9 +550,9 @@ function showPend(u,mr){
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('pendingWrap').style.display='flex';
   document.getElementById('pendInfo').innerHTML=
-    `<div class="pend-row"><span style="color:rgba(255,255,255,.5)">이름</span><span style="color:#fff;font-weight:700">${u.name}님</span></div>`+
-    `<div class="pend-row"><span style="color:rgba(255,255,255,.5)">병원</span><span style="color:#fff;font-weight:700">${u.hospital}</span></div>`+
-    `<div class="pend-row"><span style="color:rgba(255,255,255,.5)">담당 MR</span><span style="color:#fff;font-weight:700">${mr?mr.name+'님':'-'}</span></div>`;
+    `<div class="pend-row"><span class="pend-label">이름</span><span class="pend-val">${u.name}님</span></div>`+
+    `<div class="pend-row"><span class="pend-label">병원</span><span class="pend-val">${u.hospital}</span></div>`+
+    `<div class="pend-row"><span class="pend-label">담당 MR</span><span class="pend-val">${mr?mr.name+'님':'-'}</span></div>`;
   const iv=setInterval(async()=>{
     const {data}=await sb.from('users').select('mr_approval').eq('id',u.id).single();
     if(data?.mr_approval==='approved'){clearInterval(iv);CU={...u,mr_approval:'approved'};localStorage.setItem('sv_session',JSON.stringify(CU));toast('승인되었습니다! 🎉');setTimeout(enterApp,1200);}
