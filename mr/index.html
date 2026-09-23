@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SymForYou MR</title>
-<meta name="app-build" content="2026-09-23-j">
+<meta name="app-build" content="2026-09-23-k">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -1656,22 +1656,72 @@ async function sendInvite(){
 }
 
 // 인쇄
-function printInvite(){
-  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
-  const isPdf=selectedSympo.agenda_image_url&&selectedSympo.agenda_image_url.match(/\.pdf$/i);
-  if(isPdf){
-    window.open(selectedSympo.agenda_image_url,'_blank');
-    toast('PDF가 열렸습니다. Ctrl+P로 인쇄하세요');
-  }
-  printInviteCard();
+// ===================================================================
+//  인쇄 — 1장: 아젠다(PDF/이미지)  ·  2장: 커스텀 초대장
+// ===================================================================
+let _pdfjsReady=null;
+function loadPdfJs(){
+  if(_pdfjsReady) return _pdfjsReady;
+  _pdfjsReady=new Promise((res,rej)=>{
+    const sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    sc.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      res(window.pdfjsLib);
+    };
+    sc.onerror=()=>rej(new Error('pdf.js 로드 실패'));
+    document.head.appendChild(sc);
+  });
+  return _pdfjsReady;
 }
 
-function printInviteCard(){
+// 아젠다를 인쇄용 이미지 목록으로 — PDF 는 페이지마다 이미지로 변환
+async function agendaSheets(){
+  const url=selectedSympo && selectedSympo.agenda_image_url;
+  if(!url) return [];
+  if(!/\.pdf(\?|$)/i.test(url)) return [url];         // 이미지면 그대로 사용
+  const lib=await loadPdfJs();
+  const buf=await (await fetch(url)).arrayBuffer();
+  const doc=await lib.getDocument({data:buf}).promise;
+  const out=[];
+  const max=Math.min(doc.numPages,3);                 // 아젠다는 최대 3장까지
+  for(let i=1;i<=max;i++){
+    const pg=await doc.getPage(i);
+    const base=pg.getViewport({scale:1});
+    const vp=pg.getViewport({scale:Math.min(1500/base.width,3)});
+    const cv=document.createElement('canvas');
+    cv.width=vp.width; cv.height=vp.height;
+    await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+    out.push(cv.toDataURL('image/jpeg',0.9));
+  }
+  return out;
+}
+
+async function printInvite(){
+  if(!selectedSympo){toast('심포지엄을 선택해주세요',false);return;}
+  let sheets=[];
+  const hasAgenda=!!(selectedSympo.agenda_image_url);
+  if(hasAgenda){
+    toast('인쇄물을 준비하는 중입니다...');
+    try{
+      sheets=await agendaSheets();
+    }catch(e){
+      console.error('[agenda]',e);
+      toast('아젠다를 불러오지 못해 초대장만 인쇄합니다',false);
+      sheets=[];
+    }
+  }
+  printInviteCard(sheets);
+}
+
+function printInviteCard(agendaImgs){
   if(!selectedSympo)return;
+  agendaImgs=agendaImgs||[];
   const period=selectedSympo.symposium_date+(selectedSympo.symposium_date_end?' ~ '+selectedSympo.symposium_date_end:'');
   const msg=document.getElementById('customMsg').value;
 
-  // 인쇄는 흰 종이 기준이므로 헤더 그라데이션만 컨셉을 따르고 본문은 밝은 톤 유지
+  // 인쇄는 흰 종이 기준 — 헤더와 강조선만 컨셉 색을 따름
   const PRINT_THEME={
     1:{header:'linear-gradient(135deg,#4a423c,#8d837a)',headerText:'#ffffff',printAccent:'#6b6158',msgBg:'#f5f2ee'},
     2:{header:'linear-gradient(135deg,#10402b,#2f8a5c)',headerText:'#ffffff',printAccent:'#146b45',msgBg:'#eef5f0'},
@@ -1684,37 +1734,56 @@ function printInviteCard(){
 
   const placesHtml=addedPlaces.map(p=>{
     const color=typeColors[p.type]||'#333';
-    return '<div style="border:3px solid '+color+';border-radius:16px;padding:18px 16px;break-inside:avoid">'
-      +'<div style="font-size:22px;font-weight:900;color:#1d2226;margin-bottom:6px">'+p.name+'</div>'
-      +(p.addr?'<div style="font-size:12px;color:#555;margin-bottom:3px">📍 '+(displayAddress(p.addr)||p.addr)+'</div>':'')
-      +(p.phone?'<div style="font-size:12px;color:#555;margin-bottom:4px">📞 '+p.phone+'</div>':'')
-      +(p.highlight?'<div style="font-size:13px;font-weight:700;color:#146b45;margin-top:6px">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
-      +(p.tip?'<div style="font-size:13px;color:#333;margin-top:6px;line-height:1.5">'+p.tip+'</div>':'')
+    return '<div class="pcard" style="border-color:'+color+'">'
+      +'<div class="pkind" style="color:'+color+'">'+(hlMeta(p.type).icon)+' '+(typeLabel[p.type]||'장소')+'</div>'
+      +'<div class="pname">'+p.name+'</div>'
+      +(p.addr?'<div class="pline">📍 '+(displayAddress(p.addr)||p.addr)+'</div>':'')
+      +(p.phone?'<div class="pline">📞 '+p.phone+'</div>':'')
+      +(p.highlight?'<div class="phl" style="color:'+color+'">'+hlMeta(p.type).icon+' '+p.highlight+'</div>':'')
+      +(p.tip?'<div class="ptip">'+p.tip+'</div>':'')
       +'</div>';
   }).join('');
 
-  const agendaHtml=selectedSympo.agenda_image_url&&!selectedSympo.agenda_image_url.match(/\.pdf$/i)
-    ?'<img src="'+selectedSympo.agenda_image_url+'" style="width:60%;display:block;margin:0 auto;max-height:250px;object-fit:contain;border-radius:8px">'
-    :'';
+  // 아젠다 — 장마다 한 페이지 가득
+  const agendaSheetsHtml=agendaImgs.map((src,i)=>
+    '<div class="sheet agenda"><img src="'+src+'">'
+    +'<div class="ag-cap">🗒️ 아젠다'+(agendaImgs.length>1?' ('+(i+1)+'/'+agendaImgs.length+')':'')+'</div></div>'
+  ).join('');
 
   const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>SymForYou 초대장</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
     +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#1d2226;}'
-    +'.page{width:190mm;margin:0 auto;padding:12mm 14mm;}'
-    +'.title-box{background:'+PT.header+';color:'+PT.headerText+';text-align:center;border-radius:10px;padding:12px 20px;font-size:20px;font-weight:900;margin-bottom:18px;letter-spacing:-0.5px}'
-    +'.hotel-header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #1d2226;}'
-    +'.hotel-name{font-size:28px;font-weight:900;margin-bottom:5px;}'
-    +'.hotel-date{font-size:13px;color:#555;margin-bottom:4px;}'
-    +'.hotel-sympo{font-size:15px;font-weight:700;color:'+PT.printAccent+';}'
-    +'.msg-box{background:'+PT.msgBg+';border-left:4px solid '+PT.printAccent+';border-radius:4px;padding:10px 14px;font-size:12px;color:#444;margin:14px 0;line-height:1.6;}'
-    +'.sec-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:16px 0 10px;}'
-    +'.sec-title-bar{width:5px;height:16px;background:'+PT.printAccent+';border-radius:3px;}'
-    +'.agenda-wrap{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:6px;}'
-    +'.places-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}'
-    +'.footer{text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;}'
-    +'@media print{body{margin:0;}@page{size:A4;margin:10mm;}div{break-inside:avoid;}}'
-    +'</style></head><body><div class="page">'
+    +'.sheet{width:190mm;min-height:267mm;margin:0 auto;padding:0;page-break-after:always;break-after:page;display:flex;flex-direction:column;}'
+    +'.sheet:last-child{page-break-after:auto;break-after:auto;}'
+    +'.agenda{align-items:center;justify-content:center;padding:4mm;}'
+    +'.agenda img{max-width:100%;max-height:250mm;object-fit:contain;}'
+    +'.ag-cap{margin-top:5mm;font-size:11px;color:#999;}'
+    +'.card-sheet{padding:8mm 6mm;}'
+    +'.title-box{background:'+PT.header+';color:'+PT.headerText+';text-align:center;border-radius:9px;padding:10px 18px;font-size:18px;font-weight:900;margin-bottom:12px;letter-spacing:-0.5px;'
+      +'-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'.hotel-header{text-align:center;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #1d2226;}'
+    +'.hotel-name{font-size:24px;font-weight:900;margin-bottom:4px;}'
+    +'.hotel-date{font-size:12px;color:#555;margin-bottom:3px;}'
+    +'.hotel-sympo{font-size:14px;font-weight:700;color:'+PT.printAccent+';}'
+    +'.msg-box{background:'+PT.msgBg+';border-left:4px solid '+PT.printAccent+';border-radius:4px;padding:8px 12px;font-size:11.5px;color:#444;margin:10px 0;line-height:1.55;'
+      +'-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'.sec-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;margin:12px 0 8px;}'
+    +'.sec-title-bar{width:5px;height:15px;background:'+PT.printAccent+';border-radius:3px;'
+      +'-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'.places-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}'
+    +'.pcard{border:2.5px solid #999;border-radius:12px;padding:10px 11px;break-inside:avoid;'
+      +'-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'.pkind{font-size:10px;font-weight:800;margin-bottom:3px;}'
+    +'.pname{font-size:15px;font-weight:900;color:#1d2226;margin-bottom:4px;line-height:1.3;word-break:keep-all;}'
+    +'.pline{font-size:10.5px;color:#555;line-height:1.45;word-break:keep-all;}'
+    +'.phl{font-size:11px;font-weight:800;margin-top:4px;}'
+    +'.ptip{font-size:10.5px;color:#333;margin-top:4px;line-height:1.45;word-break:keep-all;}'
+    +'.footer{text-align:center;margin-top:auto;padding-top:10px;border-top:1px solid #eee;font-size:9.5px;color:#aaa;}'
+    +'@media print{body{margin:0;}@page{size:A4;margin:8mm;}}'
+    +'</style></head><body>'
+    +agendaSheetsHtml
+    +'<div class="sheet card-sheet">'
     +'<div class="title-box">Symposium 가시는길</div>'
     +'<div class="hotel-header">'
     +'<div class="hotel-name">🏨 '+selectedSympo.hotel_name+'</div>'
@@ -1722,14 +1791,14 @@ function printInviteCard(){
     +(selectedSympo.symposium_name?'<div class="hotel-sympo">🎓 '+selectedSympo.symposium_name+'</div>':'')
     +'</div>'
     +(msg?'<div class="msg-box">'+msg+'</div>':'')
-    +(agendaHtml?'<div class="sec-title"><div class="sec-title-bar"></div>🗒️ 아젠다</div><div class="agenda-wrap">'+agendaHtml+'</div>':'')
     +(addedPlaces.length?'<div class="sec-title"><div class="sec-title-bar"></div>🗺️ 가시는길 추천장소</div><div class="places-grid">'+placesHtml+'</div>':'')
     +'<div class="footer">Powered by SymForYou · Yuhan Corporation</div>'
     +'</div>'
-    +'<script>window.onload=function(){setTimeout(function(){window.print();},800);}<\/script>'
+    +'<script>window.onload=function(){setTimeout(function(){window.print();},700);}<\/script>'
     +'</body></html>';
 
   const pw=window.open('','_blank');
+  if(!pw){toast('팝업이 차단되었습니다. 브라우저에서 허용해주세요',false);return;}
   pw.document.write(html);
   pw.document.close();
 }
