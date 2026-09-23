@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SymForYou User</title>
-<meta name="app-build" content="2026-09-23-e">
+<meta name="app-build" content="2026-09-23-f">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -181,11 +181,26 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .gps-hotel{font-size:15px;font-weight:800;color:#1d2226;margin-bottom:3px;}
 .gps-sub{font-size:12px;color:#6b737a;margin-bottom:22px;line-height:1.5;}
 .spin-wrap{position:relative;width:180px;height:180px;margin:0 auto 18px;}
-.spin-ring{position:absolute;inset:0;border-radius:50%;border:3px dashed #e1e4e7;animation:spinRing 3s linear infinite;}
+.spin-ring{position:absolute;inset:0;border-radius:50%;border:3px dashed #e1e4e7;
+  animation:spinRing 3s linear infinite;transition:border-color .3s;}
+/* 다 돌리면 테두리가 실선 녹색으로 */
+.gps-card.charged .spin-ring{border-style:solid;border-color:var(--accent);animation-duration:.8s;}
 @keyframes spinRing{to{transform:rotate(360deg);}}
-.spin-logo{position:absolute;top:50%;left:50%;width:130px;height:130px;border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,.2);transform:translate(-50%,-50%);background:#f4f5f6;touch-action:none;}
-.spin-logo img{width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;}
+.spin-logo{position:absolute;top:50%;left:50%;width:140px;height:140px;
+  transform:translate(-50%,-50%);perspective:850px;touch-action:none;cursor:grab;}
+.spin-logo:active{cursor:grabbing;}
+.disc{position:relative;width:100%;height:100%;transform-style:preserve-3d;will-change:transform;}
+.disc-face{position:absolute;inset:0;border-radius:50%;overflow:hidden;box-sizing:border-box;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.22);}
+.disc-front{background:#f4f5f6;}
+.disc-front img{width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;}
+.disc-back{transform:rotateY(180deg);
+  background:radial-gradient(circle at 50% 32%,#2f8a5c 0%,#0f5534 70%);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.9);font-size:34px;font-weight:900;letter-spacing:-1px;}
 .spin-hint{font-size:12px;color:#6b737a;margin-bottom:12px;}
+.spin-hint b{color:var(--accent);}
 .spin-progress{width:100%;height:8px;background:#eef0f2;border-radius:4px;overflow:hidden;}
 .spin-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;width:0%;transition:width .05s;}
 
@@ -442,11 +457,16 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 <div class="gps-overlay" id="gpsOverlay">
   <div class="gps-card">
     <div class="gps-hotel" id="gpsHotelName">🏨 도착!</div>
-    <div class="gps-sub">로고를 좌우로 슬라이드하면<br>나무가 회전하며 도장이 찍힙니다!</div>
+    <div class="gps-sub">나무 원판을 좌우로 휙 돌리면<br>도장이 찍힙니다!</div>
     <div class="spin-wrap">
       <div class="spin-ring"></div>
       <div class="spin-logo" id="spinLogo">
-        <img src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png" alt="VOY">
+        <div class="disc" id="spinDisc">
+          <div class="disc-face disc-front">
+            <img src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png" alt="VOY">
+          </div>
+          <div class="disc-face disc-back">VOY</div>
+        </div>
       </div>
       <div class="stamp-slam" id="stampSlam">
         <div class="stamp-ink">
@@ -455,7 +475,7 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
         </div>
       </div>
     </div>
-    <div class="spin-hint">👉 좌우로 슬라이드하세요!</div>
+    <div class="spin-hint">👉 손가락으로 <b>휙</b> 돌려보세요</div>
     <div class="spin-progress"><div class="spin-bar" id="spinBar"></div></div>
     <button class="gps-cancel" onclick="cancelSpin()">나중에 하기</button>
   </div>
@@ -890,78 +910,98 @@ function getDist(la1,lo1,la2,lo2){
 }
 
 // ====== 슬라이드 스핀 ======
+const SPIN_GOAL=720;          // 두 바퀴 돌리면 완료
+let _spinRAF=null, _spinVel=0;
+
+function stopSpinAnim(){ if(_spinRAF){cancelAnimationFrame(_spinRAF);_spinRAF=null;} }
+
 function showSpin(){
-  spinActive=true;spinRot=0;spinTotal=0;isDragging=false;
+  spinActive=true; spinRot=0; spinTotal=0; isDragging=false; _spinVel=0;
+  stopSpinAnim();
   document.getElementById('gpsHotelName').textContent='🏨 '+CJ.hotel_name+' 도착!';
   document.getElementById('spinBar').style.width='0%';
 
-  // 도장 상태 초기화
   const card=document.querySelector('#gpsOverlay .gps-card');
-  card.classList.remove('stamped','shake');
+  card.classList.remove('stamped','shake','charged');
   const st=document.getElementById('stampSlam');
-  st.classList.remove('slam');
-  st.style.cssText='';
+  st.classList.remove('slam'); st.style.cssText='';
 
   document.getElementById('gpsOverlay').classList.add('show');
 
-  const logo=document.getElementById('spinLogo');
-  logo.style.transition='';
-  logo.style.transform='translate(-50%,-50%) rotate(0deg)';
+  // 리스너 초기화를 위해 통째로 교체
+  const old=document.getElementById('spinLogo');
+  const stage=old.cloneNode(true);
+  old.parentNode.replaceChild(stage,old);
+  const disc=stage.querySelector('#spinDisc');
+  disc.style.transition='';
+  disc.style.transform='rotateY(0deg)';
 
-  // 기존 리스너 제거를 위해 새 엘리먼트로 교체
-  const newLogo=logo.cloneNode(true);
-  logo.parentNode.replaceChild(newLogo,logo);
+  const draw=()=>{ disc.style.transform='rotateY('+spinRot+'deg)'; };
 
-  function onTouchStart(e){
-    e.preventDefault();
-    isDragging=true;
-    lastX=e.touches[0].clientX;
-  }
-  function onTouchMove(e){
-    e.preventDefault();
-    if(!isDragging||!spinActive)return;
-    const x=e.touches[0].clientX;
-    const dx=x-lastX;
-    lastX=x;
-    spinRot+=dx*3;         // 슬라이드 속도 배율
-    spinTotal+=Math.abs(dx);
-    newLogo.style.transform=`translate(-50%,-50%) rotate(${spinRot}deg)`;
-    const pct=Math.min(spinTotal/400*100,100);
+  function addRot(d){
+    if(!spinActive) return;
+    spinRot+=d;
+    spinTotal+=Math.abs(d);
+    draw();
+    const pct=Math.min(spinTotal/SPIN_GOAL*100,100);
     document.getElementById('spinBar').style.width=pct+'%';
-    if(spinTotal>=400&&spinActive)completeSpin();
+    if(pct>=100){
+      card.classList.add('charged');
+      if(spinActive){ stopSpinAnim(); completeSpin(); }
+    }
   }
-  function onTouchEnd(){isDragging=false;}
 
-  newLogo.addEventListener('touchstart',onTouchStart,{passive:false});
-  newLogo.addEventListener('touchmove',onTouchMove,{passive:false});
-  newLogo.addEventListener('touchend',onTouchEnd,{passive:true});
+  // 손을 떼면 관성으로 더 돌다가 감속
+  function glide(){
+    _spinRAF=requestAnimationFrame(()=>{
+      if(!spinActive||isDragging){_spinRAF=null;return;}
+      addRot(_spinVel);
+      _spinVel*=0.955;
+      if(Math.abs(_spinVel)>0.4) glide(); else {_spinRAF=null;_spinVel=0;}
+    });
+  }
 
-  // 마우스 지원
-  newLogo.addEventListener('mousedown',e=>{isDragging=true;lastX=e.clientX;});
-  document.addEventListener('mousemove',e=>{
-    if(!isDragging||!spinActive)return;
-    const dx=e.clientX-lastX;lastX=e.clientX;
-    spinRot+=dx*3;spinTotal+=Math.abs(dx);
-    newLogo.style.transform=`translate(-50%,-50%) rotate(${spinRot}deg)`;
-    document.getElementById('spinBar').style.width=Math.min(spinTotal/400*100,100)+'%';
-    if(spinTotal>=400&&spinActive)completeSpin();
-  });
-  document.addEventListener('mouseup',()=>{isDragging=false;});
+  let px=0, moved=0;
+  const SPEED=2.2;                       // 손가락 1px → 회전 각도
+
+  function down(x){ isDragging=true; stopSpinAnim(); _spinVel=0; px=x; moved=0; }
+  function move(x){
+    if(!isDragging||!spinActive) return;
+    const dx=x-px; px=x; moved+=Math.abs(dx);
+    const d=dx*SPEED;
+    _spinVel=d;                          // 마지막 이동량이 곧 초기 속도
+    addRot(d);
+  }
+  function up(){
+    if(!isDragging) return;
+    isDragging=false;
+    if(Math.abs(_spinVel)>1.5) glide();  // 휙 돌렸을 때만 관성
+    else _spinVel=0;
+  }
+
+  stage.addEventListener('touchstart',e=>{e.preventDefault();down(e.touches[0].clientX);},{passive:false});
+  stage.addEventListener('touchmove',e=>{e.preventDefault();move(e.touches[0].clientX);},{passive:false});
+  stage.addEventListener('touchend',up,{passive:true});
+  stage.addEventListener('touchcancel',up,{passive:true});
+
+  stage.addEventListener('mousedown',e=>{e.preventDefault();down(e.clientX);});
+  window.addEventListener('mousemove',e=>move(e.clientX));
+  window.addEventListener('mouseup',up);
 }
 
-function cancelSpin(){spinActive=false;isDragging=false;document.getElementById('gpsOverlay').classList.remove('show');}
+function cancelSpin(){spinActive=false;isDragging=false;stopSpinAnim();document.getElementById('gpsOverlay').classList.remove('show');}
 
 // ====== 도장 꽝 연출 ======
 function playStamp(){
   const card=document.querySelector('#gpsOverlay .gps-card');
-  const logo=document.getElementById('spinLogo');
   const st=document.getElementById('stampSlam');
   card.classList.add('stamped');
 
-  // 나무가 마지막으로 두 바퀴 더 돌고 멈춤
-  if(logo){
-    logo.style.transition='transform .5s cubic-bezier(.15,.85,.25,1)';
-    logo.style.transform='translate(-50%,-50%) rotate('+(Math.round(spinRot/360)*360+720)+'deg)';
+  // 원판이 한 바퀴 더 돌아 앞면으로 딱 맞춰 멈춤
+  const disc=document.getElementById('spinDisc');
+  if(disc){
+    disc.style.transition='transform .55s cubic-bezier(.15,.85,.25,1)';
+    disc.style.transform='rotateY('+(Math.round(spinRot/360)*360+360)+'deg)';
   }
 
   // 애니메이션 재생 리셋
