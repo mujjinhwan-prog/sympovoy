@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SymForYou MR</title>
-<meta name="app-build" content="2026-09-23-d">
+<meta name="app-build" content="2026-09-23-i">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -159,6 +159,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   transition:all .15s;white-space:nowrap;user-select:none;}
 .rec-tab:hover{color:var(--accent);}
 .rec-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(20,107,69,.05);}
+/* 상위 소스 탭 — 조금 더 두껍게 */
+.src-tabs{background:var(--surface2);}
+.src-tabs .rec-tab{font-size:13px;font-weight:800;padding:12px 4px;}
+.src-tabs .rec-tab.active{background:var(--surface);}
 .rec-body{padding:12px 14px 14px;}
 .rec-radius{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
 .rec-radius .lbl{font-size:11.5px;color:var(--muted);font-weight:700;margin-right:2px;}
@@ -402,6 +406,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
           <span class="cnt" id="sympoCount"></span>
         </div>
         <div class="filter-bar">
+          <div class="filter-item" style="flex:1 1 220px">
+            <label>검색</label>
+            <input id="fQuery" placeholder="행사장·심포지엄명" oninput="applySympoFilter()"
+                   style="width:100%;min-width:0;font-size:13px;padding:6px 10px;border-radius:7px">
+          </div>
           <div class="filter-item">
             <label>월</label>
             <select id="fMonth" onchange="applySympoFilter()"><option value="all">전체</option></select>
@@ -424,12 +433,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
       <!-- STEP 2: 추천 장소 -->
       <div class="card" id="step2Place" style="display:none">
         <div class="card-title">STEP 2 · 추천 장소 추가 (최대 6개)</div>
-        <!-- 행사장 주변 추천 (구글 평점순) -->
+        <!-- 장소 찾기 — 주변 추천 / 직접 검색 / MR 추천 -->
         <div class="rec-panel">
           <div class="rec-top">
-            <span class="rec-title">📍 행사장 주변 추천</span>
+            <span class="rec-title" id="recTitle">📍 행사장 주변 추천</span>
             <span class="rec-hotel" id="nearbyHotel"></span>
           </div>
+          <div class="rec-tabs src-tabs">
+            <div class="rec-tab active" data-s="near" onclick="setSource('near')">📍 주변 추천</div>
+            <div class="rec-tab" data-s="search" onclick="setSource('search')">🔍 직접 검색</div>
+            <div class="rec-tab" data-s="mr" onclick="setSource('mr')">📊 MR 추천</div>
+          </div>
+
+          <div id="srcNear">
           <div class="rec-tabs">
             <div class="rec-tab active" data-t="restaurant" onclick="setNearbyType('restaurant')">🍽️ 맛집</div>
             <div class="rec-tab" data-t="cafe" onclick="setNearbyType('cafe')">🍰 디저트</div>
@@ -447,23 +463,39 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
             </div>
             <div id="nearbyList"></div>
           </div>
+          </div><!-- /srcNear -->
+
+          <!-- 직접 검색 -->
+          <div id="srcSearch" class="rec-body" style="display:none">
+            <div class="search-row">
+              <input id="placeSearch" placeholder="상호 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
+              <select id="placeType" style="width:112px">
+                <option value="restaurant">🍽️ 맛집</option>
+                <option value="cafe">🍰 디저트</option>
+                <option value="attraction">🏛️ 명소</option>
+                <option value="shopping">🛍️ 쇼핑</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);padding:2px 2px 0;line-height:1.6">
+              추천 목록에 없는 곳을 넣을 때 쓰세요. 상호를 정확히 넣을수록 잘 찾습니다.
+            </div>
+            <div id="placeResults"></div>
+          </div>
+
+          <!-- MR 추천 -->
+          <div id="srcMr" class="rec-body" style="display:none">
+            <div style="font-size:11.5px;color:var(--muted);padding:0 2px 8px;line-height:1.6">
+              같은 행사장에서 다른 MR들이 많이 넣은 장소입니다.
+            </div>
+            <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()"
+              style="width:100%;border:1.5px dashed var(--border);color:var(--accent);font-size:12.5px">
+              📊 많이 추천된 장소 불러오기
+            </button>
+            <div id="top10List" style="display:none;margin-top:12px"></div>
+          </div>
         </div>
 
-        <button class="btn btn-ghost" id="top10Btn" onclick="loadTop10()" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--border);color:var(--muted);font-size:12px">
-          📊 우리 MR들이 많이 추천한 장소 보기
-        </button>
-        <div id="top10List" style="display:none;margin-bottom:14px"></div>
-        <div class="search-row">
-          <input id="placeSearch" placeholder="정확한 상호 검색 또는 예) 웨스틴조선 근처 맛집" onkeydown="if(event.key==='Enter')searchPlace()">
-          <select id="placeType" style="width:110px">
-            <option value="restaurant">🍽️ 맛집</option>
-            <option value="attraction">🏛️ 명소</option>
-            <option value="cafe">🍰 디저트</option>
-            <option value="shopping">🛍️ 쇼핑</option>
-          </select>
-          <button class="btn btn-primary btn-sm" onclick="searchPlace()">검색</button>
-        </div>
-        <div id="placeResults"></div>
         <div class="place-grid" id="addedPlacesGrid"></div>
       </div>
 
@@ -792,10 +824,18 @@ function setSympoView(v){
 function applySympoFilter(){
   const m=document.getElementById('fMonth').value;
   const h=document.getElementById('fHotel').value;
+  const qEl=document.getElementById('fQuery');
+  const q=(qEl?qEl.value:'').replace(/\s/g,'').toLowerCase();
   let list=window._sympoDB||[];
   if(m!=='all') list=list.filter(j=>(j.symposium_date||'').startsWith(m));
   if(h!=='all') list=list.filter(j=>j.hotel_name===h);
   if(_fView==='up') list=list.filter(j=>!sympoIsPast(j));
+  if(q){
+    list=list.filter(j=>{
+      const t=((j.hotel_name||'')+(j.symposium_name||'')).replace(/\s/g,'').toLowerCase();
+      return t.includes(q);
+    });
+  }
   renderMrSympoList(list);
 }
 
@@ -876,8 +916,12 @@ function renderMrSympoList(data){
   if(cnt) cnt.textContent='전체 '+rows.length+'건';
 
   if(!rows.length){
+    const qEl=document.getElementById('fQuery');
+    const hasQ=qEl&&qEl.value.trim();
     el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:22px;text-align:center;'
-      +'border:1px dashed var(--border);border-radius:10px">조건에 맞는 심포지엄이 없습니다</div>';
+      +'border:1px dashed var(--border);border-radius:10px;line-height:1.7">조건에 맞는 심포지엄이 없습니다'
+      +(hasQ&&_fView==='up'?'<br><span style="font-size:12px">지난 행사일 수 있습니다 — 보기를 '
+        +'<b>지난 행사 포함</b>으로 바꿔보세요</span>':'')+'</div>';
     return;
   }
   el.innerHTML=rows.map(sympoRowHtml).join('');
@@ -905,7 +949,14 @@ async function openInviteFor(id){
   const row=document.getElementById('srow_'+id);
   if(row) row.classList.add('selected');
 
-  document.querySelectorAll('.rec-tab').forEach(t=>t.classList.toggle('active',t.dataset.t==='restaurant'));
+  document.querySelectorAll('#srcNear .rec-tab').forEach(t=>t.classList.toggle('active',t.dataset.t==='restaurant'));
+  setSource('near');
+  const tl=document.getElementById('top10List');
+  if(tl){tl.style.display='none';tl.innerHTML='';}
+  const pr=document.getElementById('placeResults');
+  if(pr) pr.innerHTML='';
+  const ps=document.getElementById('placeSearch');
+  if(ps) ps.value='';
   const sel=document.getElementById('placeType');
   if(sel) sel.value='restaurant';
 
@@ -962,6 +1013,20 @@ function setRadius(r){
   _nbRadius=r;
   document.querySelectorAll('.radius-chip').forEach(c=>c.classList.toggle('active',+c.dataset.r===r));
   loadNearby();
+}
+
+// 장소 소스 전환 (주변 추천 / 직접 검색 / MR 추천)
+const SRC_TITLE={near:'📍 행사장 주변 추천',search:'🔍 장소 직접 검색',mr:'📊 MR들이 많이 추천한 장소'};
+function setSource(src){
+  document.querySelectorAll('.src-tabs .rec-tab').forEach(t=>t.classList.toggle('active',t.dataset.s===src));
+  ['near','search','mr'].forEach(k=>{
+    const el=document.getElementById('src'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.style.display=(k===src)?'block':'none';
+  });
+  const t=document.getElementById('recTitle');
+  if(t) t.textContent=SRC_TITLE[src];
+  if(src==='search'){ setTimeout(()=>document.getElementById('placeSearch').focus(),80); }
+  if(src==='mr' && document.getElementById('top10List').style.display==='none'){ loadTop10(); }
 }
 
 function setNearbyType(t){
