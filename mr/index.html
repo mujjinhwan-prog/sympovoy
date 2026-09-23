@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SymForYou MR</title>
-<meta name="app-build" content="2026-09-23-i">
+<meta name="app-build" content="2026-09-23-j">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -211,10 +211,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .concept-card:hover,.concept-card.selected{border-color:var(--accent);background:rgba(20,107,69,.05);}
 .concept-icon{font-size:28px;margin-bottom:6px;}
 .concept-swatch{height:38px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:-.2px;}
-.sw1{background:linear-gradient(135deg,#0e1512,#1f4030);color:#4fd18c;}
-.sw2{background:linear-gradient(135deg,#2a2f33,#6b737a);color:#eceef0;}
-.sw3{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#ffffff;}
+.sw1{background:linear-gradient(135deg,#4a423c,#8d837a);color:#f6f1ec;}
+.sw2{background:linear-gradient(135deg,#10402b,#2f8a5c);color:#ffffff;}
+.sw3{background:linear-gradient(135deg,#b3341a,#e8622f);color:#fff2ec;}
 .concept-title{font-size:13px;font-weight:800;}
+.concept-feel{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4;word-break:keep-all;}
 .concept-desc{font-size:11px;color:var(--muted);margin-top:2px;}
 
 /* 승인 */
@@ -510,18 +511,21 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
         <div class="card-title">STEP 4 · 초대장 컨셉 & 메시지</div>
         <div class="concept-grid">
           <div class="concept-card selected" onclick="selectConcept(this,1)">
-            <div class="concept-swatch sw1">Aa 딥 그린</div>
-            <div class="concept-title">딥 그린</div>
+            <div class="concept-swatch sw1">Aa 모노 그레이</div>
+            <div class="concept-title">모노 그레이</div>
+            <div class="concept-feel">따뜻하고 환영하는</div>
             <div class="concept-desc">격식있는 고급스러운 분위기</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,2)">
-            <div class="concept-swatch sw2">Aa 모노 그레이</div>
-            <div class="concept-title">모노 그레이</div>
+            <div class="concept-swatch sw2">Aa 클린 그린</div>
+            <div class="concept-title">클린 그린</div>
+            <div class="concept-feel">깔끔하고 신뢰감 있는</div>
             <div class="concept-desc">따뜻하고 환영하는 느낌</div>
           </div>
           <div class="concept-card" onclick="selectConcept(this,3)">
-            <div class="concept-swatch sw3">Aa 클린 그린</div>
-            <div class="concept-title">클린 그린</div>
+            <div class="concept-swatch sw3">Aa 선셋 오렌지</div>
+            <div class="concept-title">선셋 오렌지</div>
+            <div class="concept-feel">활기차고 설레는</div>
             <div class="concept-desc">깔끔하고 신뢰감 있는 느낌</div>
           </div>
         </div>
@@ -1474,24 +1478,24 @@ function displayAddress(raw){
 // ===== 초대장 컨셉 테마 =====
 // user 페이지의 .hotel-hero.c1/c2/c3 와 색을 맞춤
 const CONCEPTS={
-  1:{name:'딥 그린',
-     header:'linear-gradient(135deg,#0e1512,#1f4030)', headerText:'#ffffff',
-     page:'#131618', text:'#e8eaec', sub:'#98a0a6',
-     accent:'#4fd18c', line:'#2d3237',
-     msgBg:'rgba(79,209,140,.10)', cardBg:'rgba(255,255,255,.04)',
-     radius:'16px', titleFont:'900'},
-  2:{name:'모노 그레이',
-     header:'linear-gradient(135deg,#2a2f33,#6b737a)', headerText:'#ffffff',
-     page:'#f7f8f9', text:'#1d2226', sub:'#6b737a',
-     accent:'#3a4247', line:'#e1e4e7',
-     msgBg:'rgba(58,66,71,.07)', cardBg:'#ffffff',
-     radius:'4px', titleFont:'800'},
-  3:{name:'클린 그린',
+  1:{name:'모노 그레이', feel:'따뜻하고 환영하는',
+     header:'linear-gradient(135deg,#4a423c,#8d837a)', headerText:'#ffffff',
+     page:'#faf9f7', text:'#241f1c', sub:'#7a726b',
+     accent:'#6b6158', line:'#e6e1dc',
+     msgBg:'rgba(107,97,88,.09)', cardBg:'#ffffff',
+     radius:'16px', titleFont:'800'},
+  2:{name:'클린 그린', feel:'깔끔하고 신뢰감 있는',
      header:'linear-gradient(135deg,#10402b,#2f8a5c)', headerText:'#ffffff',
      page:'#ffffff', text:'#1d2226', sub:'#6b737a',
      accent:'#146b45', line:'#e1e4e7',
      msgBg:'rgba(20,107,69,.07)', cardBg:'#f7f9f8',
-     radius:'12px', titleFont:'900'}
+     radius:'9px', titleFont:'900'},
+  3:{name:'선셋 오렌지', feel:'활기차고 설레는',
+     header:'linear-gradient(135deg,#b3341a,#e8622f)', headerText:'#ffffff',
+     page:'#fffaf7', text:'#26160f', sub:'#8a6a5c',
+     accent:'#d2431f', line:'#f2ded4',
+     msgBg:'rgba(227,76,38,.09)', cardBg:'#fff7f3',
+     radius:'20px', titleFont:'900'}
 };
 function currentTheme(){return CONCEPTS[selectedConcept]||CONCEPTS[1];}
 
@@ -1507,9 +1511,7 @@ function updatePreview(){
   const typeColors={restaurant:'#146b45',cafe:'#3f8f63',attraction:'#5f6b72',shopping:'#2b3033'};
   const typeIcon={restaurant:'🍽️',cafe:'🍰',attraction:'🏛️',shopping:'🛍️'};
 
-  // 컨셉 1은 어두운 배경이라 타입 색을 밝은 톤으로 교체
-  const darkTypeColors={restaurant:'#5cc994',cafe:'#7fcf9f',attraction:'#a3adb3',shopping:'#c3c9cd'};
-  const tc=(selectedConcept===1)?darkTypeColors:typeColors;
+  const tc=typeColors;
 
   const placesHtml=addedPlaces.map(p=>{
     const col=tc[p.type]||t.accent;
@@ -1671,9 +1673,9 @@ function printInviteCard(){
 
   // 인쇄는 흰 종이 기준이므로 헤더 그라데이션만 컨셉을 따르고 본문은 밝은 톤 유지
   const PRINT_THEME={
-    1:{header:'linear-gradient(135deg,#0e1512,#1f4030)',headerText:'#ffffff',printAccent:'#1f4030',msgBg:'#eef3f0'},
-    2:{header:'linear-gradient(135deg,#2a2f33,#6b737a)',headerText:'#ffffff',printAccent:'#3a4247',msgBg:'#f1f3f4'},
-    3:{header:'linear-gradient(135deg,#10402b,#2f8a5c)',headerText:'#ffffff',printAccent:'#146b45',msgBg:'#eef5f0'}
+    1:{header:'linear-gradient(135deg,#4a423c,#8d837a)',headerText:'#ffffff',printAccent:'#6b6158',msgBg:'#f5f2ee'},
+    2:{header:'linear-gradient(135deg,#10402b,#2f8a5c)',headerText:'#ffffff',printAccent:'#146b45',msgBg:'#eef5f0'},
+    3:{header:'linear-gradient(135deg,#b3341a,#e8622f)',headerText:'#ffffff',printAccent:'#d2431f',msgBg:'#fdf0ea'}
   };
   const PT=PRINT_THEME[selectedConcept]||PRINT_THEME[1];
 
@@ -1828,7 +1830,7 @@ async function loadSentInvites(){
     const u=p.users||{};
     const period=j.symposium_date+(j.symposium_date_end?' ~ '+j.symposium_date_end:'');
     const places=locMap[p.id]||[];
-    const cColors={1:'#1f4030',2:'#6b737a',3:'#2f8a5c'};
+    const cColors={1:'#6b6158',2:'#146b45',3:'#d2431f'};
     return `<div style="border:2px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px">
       <div style="background:${cColors[p.concept]||'#146b45'};padding:10px 14px;color:#fff">
         <div style="display:flex;justify-content:space-between;align-items:center">
