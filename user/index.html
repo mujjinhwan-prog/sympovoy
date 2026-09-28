@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>SymForYou User</title>
-<meta name="app-build" content="2026-09-28-a">
+<meta name="app-build" content="2026-09-28-b">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -36,10 +36,12 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 
 .app{display:none;}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.tl{display:flex;align-items:center;gap:7px;min-width:0;flex:1 1 auto;overflow:hidden;}
-.tl img{width:26px;height:26px;border-radius:50%;}
-.tl .wm{font-size:15px;max-width:100%;overflow:hidden;}
-@media (max-width:400px){.tl .wm{font-size:13px;padding:3px 8px;} .tuser{display:none;}}
+.tl{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;overflow:visible;}
+.tl img{width:34px;height:34px;border-radius:50%;flex-shrink:0;}
+.tl .wm{font-size:27px;line-height:1;flex-shrink:0;}
+/* 화면이 좁아지면 비율 그대로 단계적으로 축소 */
+@media (max-width:480px){.tl .wm{font-size:23px;} .tl img{width:30px;height:30px;}}
+@media (max-width:390px){.tl .wm{font-size:19px;} .tl img{width:26px;height:26px;} .tuser{display:none;}}
 .tl em{color:var(--accent);font-style:normal;}
 .tr{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px;}
 .tbtn{background:var(--surface2);border:1px solid var(--border);border-radius:18px;padding:4px 10px;font-size:11px;color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;}
