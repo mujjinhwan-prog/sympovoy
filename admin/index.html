@@ -357,8 +357,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">✅ 승인 현황</div>
       <div class="card">
         <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-          <input id="searchMr" placeholder="🔍 MR 이름 또는 사번 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
-          <input id="searchUser" placeholder="🔍 사용자 이름 또는 병원 검색" style="flex:1;min-width:160px" oninput="filterApproval()">
+          <input id="searchAll" placeholder="🔍 사용자·병원·담당MR·사번 통합 검색" style="flex:1;min-width:200px" oninput="filterApproval()">
           <select id="filterStatus" style="width:120px" onchange="filterApproval()">
             <option value="">전체</option>
             <option value="pending">대기중</option>
@@ -1132,8 +1131,11 @@ async function approveUser(id){await sb.from('users').update({is_approved:true})
 // users를 참조하는 자식 테이블 — 새 테이블이 생기면 여기에만 추가
 const USER_CHILD_TABLES=['symposium_history','items','visits','invite_packages'];
 
-async function delUser(id){
-  if(!confirm('이 사용자를 삭제하시겠습니까?\n방문 기록·초대장·품목이 모두 함께 삭제됩니다.'))return;
+async function delUser(id){ return deleteUserFrom(id,'','users'); }
+
+// 승인 현황 / 사용자 관리 어디서 눌러도 같은 절차로 삭제하고, 누른 화면만 새로고침
+async function deleteUserFrom(id,name,from){
+  if(!confirm((name?'"'+name+'" ':'')+'사용자를 삭제하시겠습니까?\n방문 기록·초대장·품목이 모두 함께 삭제됩니다.'))return;
 
   // 1) 초대장에 딸린 장소 먼저
   const {data:pkgs}=await sb.from('invite_packages').select('id').eq('user_id',id);
@@ -1163,7 +1165,7 @@ async function delUser(id){
     return;
   }
   toast('삭제 완료');
-  loadUsers();
+  if(from==='approval') loadApproval(); else loadUsers();
 }
 async function addUser(){
   const n=document.getElementById('uName').value.trim();
@@ -1226,17 +1228,18 @@ async function loadApproval(){
 }
 
 function filterApproval(){
-  const mr=document.getElementById('searchMr').value.toLowerCase();
-  const user=document.getElementById('searchUser').value.toLowerCase();
+  // 통합 검색 — 이미 불러온 목록을 브라우저에서 거르므로 서버 호출이 없습니다
+  const q=document.getElementById('searchAll').value.replace(/\s/g,'').toLowerCase();
   const status=document.getElementById('filterStatus').value;
   const filtered=_allApproval.filter(u=>{
-    const mrName=(u.introducers?.name||'').toLowerCase();
-    const mrEmp=(u.introducers?.employee_id||'').toLowerCase();
-    const uName=(u.name||'').toLowerCase();
-    const uHosp=(u.hospital||'').toLowerCase();
-    return (!mr||(mrName.includes(mr)||mrEmp.includes(mr)))
-      &&(!user||(uName.includes(user)||uHosp.includes(user)))
-      &&(!status||u.mr_approval===status);
+    if(status&&u.mr_approval!==status) return false;
+    if(!q) return true;
+    const hay=[
+      u.name, u.hospital,
+      u.introducers&&u.introducers.name,
+      u.introducers&&u.introducers.employee_id
+    ].join('').replace(/\s/g,'').toLowerCase();
+    return hay.includes(q);
   });
   renderApproval(filtered);
 }
@@ -1253,7 +1256,8 @@ function renderApproval(data){
       <td>${new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
       <td>
         ${u.mr_approval!=='approved'?`<button class="btn btn-success btn-sm" onclick="adminApproveUser('${u.id}')">승인</button> `:''}
-        ${u.mr_approval!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="adminRejectUser('${u.id}')">거절</button>`:''}
+        ${u.mr_approval!=='rejected'?`<button class="btn btn-ghost btn-sm" onclick="adminRejectUser('${u.id}')">거절</button> `:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteUserFrom('${u.id}','${(u.name||'').replace(/'/g,"&#39;")}','approval')">삭제</button>
       </td>
     </tr>
   `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
