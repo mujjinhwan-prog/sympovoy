@@ -216,9 +216,11 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .disc-front{background:#f4f5f6;}
 .disc-front img{width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;}
 .disc-back{transform:rotateY(180deg);
-  background:radial-gradient(circle at 50% 32%,#2f8a5c 0%,#0f5534 70%);
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.9);font-size:34px;font-weight:900;letter-spacing:-1px;}
+  background:radial-gradient(circle at 50% 30%,#1d2226 0%,#0d1012 75%);
+  display:flex;align-items:center;justify-content:center;padding:10px;}
+/* 원판 뒷면의 SymForYou 로고 — 원 안에 들어가도록 작게 */
+.disc-back .wm{font-size:15px;color:#eceef0;}
+.disc-back .wm-sub{font-size:.30em;opacity:.9;}
 .spin-hint{font-size:12px;color:#6b737a;margin-bottom:12px;}
 .spin-hint b{color:var(--accent);}
 .spin-progress{width:100%;height:8px;background:#eef0f2;border-radius:4px;overflow:hidden;}
@@ -490,7 +492,9 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
           <div class="disc-face disc-front">
             <img src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/yh_namu.png" alt="VOY">
           </div>
-          <div class="disc-face disc-back">VOY</div>
+          <div class="disc-face disc-back">
+            <span class="wm"><span class="wm-row"><span class="wm-p wm-p1"><i>Sym</i></span><span class="wm-p wm-p2"><i>For</i></span><span class="wm-p wm-p3"><i>You</i></span></span><span class="wm-sub">With YUHAN</span></span>
+          </div>
         </div>
       </div>
       <div class="stamp-slam" id="stampSlam">
