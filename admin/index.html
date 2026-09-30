@@ -429,7 +429,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">📍 방문 인증 검수</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS점수</th><th>사진</th><th>사진점수</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS점수</th><th>사진</th><th>사진점수</th><th>관리</th></tr></thead>
           <tbody id="visitTb"></tbody></table>
         </div>
       </div>
@@ -1200,10 +1200,21 @@ async function loadVisits(){
         <button class="score-btn s3" onclick="setPhoto('${v.id}',3)">+3</button>
         <button class="score-btn s1" onclick="setPhoto('${v.id}',1)">+1</button>
       `:`<span class="badge badge-blue">${v.photo_score||0}점</span>`}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="delVisit('${v.id}','${(v.users?.name||'').replace(/'/g,"&#39;")}','${(v.journeys?.hotel_name||'').replace(/'/g,"&#39;")}')">삭제</button></td>
     </tr>
-  `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  `).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 async function setPhoto(id,score){await sb.from('visits').update({photo_score:score}).eq('id',id);toast(`+${score}점 부여`);loadVisits();}
+
+// 방문(참석) 기록 삭제 — 점수도 함께 사라지므로 한 번 더 확인
+async function delVisit(id,name,place){
+  const who=[name,place].filter(Boolean).join(' · ');
+  if(!confirm((who?who+'\n\n':'')+'이 방문 인증 기록을 삭제하시겠습니까?\n적립된 점수와 인증 사진 기록이 함께 사라집니다.'))return;
+  const {error}=await sb.from('visits').delete().eq('id',id);
+  if(error){console.error('[visits]',error);toast('삭제 실패: '+error.message,false);return;}
+  toast('방문 기록이 삭제되었습니다');
+  loadVisits();
+}
 
 // 품목
 async function loadItems(){
