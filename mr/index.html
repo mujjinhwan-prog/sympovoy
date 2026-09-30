@@ -1867,7 +1867,7 @@ async function loadAttendance(){
 // 참석(방문 인증) 기록 삭제
 async function delAttendance(id,name,place){
   const who=[name,place].filter(Boolean).join(' · ');
-  if(!confirm((who?who+'\n\n':'')+'이 참석 기록을 삭제하시겠습니까?\n적립된 점수와 인증 사진 기록이 함께 사라집니다.'))return;
+  if(!confirm((who?who+'\n\n':'')+'이 참석 기록을 삭제하시겠습니까?\n적립된 버들과 인증 사진 기록이 함께 사라집니다.'))return;
   const {error}=await sb.from('visits').delete().eq('id',id);
   if(error){console.error('[visits]',error);toast('삭제 실패: '+error.message,false);return;}
   toast('참석 기록이 삭제되었습니다');
@@ -1908,9 +1908,9 @@ async function loadItems(){
           <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
             <div style="font-size:14px;font-weight:700;flex:1">💊 ${i.item_name}</div>
             <div style="display:flex;gap:4px;flex-shrink:0">
-              <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5점</button>
-              <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3점</button>
-              <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1점</button>
+              <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:5px 10px" onclick="approveItem('${i.id}',5)">⭐⭐⭐ 5 버들</button>
+              <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:5px 10px" onclick="approveItem('${i.id}',3)">⭐⭐ 3 버들</button>
+              <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:5px 10px" onclick="approveItem('${i.id}',1)">⭐ 1 버들</button>
             </div>
           </div>`).join('')}
       </div>
@@ -1919,7 +1919,7 @@ async function loadItems(){
 
 async function approveItem(id,score){
   await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
-  toast(`${score}점 승인 완료`);loadItems();
+  toast(`${score} 버들 승인 완료`);loadItems();
 }
 
 // ===== 발송 초대장 이력 =====
@@ -2062,7 +2062,7 @@ async function loadUserManage(){
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <span class="badge badge-blue">초대장 ${uInvs.length}개</span>
             <span class="badge badge-green">방문 ${uVis.length}회</span>
-            <span class="badge badge-blue">누적 ${totalScore}점</span>
+            <span class="badge badge-blue">누적 ${totalScore} 버들</span>
             <span class="badge ${u.mr_approval==='approved'?'badge-green':'badge-yellow'}">${u.mr_approval==='approved'?'승인':'대기'}</span>
           </div>
         </div>
@@ -2116,11 +2116,11 @@ async function showUserDetail(userId){
         <div style="font-size:13px;font-weight:700">💊 ${i.item_name}</div>
         <div style="display:flex;align-items:center;gap:6px">
           ${i.is_approved
-            ?`<span class="badge badge-green">${i.approved_score||0}점 ✅</span>`
+            ?`<span class="badge badge-green">${i.approved_score||0} 버들 ✅</span>`
             :`<div style="display:flex;gap:4px">
-                <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5점</button>
-                <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3점</button>
-                <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1점</button>
+                <button class="btn btn-sm" style="background:rgba(20,107,69,.15);color:var(--green);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',5,this)">⭐⭐⭐ 5 버들</button>
+                <button class="btn btn-sm" style="background:rgba(95,107,114,.14);color:var(--yellow);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',3,this)">⭐⭐ 3 버들</button>
+                <button class="btn btn-sm" style="background:rgba(179,38,30,.14);color:var(--red);border:none;padding:4px 8px;font-size:11px" onclick="approveItemInline('${i.id}',1,this)">⭐ 1 버들</button>
               </div>`
           }
         </div>
@@ -2134,10 +2134,10 @@ async function showUserDetail(userId){
           <div style="font-size:11px;color:var(--muted)">📅 ${period||'-'}${j.symposium_name?' · 🎓 '+j.symposium_name:''}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:18px;font-weight:900;color:var(--accent)">${sympoTotal}점</div>
+          <div style="font-size:18px;font-weight:900;color:var(--accent)">${sympoTotal} 버들</div>
           <div style="display:flex;gap:4px;margin-top:3px;justify-content:flex-end">
-            ${vis?`<span class="badge badge-green">방문 ${visScore2}점</span>`:'<span class="badge badge-yellow">미방문</span>'}
-            <span class="badge badge-blue">품목 ${itmScore2}점</span>
+            ${vis?`<span class="badge badge-green">방문 ${visScore2} 버들</span>`:'<span class="badge badge-yellow">미방문</span>'}
+            <span class="badge badge-blue">품목 ${itmScore2} 버들</span>
           </div>
         </div>
       </div>
@@ -2157,7 +2157,7 @@ async function showUserDetail(userId){
       <div style="font-size:18px;font-weight:900;margin-bottom:3px">${u.name}</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${u.hospital}</div>
       <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;padding:16px;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
-        <div><div style="font-size:28px;font-weight:900">${totalScore}</div><div style="font-size:11px;opacity:.8">총 점수</div></div>
+        <div><div style="font-size:28px;font-weight:900">${totalScore}</div><div style="font-size:11px;opacity:.8">총 버들</div></div>
         <div><div style="font-size:28px;font-weight:900">${(invites||[]).length}</div><div style="font-size:11px;opacity:.8">심포지엄</div></div>
         <div><div style="font-size:28px;font-weight:900">${(items||[]).length}</div><div style="font-size:11px;opacity:.8">품목</div></div>
       </div>
@@ -2172,13 +2172,13 @@ async function showUserDetail(userId){
 // 인라인 품목 승인 (상세 팝업 내)
 async function approveItemInline(id,score,btn){
   await sb.from('items').update({is_approved:true,approved_score:score,approved_by:currentIntroducer.id}).eq('id',id);
-  toast(`${score}점 승인 완료 ✅`);
+  toast(`${score} 버들 승인 완료 ✅`);
   // 해당 행 UI 즉시 업데이트
   const row=btn.closest('div[style*="border-bottom"]');
   if(row){
     const nameEl=row.querySelector('div[style*="font-weight:700"]');
     const name=nameEl?nameEl.textContent:'';
-    row.innerHTML=`<div style="font-size:13px;font-weight:700">${name}</div><span class="badge badge-green">${score}점 ✅</span>`;
+    row.innerHTML=`<div style="font-size:13px;font-weight:700">${name}</div><span class="badge badge-green">${score} 버들 ✅</span>`;
     row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';row.style.padding='8px 0';row.style.borderBottom='1px solid var(--border)';
   }
 }
