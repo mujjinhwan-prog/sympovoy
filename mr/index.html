@@ -1853,8 +1853,25 @@ async function loadAttendance(){
   el.innerHTML=data&&data.length?data.map(v=>`
     <div class="user-item">
       <div><div class="user-name">${v.users?.name||'-'}</div><div class="user-hosp">${v.users?.hospital||'-'} · ${v.journeys?.hotel_name||'-'}</div></div>
-      <div style="text-align:right"><div class="att-status-ok">✅ 도착완료</div><div style="font-size:11px;color:var(--muted)">${new Date(v.visited_at).toLocaleString('ko-KR')}</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="text-align:right">
+          <div class="att-status-ok">✅ 도착완료</div>
+          <div style="font-size:11px;color:var(--muted)">${new Date(v.visited_at).toLocaleString('ko-KR')}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" style="flex-shrink:0"
+          onclick="delAttendance('${v.id}','${(v.users?.name||'').replace(/'/g,"&#39;")}','${(v.journeys?.hotel_name||'').replace(/'/g,"&#39;")}')">삭제</button>
+      </div>
     </div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">데이터 없음</div>';
+}
+
+// 참석(방문 인증) 기록 삭제
+async function delAttendance(id,name,place){
+  const who=[name,place].filter(Boolean).join(' · ');
+  if(!confirm((who?who+'\n\n':'')+'이 참석 기록을 삭제하시겠습니까?\n적립된 점수와 인증 사진 기록이 함께 사라집니다.'))return;
+  const {error}=await sb.from('visits').delete().eq('id',id);
+  if(error){console.error('[visits]',error);toast('삭제 실패: '+error.message,false);return;}
+  toast('참석 기록이 삭제되었습니다');
+  loadAttendance();
 }
 
 // 품목 승인 - 사용자별 그룹화
