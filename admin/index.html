@@ -429,7 +429,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">📍 방문 인증 검수</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS 버들</th><th>사진</th><th>사진 버들</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS 버들</th><th>인증샷</th><th>관리</th></tr></thead>
           <tbody id="visitTb"></tbody></table>
         </div>
       </div>
@@ -495,7 +495,7 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="form-group">
       <label>아젠다 이미지 업로드</label>
       <div class="upload-zone" onclick="document.getElementById('agendaFile').click()" id="uploadZone">
-        📎 클릭하여 이미지 선택 (JPG, PNG, PDF)
+        📎 클릭하여 파일 선택 (JPG, PNG, PDF)
       </div>
       <input type="file" id="agendaFile" accept="image/*,.pdf" style="display:none" onchange="uploadAgenda(this)">
       <input type="hidden" id="agendaUrl">
@@ -810,7 +810,7 @@ function openSympoModal(){
   document.getElementById('selectedHotelBox').style.display='none';
   document.getElementById('agendaUrl').value='';
   document.getElementById('agendaPreview').style.display='none';
-  document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+  document.getElementById('uploadZone').textContent='📎 클릭하여 파일 선택 (JPG, PNG, PDF)';
   document.getElementById('sympoModal').classList.add('open');
 }
 
@@ -961,34 +961,101 @@ function clearHotel(){
   document.getElementById('hotelSearch').select();
 }
 
+// ===================================================================
+//  아젠다 업로드
+//   · 파일명 = 시작일 + 행사장 영문  (예: 20261108conrad.jpg)
+//   · 같은 심포지엄에 다시 올리면 덮어써서 파일이 쌓이지 않음
+//   · 이미지는 1600px 로 줄여 저장 (아젠다 글씨는 그대로 읽힘)
+// ===================================================================
+
+// 자주 쓰는 행사장 → 영문. 없으면 한글을 로마자로 대충 옮김
+const HOTEL_EN=[
+  ['콘래드','conrad'],['웨스틴','westin'],['조선','josun'],['신라','shilla'],
+  ['롯데','lotte'],['그랜드하얏트','grandhyatt'],['하얏트','hyatt'],
+  ['인터컨티넨탈','intercontinental'],['파라다이스','paradise'],['소노','sono'],
+  ['라마다','ramada'],['메리어트','marriott'],['힐튼','hilton'],['쉐라톤','sheraton'],
+  ['워커힐','walkerhill'],['글래드','glad'],['나인트리','ninetree'],['오크우드','oakwood'],
+  ['앰배서더','ambassador'],['코트야드','courtyard'],['노보텔','novotel'],['이비스','ibis'],
+  ['유한양행','yuhan'],['윌로우하우스','willowhouse'],['컨벤션','convention'],['호텔','']
+];
+function hotelSlug(name){
+  let t=String(name||'').replace(/\s/g,'');   // 띄어쓰기 제거 후 대조
+  let out='';
+  HOTEL_EN.forEach(([ko,en])=>{ if(t.includes(ko)){ out+=en; t=t.replace(ko,''); } });
+  // 남은 영문·숫자도 붙임
+  out+=(t.match(/[A-Za-z0-9]+/g)||[]).join('').toLowerCase();
+  out=out.replace(/[^a-z0-9]/g,'');
+  return out||'sympo';
+}
+function agendaBaseName(){
+  const d=(document.getElementById('sDateStart').value||'').replace(/-/g,'');
+  const h=hotelSlug(selectedHotel?selectedHotel.name:'');
+  return (d||'nodate')+h;
+}
+
+// 이미지 축소 — PDF 는 그대로 둡니다
+function shrinkImage(file,maxPx){
+  return new Promise(res=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const sc=Math.min(1,maxPx/Math.max(img.width,img.height));
+      if(sc>=1){URL.revokeObjectURL(url);res(file);return;}   // 이미 작으면 그대로
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      cv.toBlob(b=>{URL.revokeObjectURL(url);res(b||file);},'image/jpeg',0.85);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);res(file);};
+    img.src=url;
+  });
+}
+
 async function uploadAgenda(input){
   const file=input.files[0];if(!file)return;
-  document.getElementById('uploadZone').textContent='업로드 중... ⏳';
+  if(!document.getElementById('sDateStart').value||!selectedHotel){
+    toast('시작일과 행사장을 먼저 정해주세요 — 파일명에 쓰입니다',false);
+    input.value='';return;
+  }
+  const zone=document.getElementById('uploadZone');
+  zone.textContent='업로드 중... ⏳';
   try{
-    const ext=file.name.split('.').pop().toLowerCase();
-    const path=`agenda_${Date.now()}.${ext}`;
-    const {data:upData,error}=await sb.storage.from('agenda-images').upload(path,file,{upsert:true,contentType:file.type});
+    const isPdf=/pdf$/i.test(file.name)||file.type==='application/pdf';
+    let body=file, ext='pdf', type='application/pdf';
+    if(!isPdf){
+      body=await shrinkImage(file,1600);
+      ext='jpg'; type='image/jpeg';
+    }
+    const path=agendaBaseName()+'.'+ext;
+
+    const {error}=await sb.storage.from('agenda-images')
+      .upload(path,body,{upsert:true,contentType:type,cacheControl:'3600'});
     if(error){
       console.error('업로드 오류:',error);
       toast('업로드 실패: '+error.message,false);
-      document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+      zone.textContent='📎 클릭하여 파일 선택 (JPG, PNG, PDF)';
       return;
     }
     const {data:urlData}=sb.storage.from('agenda-images').getPublicUrl(path);
-    const publicUrl=urlData.publicUrl;
+    // 덮어쓴 경우 브라우저가 옛 파일을 보여주지 않도록 뒤에 시각을 붙임
+    const publicUrl=urlData.publicUrl+'?t='+Date.now();
     document.getElementById('agendaUrl').value=publicUrl;
-    if(file.type.startsWith('image/')){
+
+    const kb=Math.round((body.size||file.size)/1024);
+    if(!isPdf){
       document.getElementById('agendaPreview').src=publicUrl;
       document.getElementById('agendaPreview').style.display='block';
-      document.getElementById('uploadZone').textContent='✅ 이미지 업로드 완료';
-    } else {
-      document.getElementById('uploadZone').textContent='✅ '+file.name+' 업로드 완료';
+      zone.textContent='✅ '+path+' ('+kb+'KB)';
+    }else{
+      document.getElementById('agendaPreview').style.display='none';
+      zone.textContent='✅ '+path+' ('+kb+'KB)';
+      if(kb>3000) toast('PDF 가 '+Math.round(kb/1024)+'MB 입니다. 가능하면 줄여서 올려주세요',false);
     }
     toast('아젠다 업로드 완료 ✅');
   }catch(e){
     console.error('업로드 예외:',e);
     toast('업로드 오류: '+e.message,false);
-    document.getElementById('uploadZone').textContent='📎 클릭하여 이미지 선택 (JPG, PNG, PDF)';
+    zone.textContent='📎 클릭하여 파일 선택 (JPG, PNG, PDF)';
   }
 }
 
@@ -1062,7 +1129,7 @@ async function renderUsersTable(users){
         <button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')">삭제</button>
       </td>
     </tr>`;
-  }).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
 // 사용자 상세 보기
@@ -1088,7 +1155,7 @@ async function showUserDetail(userId){
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <span class="badge badge-green">방문인증 +${v.gps_score||0} 버들</span>
         <span class="badge badge-blue">사진 +${v.photo_score||0} 버들</span>
-        ${v.photo_url?`<img src="${v.photo_url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:''}
+        ${v.photo_score?`<span class="badge badge-green">📸 +${v.photo_score} 버들</span>`:''}
       </div>
     </div>
   `).join('') || '<div style="color:var(--muted);font-size:13px">방문 기록 없음</div>';
@@ -1194,17 +1261,11 @@ async function loadVisits(){
       <td>${v.journeys?.hotel_name||'-'}</td>
       <td>${new Date(v.visited_at).toLocaleString('ko-KR')}</td>
       <td><span class="badge badge-green">+${v.gps_score||10} 버들</span></td>
-      <td>${v.photo_url?`<img src="${v.photo_url}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:'<span style="color:var(--muted)">없음</span>'}</td>
-      <td>${v.photo_url&&!v.photo_score?`
-        <button class="score-btn s5" onclick="setPhoto('${v.id}',5)">+5</button>
-        <button class="score-btn s3" onclick="setPhoto('${v.id}',3)">+3</button>
-        <button class="score-btn s1" onclick="setPhoto('${v.id}',1)">+1</button>
-      `:`<span class="badge badge-blue">${v.photo_score||0} 버들</span>`}</td>
+      <td>${v.photo_score?`<span class="badge badge-green">📸 +${v.photo_score} 버들</span>`:'<span style="color:var(--muted);font-size:12px">미촬영</span>'}</td>
       <td><button class="btn btn-danger btn-sm" onclick="delVisit('${v.id}','${(v.users?.name||'').replace(/'/g,"&#39;")}','${(v.journeys?.hotel_name||'').replace(/'/g,"&#39;")}')">삭제</button></td>
     </tr>
-  `).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
+  `).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
-async function setPhoto(id,score){await sb.from('visits').update({photo_score:score}).eq('id',id);toast(`+${score} 버들 부여`);loadVisits();}
 
 // 방문(참석) 기록 삭제 — 점수도 함께 사라지므로 한 번 더 확인
 async function delVisit(id,name,place){
@@ -1318,7 +1379,7 @@ async function showDetail(vid){
     <div class="d-row"><span class="d-label">사진 버들</span><span class="d-val">+${v.photo_score||0} 버들</span></div>
     <div class="d-row"><span class="d-label">품목 버들</span><span class="d-val">+${v.item_score||0} 버들</span></div>
     <div class="d-row"><span class="d-label">합계</span><span class="d-val" style="color:var(--accent);font-size:16px;font-weight:900">${total} 버들</span></div>
-    ${v.photo_url?`<img src="${v.photo_url}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin:14px 0">`:'<div style="background:var(--surface2);border-radius:8px;padding:30px;text-align:center;color:var(--muted);margin:14px 0;font-size:13px">사진 없음</div>'}
+    <div style="background:var(--surface2);border-radius:8px;padding:14px;margin:14px 0;text-align:center;font-size:12px;color:var(--muted);line-height:1.7">${v.photo_score?'📸 현장에서 인증샷을 촬영했습니다<br><span style="color:var(--accent);font-weight:800">+'+v.photo_score+' 버들 적립</span>':'인증샷 미촬영'}<br><span style="font-size:11px;opacity:.8">사진은 저장하지 않습니다</span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">품목 내역</div>
     ${items?.length?items.map(i=>`<div style="background:var(--surface2);border-radius:6px;padding:8px 12px;margin-bottom:5px;font-size:13px">${i.item_name}<span class="badge badge-blue" style="float:right">${i.approved_score||0} 버들</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px">없음</div>'}
     <button class="btn btn-primary btn-full" style="margin-top:18px" onclick="document.getElementById('detailPanel').classList.remove('open')">← 목록으로</button>
