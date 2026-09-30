@@ -346,7 +346,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="card">
         <div class="card-title">최근 방문 인증</div>
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>인증일시</th><th>점수</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>인증일시</th><th>버들</th></tr></thead>
           <tbody id="recentTb"></tbody></table>
         </div>
       </div>
@@ -418,7 +418,7 @@ tbody tr:hover td{background:var(--surface2);}
         </div>
         <div class="month-filter" id="userMonthFilter"></div>
         <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적점수</th><th>상태</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>이름</th><th>병원명</th><th>담당 MR</th><th>MR 이메일</th><th>심포지엄 도장깨기</th><th>누적 버들</th><th>상태</th><th>관리</th></tr></thead>
           <tbody id="userTb"></tbody></table>
         </div>
       </div>
@@ -429,7 +429,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">📍 방문 인증 검수</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS점수</th><th>사진</th><th>사진점수</th><th>관리</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>장소</th><th>방문일시</th><th>GPS 버들</th><th>사진</th><th>사진 버들</th><th>관리</th></tr></thead>
           <tbody id="visitTb"></tbody></table>
         </div>
       </div>
@@ -440,7 +440,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">💊 품목 관리</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>사용자</th><th>병원</th><th>품목</th><th>제출일시</th><th>상태</th><th>점수</th></tr></thead>
+          <table><thead><tr><th>사용자</th><th>병원</th><th>품목</th><th>제출일시</th><th>상태</th><th>버들</th></tr></thead>
           <tbody id="itemTb"></tbody></table>
         </div>
       </div>
@@ -451,7 +451,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="page-title">📋 전체 DB</div>
       <div class="card">
         <div class="table-wrap">
-          <table><thead><tr><th>이름</th><th>병원명</th><th>참석 여정</th><th>누적점수</th></tr></thead>
+          <table><thead><tr><th>이름</th><th>병원명</th><th>참석 여정</th><th>누적 버들</th></tr></thead>
           <tbody id="dbTb"></tbody></table>
         </div>
       </div>
@@ -669,7 +669,7 @@ async function loadDashboard(){
   document.getElementById('recentTb').innerHTML=data?.length?data.map(v=>`
     <tr><td>${v.users?.name||'-'}</td><td>${v.users?.hospital||'-'}</td><td>${v.journeys?.hotel_name||'-'}</td>
     <td>${new Date(v.visited_at).toLocaleString('ko-KR')}</td>
-    <td><span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</span></td></tr>
+    <td><span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)} 버들</span></td></tr>
   `).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
@@ -1055,7 +1055,7 @@ async function renderUsersTable(users){
       <td>${u.introducers?.name||'-'}</td>
       <td style="font-size:12px">${u.introducers?.email||'-'}</td>
       <td>${chips}</td>
-      <td><span class="badge badge-blue">${total}점</span></td>
+      <td><span class="badge badge-blue">${total} 버들</span></td>
       <td><span class="badge ${u.is_approved?'badge-green':'badge-yellow'}">${u.is_approved?'승인':'대기'}</span></td>
       <td>
         ${!u.is_approved?`<button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">승인</button> `:''}
@@ -1083,11 +1083,11 @@ async function showUserDetail(userId){
           <div style="font-size:15px;font-weight:800">🏨 ${v.journeys?.hotel_name||'-'}</div>
           <div style="font-size:12px;color:var(--muted)">${v.journeys?.symposium_date||''} ${v.journeys?.symposium_date_end?'~ '+v.journeys.symposium_date_end:''}</div>
         </div>
-        <span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</span>
+        <span class="badge badge-blue">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)} 버들</span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="badge badge-green">방문인증 +${v.gps_score||0}점</span>
-        <span class="badge badge-blue">사진 +${v.photo_score||0}점</span>
+        <span class="badge badge-green">방문인증 +${v.gps_score||0} 버들</span>
+        <span class="badge badge-blue">사진 +${v.photo_score||0} 버들</span>
         ${v.photo_url?`<img src="${v.photo_url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:''}
       </div>
     </div>
@@ -1096,7 +1096,7 @@ async function showUserDetail(userId){
   const itemRows=(items||[]).map(i=>`
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
       <span>${i.item_name}</span>
-      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'+'+i.approved_score+'점':'검토중'}</span>
+      <span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'+'+i.approved_score+' 버들':'검토중'}</span>
     </div>
   `).join('') || '<div style="color:var(--muted);font-size:13px">품목 없음</div>';
 
@@ -1108,12 +1108,12 @@ async function showUserDetail(userId){
 
     <!-- 점수 요약 -->
     <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;padding:16px;color:#fff;text-align:center;margin:14px 0">
-      <div style="font-size:36px;font-weight:900">${total}점</div>
-      <div style="font-size:12px;opacity:.8;margin-top:4px">누적 점수</div>
+      <div style="font-size:36px;font-weight:900">${total} 버들</div>
+      <div style="font-size:12px;opacity:.8;margin-top:4px">누적 버들</div>
       <div style="display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12px">
-        <span>방문 ${gpsTotal}점</span>
-        <span>사진 ${photoTotal}점</span>
-        <span>품목 ${itemTotal}점</span>
+        <span>방문 ${gpsTotal} 버들</span>
+        <span>사진 ${photoTotal} 버들</span>
+        <span>품목 ${itemTotal} 버들</span>
       </div>
     </div>
 
@@ -1193,23 +1193,23 @@ async function loadVisits(){
       <td>${v.users?.name||'-'}</td><td>${v.users?.hospital||'-'}</td>
       <td>${v.journeys?.hotel_name||'-'}</td>
       <td>${new Date(v.visited_at).toLocaleString('ko-KR')}</td>
-      <td><span class="badge badge-green">+${v.gps_score||10}점</span></td>
+      <td><span class="badge badge-green">+${v.gps_score||10} 버들</span></td>
       <td>${v.photo_url?`<img src="${v.photo_url}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="window.open('${v.photo_url}','_blank')">`:'<span style="color:var(--muted)">없음</span>'}</td>
       <td>${v.photo_url&&!v.photo_score?`
         <button class="score-btn s5" onclick="setPhoto('${v.id}',5)">+5</button>
         <button class="score-btn s3" onclick="setPhoto('${v.id}',3)">+3</button>
         <button class="score-btn s1" onclick="setPhoto('${v.id}',1)">+1</button>
-      `:`<span class="badge badge-blue">${v.photo_score||0}점</span>`}</td>
+      `:`<span class="badge badge-blue">${v.photo_score||0} 버들</span>`}</td>
       <td><button class="btn btn-danger btn-sm" onclick="delVisit('${v.id}','${(v.users?.name||'').replace(/'/g,"&#39;")}','${(v.journeys?.hotel_name||'').replace(/'/g,"&#39;")}')">삭제</button></td>
     </tr>
   `).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
-async function setPhoto(id,score){await sb.from('visits').update({photo_score:score}).eq('id',id);toast(`+${score}점 부여`);loadVisits();}
+async function setPhoto(id,score){await sb.from('visits').update({photo_score:score}).eq('id',id);toast(`+${score} 버들 부여`);loadVisits();}
 
 // 방문(참석) 기록 삭제 — 점수도 함께 사라지므로 한 번 더 확인
 async function delVisit(id,name,place){
   const who=[name,place].filter(Boolean).join(' · ');
-  if(!confirm((who?who+'\n\n':'')+'이 방문 인증 기록을 삭제하시겠습니까?\n적립된 점수와 인증 사진 기록이 함께 사라집니다.'))return;
+  if(!confirm((who?who+'\n\n':'')+'이 방문 인증 기록을 삭제하시겠습니까?\n적립된 버들과 인증 사진 기록이 함께 사라집니다.'))return;
   const {error}=await sb.from('visits').delete().eq('id',id);
   if(error){console.error('[visits]',error);toast('삭제 실패: '+error.message,false);return;}
   toast('방문 기록이 삭제되었습니다');
@@ -1225,7 +1225,7 @@ async function loadItems(){
       <td>${i.item_name}</td>
       <td>${new Date(i.submitted_at).toLocaleString('ko-KR')}</td>
       <td><span class="badge ${i.is_approved?'badge-green':'badge-yellow'}">${i.is_approved?'승인':'대기'}</span></td>
-      <td><span class="badge badge-blue">${i.approved_score||0}점</span></td>
+      <td><span class="badge badge-blue">${i.approved_score||0} 버들</span></td>
     </tr>
   `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
@@ -1298,7 +1298,7 @@ async function loadDB(){
       const h=(v.journeys?.hotel_name||'').slice(0,4);
       return `<span class="j-chip done" onclick="showDetail('${v.id}')">${d}${h}</span>`;
     }).join('');
-    return `<tr><td>${u.name}</td><td>${u.hospital}</td><td>${chips||'<span style="color:var(--muted)">없음</span>'}</td><td><span class="badge badge-blue">${total}점</span></td></tr>`;
+    return `<tr><td>${u.name}</td><td>${u.hospital}</td><td>${chips||'<span style="color:var(--muted)">없음</span>'}</td><td><span class="badge badge-blue">${total} 버들</span></td></tr>`;
   }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">데이터 없음</td></tr>';
 }
 
@@ -1314,13 +1314,13 @@ async function showDetail(vid){
     <div class="d-row"><span class="d-label">병원</span><span class="d-val">${v.users?.hospital}</span></div>
     <div class="d-row"><span class="d-label">장소</span><span class="d-val">${v.journeys?.hotel_name}</span></div>
     <div class="d-row"><span class="d-label">기간</span><span class="d-val">${period||'-'}</span></div>
-    <div class="d-row"><span class="d-label">방문인증</span><span class="d-val" style="color:var(--green)">+${v.gps_score||10}점</span></div>
-    <div class="d-row"><span class="d-label">사진점수</span><span class="d-val">+${v.photo_score||0}점</span></div>
-    <div class="d-row"><span class="d-label">품목점수</span><span class="d-val">+${v.item_score||0}점</span></div>
-    <div class="d-row"><span class="d-label">합계</span><span class="d-val" style="color:var(--accent);font-size:16px;font-weight:900">${total}점</span></div>
+    <div class="d-row"><span class="d-label">방문인증</span><span class="d-val" style="color:var(--green)">+${v.gps_score||10} 버들</span></div>
+    <div class="d-row"><span class="d-label">사진 버들</span><span class="d-val">+${v.photo_score||0} 버들</span></div>
+    <div class="d-row"><span class="d-label">품목 버들</span><span class="d-val">+${v.item_score||0} 버들</span></div>
+    <div class="d-row"><span class="d-label">합계</span><span class="d-val" style="color:var(--accent);font-size:16px;font-weight:900">${total} 버들</span></div>
     ${v.photo_url?`<img src="${v.photo_url}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin:14px 0">`:'<div style="background:var(--surface2);border-radius:8px;padding:30px;text-align:center;color:var(--muted);margin:14px 0;font-size:13px">사진 없음</div>'}
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">품목 내역</div>
-    ${items?.length?items.map(i=>`<div style="background:var(--surface2);border-radius:6px;padding:8px 12px;margin-bottom:5px;font-size:13px">${i.item_name}<span class="badge badge-blue" style="float:right">${i.approved_score||0}점</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px">없음</div>'}
+    ${items?.length?items.map(i=>`<div style="background:var(--surface2);border-radius:6px;padding:8px 12px;margin-bottom:5px;font-size:13px">${i.item_name}<span class="badge badge-blue" style="float:right">${i.approved_score||0} 버들</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px">없음</div>'}
     <button class="btn btn-primary btn-full" style="margin-top:18px" onclick="document.getElementById('detailPanel').classList.remove('open')">← 목록으로</button>
   `;
   document.getElementById('detailPanel').classList.add('open');
