@@ -154,6 +154,13 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .place-tip{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:8px;}
 .inv-footer{text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.2px;
   padding:16px 14px calc(18px + env(safe-area-inset-bottom,0px));}
+.photo-flash{position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;background:rgba(0,0,0,.88);
+  opacity:0;transition:opacity .3s;pointer-events:none;padding:24px;}
+.photo-flash.show{opacity:1;}
+.photo-flash img{max-width:86%;max-height:62%;border-radius:16px;object-fit:contain;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);}
+.photo-flash-cap{color:#fff;font-size:17px;font-weight:900;letter-spacing:-.3px;}
 .place-hl{display:inline-block;font-size:12.5px;font-weight:800;color:var(--pc,var(--accent));
   background:var(--surface2);border-radius:8px;padding:5px 10px;margin-bottom:8px;line-height:1.4;word-break:keep-all;}
 .place-btns{display:flex;gap:6px;flex-wrap:wrap;}
@@ -179,6 +186,14 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
 .score-num{font-size:50px;font-weight:900;line-height:1;}
 .score-bd{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px;}
 .score-bd-item{background:rgba(255,255,255,.15);border-radius:10px;padding:9px 5px;text-align:center;}
+/* 버들 — 적립 단위 아이콘 */
+.willow{display:inline-block;vertical-align:-.16em;height:1.05em;width:auto;}
+.willow-lg{height:64px;width:auto;display:block;margin:0 auto 6px;}
+.willow-hero{position:absolute;right:10px;bottom:6px;height:66px;opacity:.22;pointer-events:none;}
+.score-hero{position:relative;overflow:hidden;}
+@keyframes willowDrop{0%{transform:translateY(-14px) rotate(-8deg);opacity:0;}
+  60%{transform:translateY(3px) rotate(3deg);opacity:1;}100%{transform:translateY(0) rotate(0);opacity:1;}}
+.willow-lg{animation:willowDrop .6s ease-out;}
 .score-bd-num{font-size:18px;font-weight:800;}
 .score-bd-label{font-size:10px;opacity:.8;margin-top:1px;}
 .stamp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:8px 14px 14px;}
@@ -461,7 +476,8 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
     <div class="page" id="page-stamp">
       <div class="score-hero">
         <div class="score-num" id="totalScore">0</div>
-        <div style="font-size:12px;opacity:.8;margin-top:3px">누적 점수</div>
+        <div style="font-size:12px;opacity:.8;margin-top:3px">누적 버들</div>
+        <img class="willow-hero" src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/willow.png" alt="">
         <div class="score-bd">
           <div class="score-bd-item"><div class="score-bd-num" id="gpsTotal">0</div><div class="score-bd-label">방문</div></div>
           <div class="score-bd-item"><div class="score-bd-num" id="photoTotal">0</div><div class="score-bd-label">사진</div></div>
@@ -518,9 +534,10 @@ body{background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo',sa
     <div class="done-anim">🎉</div>
     <div style="font-size:26px;font-weight:900;margin-bottom:6px">도장 꽝! 도착 완료</div>
     <div style="font-size:14px;opacity:.7;margin-bottom:4px" id="doneHotelName"></div>
-    <div style="font-size:44px;font-weight:900;color:#4fbf85;margin-bottom:4px">+10점</div>
-    <div style="font-size:12px;opacity:.6;margin-bottom:20px">방문 인증 점수 적립!</div>
-    <button class="done-btn" onclick="afterComplete()">📸 사진 업로드 (+5점)</button>
+    <img class="willow-lg" src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/willow.png" alt="버들">
+    <div style="font-size:44px;font-weight:900;color:#4fbf85;margin-bottom:4px">+10 버들</div>
+    <div style="font-size:12px;opacity:.6;margin-bottom:20px">도착 인증 버들이 적립되었습니다</div>
+    <button class="done-btn" onclick="afterComplete()">📸 인증샷 찍기 (+5 버들)</button>
     <button class="done-skip" onclick="skipPhoto()">건너뛰기</button>
   </div>
 </div>
@@ -774,7 +791,7 @@ async function showDetail(idx){
 
   // 품목 이력
   const {data:mi}=await sb.from('items').select('*').eq('user_id',CU.id).eq('journey_id',J.id).order('submitted_at',{ascending:false});
-  const ihHtml=(mi&&mi.length)?mi.map(i=>`<div class="irow"><div><div style="font-size:13px;font-weight:700">${i.item_name}</div><div style="font-size:11px;color:var(--muted)">${new Date(i.submitted_at).toLocaleDateString('ko-KR')}</div></div><span class="badge ${i.is_approved?'badge-green':'badge-blue'}">${i.is_approved?(i.approved_score||0)+'점':'검토중'}</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">제출 이력 없음</div>';
+  const ihHtml=(mi&&mi.length)?mi.map(i=>`<div class="irow"><div><div style="font-size:13px;font-weight:700">${i.item_name}</div><div style="font-size:11px;color:var(--muted)">${new Date(i.submitted_at).toLocaleDateString('ko-KR')}</div></div><span class="badge ${i.is_approved?'badge-green':'badge-blue'}">${i.is_approved?(i.approved_score||0)+' 버들':'검토중'}</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">제출 이력 없음</div>';
 
   const icClass=isPast?'icpast':('ic'+(pkg.concept||1));
   document.getElementById('inviteDetailContent').innerHTML=`
@@ -1133,17 +1150,36 @@ function launchConfetti(){
 }
 
 function afterComplete(){document.getElementById('doneOverlay').classList.remove('show');document.getElementById('photoInput').click();}
-function skipPhoto(){document.getElementById('doneOverlay').classList.remove('show');toast('방문 인증 완료! +10점 🎉');}
+function skipPhoto(){document.getElementById('doneOverlay').classList.remove('show');toast('도착 인증 완료! +10 버들 🌿');}
 
+// 사진은 서버에 저장하지 않습니다.
+// 찍은 사진은 화면에서 잠깐 보여준 뒤 버리고, 적립 기록만 남깁니다.
 async function uploadPhoto(input){
-  const file=input.files[0];if(!file||!visitId)return;
-  toast('사진 업로드 중...');
-  const path=`visit_${visitId}_${Date.now()}.jpg`;
-  const {error}=await sb.storage.from('agenda-images').upload(path,file,{upsert:true});
-  if(error){toast('업로드 실패');return;}
-  const {data:{publicUrl}}=sb.storage.from('agenda-images').getPublicUrl(path);
-  await sb.from('visits').update({photo_url:publicUrl,photo_score:5}).eq('id',visitId);
-  toast('사진 업로드 완료! +5점 🎉');loadStamp();
+  const file=input.files[0];
+  if(!file||!visitId){input.value='';return;}
+
+  // 방금 찍은 사진을 잠깐 보여줌 (브라우저 메모리에서만)
+  const url=URL.createObjectURL(file);
+  showPhotoFlash(url);
+
+  const {error}=await sb.from('visits').update({photo_score:5}).eq('id',visitId);
+  input.value='';                       // 같은 사진을 다시 골라도 동작하도록 초기화
+  if(error){console.error('[visits]',error);toast('적립 실패: '+error.message,false);return;}
+  toast('인증 완료! +5 버들 🌿');
+  loadStamp();
+}
+
+// 촬영한 사진을 1.6초간 크게 보여준 뒤 메모리에서 해제
+function showPhotoFlash(url){
+  const box=document.createElement('div');
+  box.className='photo-flash';
+  box.innerHTML='<img src="'+url+'"><div class="photo-flash-cap">🌿 +5 버들 적립</div>';
+  document.body.appendChild(box);
+  requestAnimationFrame(()=>box.classList.add('show'));
+  setTimeout(()=>{
+    box.classList.remove('show');
+    setTimeout(()=>{box.remove();URL.revokeObjectURL(url);},350);
+  },1600);
 }
 
 // ====== 도장판 ======
@@ -1201,7 +1237,7 @@ function renderStamp(vs){
       <img class="stamp-img" src="${NAMU}">
       <div class="stamp-name">${(j.hotel_name||'').slice(0,8)}</div>
       ${period?`<div class="stamp-date">${period}</div>`:''}
-      <div class="stamp-score">${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)}점</div>
+      <div class="stamp-score"><img class="willow" src="https://wrjpvzjdhmntitxmoywa.supabase.co/storage/v1/object/public/agenda-images/willow.png" alt=""> ${(v.gps_score||0)+(v.photo_score||0)+(v.item_score||0)} 버들</div>
     </div>`;
   }).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">방문 기록 없음</div>';
 }
